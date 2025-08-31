@@ -19,9 +19,27 @@ FURL_TG = "https://t.me/s/{name}"
 FURL_TG_AFTER = FURL_TG + "?after={id}"
 FURL_TG_BEFORE = FURL_TG + "?before={id}"
 
-RE_V2RAY = re.compile(r"(\bss\b|\bssr\b|\btrojan\b|\bvless\b|\bvmess\b)://[\S]+")
 XPATH_V2RAY = "//div[@class='tgme_widget_message_text js-message_text']//text()"
 XPATH_POST_ID = "//div[@class='tgme_widget_message text_not_supported_wrap js-widget_message']/@data-post"
+RE_V2RAY = re.compile(
+    r'(?:'
+        r'hy2'
+    r'|'
+        r'hysteria2'
+    r'|'
+        r'\bss\b'
+    r'|'
+        r'ssr'
+    r'|'
+        r'trojan'
+    r'|'
+        r'vless'
+    r'|'
+        r'vmess'
+    r'|'
+        r'wireguard'
+    r')://(?:(?!://)[\S])+'
+)
 
 
 def current_less_last(channel_info: dict) -> bool:

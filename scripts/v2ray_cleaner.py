@@ -5,6 +5,22 @@ import json
 import os
 import re
 
+# hy2://password@host:port/path?params#name
+# hy2://password@host:port?params#name
+# hysteria2://password@host:port/path?params#name
+# hysteria2://password@host:port?params#name
+pattern_hysteria2 = re.compile(
+    r'(?P<url>'
+        r'(?P<protocol>hy2\b|hysteria2\b)://'
+        r'(?P<password>(?:(?!://).)+)'
+        r'@(?P<host>[^\s@]+)'
+        r':(?P<port>\d{1,5})'
+        r'(?P<path>/[^\s?#]*){0,1}'
+        r'(?:\?(?P<params>(?:(?!://)[^\s#])*)){0,1}'
+        r'(?:#(?P<name>[^\s/]*)){0,1}'
+    r')'
+)
+
 # ss://base64(method:password)@host64:port64#name
 # ss://method:password@host:port#name
 # ss://base64(method:password@host:port)#name
@@ -81,12 +97,28 @@ pattern_vmess = re.compile(
     r')'
 )
 
+# wireguard://password@host:port/path?params#name
+# wireguard://password@host:port?params#name
+pattern_wireguard = re.compile(
+    r'(?P<url>'
+        r'(?P<protocol>wireguard\b)://'
+        r'(?P<password>(?:(?!://).)+)'
+        r'@(?P<host>[^\s@]+)'
+        r':(?P<port>\d{1,5})'
+        r'(?P<path>/[^\s?#]*){0,1}'
+        r'(?:\?(?P<params>(?:(?!://)[^\s#])*)){0,1}'
+        r'(?:#(?P<name>[^\s/]*)){0,1}'
+    r')'
+)
+
 list_patterns = [
+    pattern_hysteria2,
     pattern_ss,
     pattern_ssr,
     pattern_trojan,
     pattern_vless,
     pattern_vmess,
+    pattern_wireguard,
 ]
 
 
