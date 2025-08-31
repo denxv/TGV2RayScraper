@@ -21,7 +21,7 @@ def condition_channel_to_default(channel_info: dict) -> bool:
 
 def condition_delete_channels(channel_info: dict) -> bool:
     return False if condition_channel_to_default(channel_info) else \
-        channel_info["last_id"] == -1 or channel_info["count"] == 0 and \
+        channel_info["count"] <= -3 or channel_info["count"] == 0 and \
         channel_info["last_id"] <= channel_info["current_id"]
 
 
