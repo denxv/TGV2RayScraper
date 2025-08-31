@@ -37,6 +37,18 @@ def create_file(file_path: str, data: str = "") -> str:
     return file_path
 
 
+def make_backup(files: list[str]) -> None:
+    for path in files:
+        if not os.path.exists(path):
+            continue
+        base = os.path.basename(path)
+        name, ext = os.path.splitext(base)
+        backup = f"{name}-backup-{datetime.now():%Y%m%d-%H%M%s}{ext}"
+        backup_path = os.path.join(os.path.dirname(path), backup)
+        os.rename(path, backup_path)
+        print(f"[BACK] File '{base}' was renamed to '{backup}' for backup!")
+
+
 def status(tag: str, start: str, end: str = "", tracking: bool = False) -> \
     Callable[[Callable[P, T]], Callable[P, T]]:
     def decorator(target_func: Callable[P, T]) -> Callable[P, T]:
@@ -79,18 +91,13 @@ def reset_channels_to_default(current_channels: dict) -> None:
 
 
 @status(tag="save", start="Saving channels...")
-def save_channels(channels: dict, path_channels: str = "tg-channels-current.json") -> None:
-    if os.path.exists(path_channels):
-        dir_name, base_name = os.path.split(path_channels)
-        file_name, file_ext = os.path.splitext(base_name)
-        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        backup_name = f"{file_name}-backup-{timestamp}{file_ext}"
-        backup_path = os.path.join(dir_name, backup_name)
-        os.rename(path_channels, backup_path)
-        print(f"[SAVE] File '{base_name}' was renamed to '{backup_name}' for backup!")
-
-    with open(path_channels, "w", encoding="utf-8") as tg_json:
+def save_channels(channels: dict, path_channels: str = "tg-channels-current.json",
+    path_urls: str = "tg-channels-urls.txt") -> None:
+    make_backup([path_urls, path_channels])
+    with open(path_channels, "w", encoding="utf-8") as tg_json, \
+        open(path_urls, "w", encoding="utf-8") as urls:
         json.dump(channels, tg_json, indent=4, sort_keys=True)
+        urls.writelines([f"https://t.me/s/{name}\n" for name in sorted(channels)])
         print(f"[SAVE] Saved {len(channels)} channels in '{path_channels}'!")
 
 
@@ -113,7 +120,7 @@ def main(path_channels: str = "tg-channels-current.json", \
             load_channels(path_channels=path_channels, path_urls=path_urls)
         update_channels(current_channels, list_channel_names)
         delete_channels(current_channels)
-        save_channels(current_channels, path_channels=path_channels)
+        save_channels(current_channels, path_channels=path_channels, path_urls=path_urls)
     except Exception as exception:
         print(f"[ERROR] {exception}")
 
