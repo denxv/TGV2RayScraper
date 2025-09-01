@@ -126,6 +126,8 @@ def update_info(channels: dict) -> None:
         if channel_info["current_id"] <= 0:
             diff = channel_info["last_id"] + channel_info["current_id"]
             channel_info["current_id"] = diff if diff > 0 else 1
+        elif channel_info["current_id"] > channel_info["last_id"] != -1:
+            channel_info["current_id"] = channel_info["last_id"]
     else:
         print(end="\n")
 

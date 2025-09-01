@@ -140,6 +140,8 @@ async def update_info(session: aiohttp.ClientSession, channels: dict) -> None:
         if channel_info["current_id"] <= 0:
             diff = channel_info["last_id"] + channel_info["current_id"]
             channel_info["current_id"] = diff if diff > 0 else 1
+        elif channel_info["current_id"] > channel_info["last_id"] != -1:
+            channel_info["current_id"] = channel_info["last_id"]
 
     tasks = [
         asyncio.create_task(update_channel(name, channels[name]))
