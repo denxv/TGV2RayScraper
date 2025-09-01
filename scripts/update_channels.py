@@ -13,16 +13,9 @@ T = TypeVar("T")
 REGEX_CHANNELS_NAME = re.compile(r"http[s]?://t.me/[s/]{0,2}([\w]+)")
 
 
-def condition_channel_to_default(channel_info: dict) -> bool:
-    return channel_info["count"] == 0 and \
-        channel_info["current_id"] == 1 and \
-        channel_info["last_id"] == -1
-
-
 def condition_delete_channels(channel_info: dict) -> bool:
-    return False if condition_channel_to_default(channel_info) else \
-        channel_info["count"] <= -3 or channel_info["count"] == 0 and \
-        channel_info["last_id"] <= channel_info["current_id"]
+    return channel_info["count"] <= -3 or channel_info["count"] == 0 and \
+        channel_info["current_id"] >= channel_info["last_id"] != -1
 
 
 def condition_reset_channels(channel_info: dict) -> bool:
