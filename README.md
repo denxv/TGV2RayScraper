@@ -1,15 +1,22 @@
-
 # TGV2RayScraper
 
 TGV2RayScraper is a Python project designed to collect Telegram channel data, extract V2Ray configurations, clean and normalize them, and maintain up-to-date channel information. It supports both synchronous and asynchronous scraping and includes tools for managing channel lists.
+
+For Russian version, see [README.md](docs/ru/README.md)
+
+---
 
 ## Quick Start
 
 Follow these steps to get started quickly:
 
-1. **Clone the repository**  
+1. **Clone the repository**
+
 ```bash
 git clone https://github.com/denxv/TGV2RayScraper.git
+```
+
+```bash
 cd TGV2RayScraper
 ```
 
@@ -18,7 +25,10 @@ cd TGV2RayScraper
 * On Linux/macOS:
 
 ```bash
-python3 -m venv venv
+python -m venv venv
+```
+
+```bash
 source venv/bin/activate
 ```
 
@@ -26,6 +36,9 @@ source venv/bin/activate
 
 ```bash
 python -m venv venv
+```
+
+```bash
 venv\Scripts\activate
 ```
 
@@ -45,101 +58,237 @@ This will update channels, scrape data, and clean V2Ray configurations in one st
 
 ---
 
+## Requirements
+
+The project requires the following Python libraries:
+
+* **aiohttp** – asynchronous HTTP client
+* **aiofiles** – asynchronous file operations
+* **lxml** – parsing and processing HTML/XML
+* **requests** – synchronous HTTP client
+* **tqdm** – progress bar for long-running tasks
+
+Other dependencies are listed in [`requirements.txt`](requirements.txt).
+
+---
+
 ## Project Structure
 
-* **channels/** – Directory for storing channel data
+* **channels/** – stores channel data
 
   * `current.json` – JSON file with up-to-date channel data
-  * `urls.txt` – Text file containing URLs of Telegram channels
+  * `urls.txt` – text file with Telegram channel URLs
 
-* **scripts/** – Directory for data processing scripts
+* **scripts/** – data processing scripts
 
-  * `async_scraper.py` – Asynchronous script for collecting channel data
-  * `scraper.py` – Synchronous script for collecting channel data
-  * `update_channels.py` – Script for updating channel data
-  * `v2ray_cleaner.py` – Script for cleaning and normalizing V2Ray configurations
+  * `async_scraper.py` – collects channel data asynchronously
+  * `scraper.py` – collects channel data synchronously
+  * `update_channels.py` – updates the channel list
+  * `v2ray_cleaner.py` – cleans and normalizes V2Ray configurations
 
-* **v2ray/** – Directory for storing V2Ray configuration files
+* **v2ray/** – stores V2Ray configuration files
 
-  * `configs-clean.txt` – Cleaned and normalized V2Ray configurations
-  * `configs-raw.txt` – Raw V2Ray configurations
+  * `configs-clean.txt` – cleaned and normalized configs
+  * `configs-raw.txt` – raw configs
 
-* **requirements.txt** – List of project dependencies
+* **requirements.txt** – project dependencies
 
-* **main.py** – Main script for running project operations
+* **main.py** – main script to run project operations
+
+---
+
+## Channel JSON Structure
+
+The file `channels/current.json` stores metadata about Telegram channels. Top-level keys are **channel usernames**, and values are objects with channel state.
+
+### Example
+
+```json
+{
+    "channel_name1": {
+        "count": 0,
+        "current_id": 1,
+        "last_id": -1
+    },
+    "channel_name2": {
+        "count": 0,
+        "current_id": 1,
+        "last_id": -1
+    }
+}
+```
+
+### Field Description
+
+* **`count`**
+
+  * `> 0` → number of V2Ray configurations found in the channel
+  * `= 0` → nothing found, or channel temporarily unavailable (`last_id = -1`)
+  * `< 0` → number of failed attempts to access the channel
+
+    * Each failed attempt decreases the value (`-1, -2, …`)
+    * When `count <= -3`, the channel is considered inactive and removed from `current.json` and `urls.txt`
+
+* **`current_id`**
+
+  * starting message ID for scraping
+  * `1` → start from the beginning of the channel
+  * negative → take the last N messages
+
+    * Example: if `last_id = 150` and `current_id = -100`, the effective `current_id` is `150 - 100 = 50`. Scraping will start from message 50 and move toward the last message (`last_id = 150`).
+
+* **`last_id`**
+
+  * latest message ID in the channel
+  * updated on each run
+  * `-1` → channel temporarily or permanently unavailable
+  * otherwise, a positive integer
+
+---
+
+## Supported Protocols
+
+The cleaned configuration file (`v2ray/configs-clean.txt`) contains entries in one of the following formats:
+
+---
+
+### **Hy2 / Hysteria2**
+
+```text
+hy2://password@host:port/path?params#name
+hy2://password@host:port?params#name
+
+hysteria2://password@host:port/path?params#name
+hysteria2://password@host:port?params#name
+```
+
+---
+
+### **Shadowsocks / ShadowsocksR**
+
+```text
+ss://base64(method:password)@host64:port64#name
+ss://method:password@host:port#name
+ss://base64(method:password@host:port)#name
+
+ssr://base64(host:port:protocol:method:obfs:base64(password))
+```
+
+---
+
+### **Trojan**
+
+```text
+trojan://password@host:port/path?params#name
+trojan://password@host:port?params#name
+```
+
+---
+
+### **VLESS**
+
+```text
+vless://password@host:port/path?params#name
+vless://password@host:port?params#name
+```
+
+---
+
+### **VMess**
+
+```text
+vmess://base64(json)
+vmess://password@host:port/path?params#name
+vmess://password@host:port?params#name
+```
+
+---
+
+### **WireGuard**
+
+```text
+wireguard://password@host:port/path?params#name
+wireguard://password@host:port?params#name
+```
 
 ---
 
 ## Usage
 
-### 1. Running the Scrapers
+---
 
-Collect Telegram channel data using either the asynchronous or synchronous scraper:
-
-* **Asynchronous Scraper**
-  Collects data from channels concurrently for faster processing (experimental):
-
-  ```bash
-  python scripts/async_scraper.py
-  ```
-
-* **Synchronous Scraper**
-  Processes channels one by one (simpler, may be slower):
-
-  ```bash
-  python scripts/scraper.py
-  ```
-
-### 2. Updating Channels
-
-To update the channel list or synchronize new data into the current JSON file:
+### **1. Updating Channels**
 
 ```bash
 python scripts/update_channels.py
 ```
 
-This script:
+---
+
+The script:
 
 * Reads the current channel list (`channels/current.json`)
-* Merges new URLs from `channels/urls.txt`
-* Saves the updated list back to `current.json`
-* Creates a timestamped backup like `current-YYYYMMDD-HHMMSS.json`
+* Merges with new URLs from `channels/urls.txt`
+* Creates timestamped backups of both files
+* Saves the updated list back to `current.json` and `urls.txt`
 
-### 3. Cleaning V2Ray Configurations
+---
 
-To process raw V2Ray configuration files and produce cleaned/normalized output:
+### **2. Running Scrapers**
+
+* **Asynchronous Scraper** (faster, experimental)
+
+```bash
+python scripts/async_scraper.py
+```
+
+---
+
+* **Synchronous Scraper** (simpler, slower)
+
+```bash
+python scripts/scraper.py
+```
+
+---
+
+### **3. Cleaning V2Ray Configurations**
 
 ```bash
 python scripts/v2ray_cleaner.py
 ```
 
-This script:
+---
+
+The script:
 
 * Reads raw configs from `v2ray/configs-raw.txt`
 * Applies regex-based filters and normalization
-* Writes cleaned configs to `v2ray/configs-clean.txt`
+* Saves cleaned configs to `v2ray/configs-clean.txt`
 
-### 4. Running the Entire Project via `main.py`
+---
 
-You can run all main operations (scraping, updating channels, cleaning V2Ray configs) through the `main.py` script:
+### **4. Running All Steps via `main.py`**
 
 ```bash
 python main.py
 ```
 
-By default, `main.py` executes the following scripts in order:
+---
 
-1. `update_channels.py` – Updates the channel list by merging new URLs from `channels/urls.txt` into `channels/current.json`, creating a timestamped backup.
-2. `async_scraper.py` – Collects Telegram channel data asynchronously.
-3. `v2ray_cleaner.py` – Processes raw V2Ray configuration files and saves cleaned configurations to `v2ray/configs-clean.txt`.
+Executes scripts in order:
 
-This provides a one-step way to update channels, scrape data, and clean V2Ray configurations. Each script is run sequentially, and any errors will stop the execution.
+1. `update_channels.py` – update the channel list
+2. `async_scraper.py` – collect Telegram channel data asynchronously
+3. `v2ray_cleaner.py` – clean and normalize configurations
+
+Provides a one-step way to update channels, scrape data, and clean configurations.
 
 ---
 
 ## Notes
 
-* Always run scrapers before updating channels.
+* Always update the channel list before running the scrapers.
 * Use the V2Ray cleaner after scraping to normalize configurations.
 * Scripts are provided **as-is**; use at your own risk.
 
@@ -147,13 +296,13 @@ This provides a one-step way to update channels, scrape data, and clean V2Ray co
 
 ## Disclaimer
 
-This software is provided "as-is". The author is **not responsible** for any damage, data loss, or other consequences resulting from the use of this software.
+This software is provided "as-is". The author **is not responsible** for any damage, data loss, or other consequences resulting from the use of this software.
 
 **Important:** Intended for educational/personal use only. The author is not responsible for:
 
-* Misuse, including spamming or overloading Telegram servers.
-* Unauthorized data collection.
-* Legal or financial consequences.
+* Misuse, including spamming or overloading Telegram servers
+* Unauthorized data collection
+* Legal or financial consequences
 
 Use responsibly and comply with platform terms.
 
@@ -161,4 +310,4 @@ Use responsibly and comply with platform terms.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License – see the [LICENSE](LICENSE) file for details.
