@@ -128,7 +128,6 @@ https://t.me/s/configv2rayngvpn
 https://t.me/s/configx2ray
 https://t.me/s/configyou
 https://t.me/s/confiig_hub
-https://t.me/s/confing_chanel
 https://t.me/s/confing_costume
 https://t.me/s/confing_hup
 https://t.me/s/confingam
@@ -257,7 +256,6 @@ https://t.me/s/freeiranweb
 https://t.me/s/freeland8
 https://t.me/s/freenapsternetv
 https://t.me/s/freenet_for_everyone
-https://t.me/s/freenettir
 https://t.me/s/freeownvpn
 https://t.me/s/freeshadowsock
 https://t.me/s/freestrongvpn
@@ -320,7 +318,6 @@ https://t.me/s/hideng_app
 https://t.me/s/hitechvplus
 https://t.me/s/hkaa0
 https://t.me/s/holderproxy
-https://t.me/s/hookvpn_cisco
 https://t.me/s/hoorvpn
 https://t.me/s/hope_net
 https://t.me/s/hopev2ray
@@ -338,7 +335,6 @@ https://t.me/s/inikotesla
 https://t.me/s/internet_nor
 https://t.me/s/internetazadvmess
 https://t.me/s/ios_v2
-https://t.me/s/ip6proxy
 https://t.me/s/ip9vpn
 https://t.me/s/ip_cf
 https://t.me/s/ip_cf_config
@@ -346,7 +342,6 @@ https://t.me/s/ipcloudflaretamiz
 https://t.me/s/ipv2ray
 https://t.me/s/ipv2rayng
 https://t.me/s/ir2nel
-https://t.me/s/ir_netproxy
 https://t.me/s/ir_v2reyng
 https://t.me/s/iran_access
 https://t.me/s/iran_mehr_vpn
@@ -500,7 +495,6 @@ https://t.me/s/netbox2
 https://t.me/s/netcinnect
 https://t.me/s/netfreedom0
 https://t.me/s/netguardstore
-https://t.me/s/nethers_vpn
 https://t.me/s/netifyvpn
 https://t.me/s/netmellianti
 https://t.me/s/netv2reyng
@@ -532,7 +526,6 @@ https://t.me/s/orange_vpns
 https://t.me/s/orgempirenet
 https://t.me/s/outline_ir
 https://t.me/s/outline_open_keys
-https://t.me/s/outline_vpn
 https://t.me/s/outlineiran
 https://t.me/s/outlinereleasedkey
 https://t.me/s/outlinev
@@ -619,7 +612,6 @@ https://t.me/s/renetvpn
 https://t.me/s/rez1vpn
 https://t.me/s/rezaw_server
 https://t.me/s/rima_vpn
-https://t.me/s/rk_vps
 https://t.me/s/rnrifci
 https://t.me/s/rojproxy
 https://t.me/s/roshdcollection
@@ -645,13 +637,11 @@ https://t.me/s/server444
 https://t.me/s/server_free2
 https://t.me/s/server_housing03
 https://t.me/s/server_nekobox
-https://t.me/s/serverii
 https://t.me/s/serversiran11
 https://t.me/s/serverstm
 https://t.me/s/set_v2ray
 https://t.me/s/seven_ping
 https://t.me/s/sezar_sec
-https://t.me/s/sh2ray
 https://t.me/s/shadmanegi_vpn
 https://t.me/s/shadowproxy66
 https://t.me/s/shadowrocketv2ray
@@ -699,7 +689,6 @@ https://t.me/s/svnteam
 https://t.me/s/tawanaclub
 https://t.me/s/tc_v2ray
 https://t.me/s/teamvpnpro
-https://t.me/s/techshieldco
 https://t.me/s/tehranargo
 https://t.me/s/tehranfreevpn
 https://t.me/s/tehron98
@@ -735,8 +724,6 @@ https://t.me/s/v2all
 https://t.me/s/v2aryng_vpn
 https://t.me/s/v2box
 https://t.me/s/v2box_free
-https://t.me/s/v2box_v2
-https://t.me/s/v2boxvpnn
 https://t.me/s/v2city
 https://t.me/s/v2fetch
 https://t.me/s/v2fox_config
@@ -748,7 +735,6 @@ https://t.me/s/v2logy
 https://t.me/s/v2net_iran
 https://t.me/s/v2ngfast
 https://t.me/s/v2ngnet
-https://t.me/s/v2own
 https://t.me/s/v2pedia
 https://t.me/s/v2proxy
 https://t.me/s/v2r_ayorg
@@ -808,7 +794,6 @@ https://t.me/s/v2rayargon
 https://t.me/s/v2rayaz
 https://t.me/s/v2raybaaz
 https://t.me/s/v2raybe
-https://t.me/s/v2raybluecrystal
 https://t.me/s/v2raybuddiesvpn
 https://t.me/s/v2raycactus
 https://t.me/s/v2raycg
@@ -819,20 +804,15 @@ https://t.me/s/v2rayconfigamir
 https://t.me/s/v2raycrow
 https://t.me/s/v2raydiyako
 https://t.me/s/v2rayenglish
-https://t.me/s/v2rayepro
 https://t.me/s/v2rayexpress
 https://t.me/s/v2rayfa
 https://t.me/s/v2rayfast_7
-https://t.me/s/v2rayflash
 https://t.me/s/v2rayfree
 https://t.me/s/v2rayfree1
-https://t.me/s/v2rayfree_irr
 https://t.me/s/v2rayfree_server
 https://t.me/s/v2rayi_net
 https://t.me/s/v2raying
 https://t.me/s/v2rayip1
-https://t.me/s/v2raylandd
-https://t.me/s/v2raymakers
 https://t.me/s/v2raymelliii
 https://t.me/s/v2rayminer
 https://t.me/s/v2rayn2g
@@ -879,7 +859,6 @@ https://t.me/s/v2rayngvpn
 https://t.me/s/v2rayngvpn_1
 https://t.me/s/v2rayngvpnn
 https://t.me/s/v2rayngvvpn
-https://t.me/s/v2rayngzendegimamad
 https://t.me/s/v2raynselling
 https://t.me/s/v2rayopen
 https://t.me/s/v2rayping
@@ -893,9 +872,7 @@ https://t.me/s/v2rayroz
 https://t.me/s/v2rayservere
 https://t.me/s/v2rayshop_m
 https://t.me/s/v2raysiran
-https://t.me/s/v2raystudents
 https://t.me/s/v2raytg
-https://t.me/s/v2raytun0
 https://t.me/s/v2raytunn
 https://t.me/s/v2rayvlp
 https://t.me/s/v2rayvpn009
@@ -1061,8 +1038,6 @@ https://t.me/s/webshecan
 https://t.me/s/wedbaztel
 https://t.me/s/wedbazvpn
 https://t.me/s/weepeen
-https://t.me/s/whalevpnchannel
-https://t.me/s/wirepro_vpn
 https://t.me/s/wolf_vpn02
 https://t.me/s/womanlifefreedomvpn
 https://t.me/s/world_vmess
@@ -1104,7 +1079,6 @@ https://t.me/s/zeroshop00
 https://t.me/s/zerov2shop
 https://t.me/s/zetatech_ir2
 https://t.me/s/zilv2ray_service
-https://t.me/s/zohalserver
 https://t.me/s/zotpo
 https://t.me/s/zvpnn
 https://t.me/s/zyfxlnn

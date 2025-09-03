@@ -649,11 +649,6 @@
         "current_id": 1,
         "last_id": -1
     },
-    "confing_chanel": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "confing_costume": {
         "count": 0,
         "current_id": 1,
@@ -1294,11 +1289,6 @@
         "current_id": 1,
         "last_id": -1
     },
-    "freenettir": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "freeownvpn": {
         "count": 0,
         "current_id": 1,
@@ -1609,11 +1599,6 @@
         "current_id": 1,
         "last_id": -1
     },
-    "hookvpn_cisco": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "hoorvpn": {
         "count": 0,
         "current_id": 1,
@@ -1699,11 +1684,6 @@
         "current_id": 1,
         "last_id": -1
     },
-    "ip6proxy": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "ip9vpn": {
         "count": 0,
         "current_id": 1,
@@ -1735,11 +1715,6 @@
         "last_id": -1
     },
     "ir2nel": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
-    "ir_netproxy": {
         "count": 0,
         "current_id": 1,
         "last_id": -1
@@ -2509,11 +2484,6 @@
         "current_id": 1,
         "last_id": -1
     },
-    "nethers_vpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "netifyvpn": {
         "count": 0,
         "current_id": 1,
@@ -2665,11 +2635,6 @@
         "last_id": -1
     },
     "outline_open_keys": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
-    "outline_vpn": {
         "count": 0,
         "current_id": 1,
         "last_id": -1
@@ -3104,11 +3069,6 @@
         "current_id": 1,
         "last_id": -1
     },
-    "rk_vps": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "rnrifci": {
         "count": 0,
         "current_id": 1,
@@ -3234,11 +3194,6 @@
         "current_id": 1,
         "last_id": -1
     },
-    "serverii": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "serversiran11": {
         "count": 0,
         "current_id": 1,
@@ -3260,11 +3215,6 @@
         "last_id": -1
     },
     "sezar_sec": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
-    "sh2ray": {
         "count": 0,
         "current_id": 1,
         "last_id": -1
@@ -3504,11 +3454,6 @@
         "current_id": 1,
         "last_id": -1
     },
-    "techshieldco": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "tehranargo": {
         "count": 0,
         "current_id": 1,
@@ -3684,16 +3629,6 @@
         "current_id": 1,
         "last_id": -1
     },
-    "v2box_v2": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
-    "v2boxvpnn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "v2city": {
         "count": 0,
         "current_id": 1,
@@ -3745,11 +3680,6 @@
         "last_id": -1
     },
     "v2ngnet": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
-    "v2own": {
         "count": 0,
         "current_id": 1,
         "last_id": -1
@@ -4049,11 +3979,6 @@
         "current_id": 1,
         "last_id": -1
     },
-    "v2raybluecrystal": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "v2raybuddiesvpn": {
         "count": 0,
         "current_id": 1,
@@ -4104,11 +4029,6 @@
         "current_id": 1,
         "last_id": -1
     },
-    "v2rayepro": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "v2rayexpress": {
         "count": 0,
         "current_id": 1,
@@ -4124,22 +4044,12 @@
         "current_id": 1,
         "last_id": -1
     },
-    "v2rayflash": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "v2rayfree": {
         "count": 0,
         "current_id": 1,
         "last_id": -1
     },
     "v2rayfree1": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
-    "v2rayfree_irr": {
         "count": 0,
         "current_id": 1,
         "last_id": -1
@@ -4160,16 +4070,6 @@
         "last_id": -1
     },
     "v2rayip1": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
-    "v2raylandd": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
-    "v2raymakers": {
         "count": 0,
         "current_id": 1,
         "last_id": -1
@@ -4404,11 +4304,6 @@
         "current_id": 1,
         "last_id": -1
     },
-    "v2rayngzendegimamad": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "v2raynselling": {
         "count": 0,
         "current_id": 1,
@@ -4474,17 +4369,7 @@
         "current_id": 1,
         "last_id": -1
     },
-    "v2raystudents": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "v2raytg": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
-    "v2raytun0": {
         "count": 0,
         "current_id": 1,
         "last_id": -1
@@ -5314,16 +5199,6 @@
         "current_id": 1,
         "last_id": -1
     },
-    "whalevpnchannel": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
-    "wirepro_vpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "wolf_vpn02": {
         "count": 0,
         "current_id": 1,
@@ -5525,11 +5400,6 @@
         "last_id": -1
     },
     "zilv2ray_service": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
-    "zohalserver": {
         "count": 0,
         "current_id": 1,
         "last_id": -1
