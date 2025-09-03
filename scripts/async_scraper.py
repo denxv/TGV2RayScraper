@@ -135,7 +135,7 @@ async def update_info(session: aiohttp.ClientSession, channels: dict) -> None:
             print(f" <UU>  {channel_name:<{LEN_NAME}}\
                 {channel_info['last_id']:>{LEN_NUMBER}} -> {last_id:<{LEN_NUMBER}}")
             channel_info["last_id"] = last_id
-            channel_info["count"] = 0 if count <= 0 else count
+            channel_info["count"] = 1 if count <= 0 else count
 
         if channel_info["current_id"] <= 0:
             diff = channel_info["last_id"] + channel_info["current_id"]
