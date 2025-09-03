@@ -14,7 +14,7 @@ REGEX_CHANNELS_NAME = re.compile(r"http[s]?://t.me/[s/]{0,2}([\w]+)")
 
 
 def condition_delete_channels(channel_info: dict) -> bool:
-    return channel_info["count"] <= -3 or channel_info["count"] <= 10 and \
+    return channel_info["count"] <= -3 or channel_info["count"] <= 0 and \
         channel_info["current_id"] >= channel_info["last_id"] != -1
 
 
