@@ -122,7 +122,7 @@ The file `channels/current.json` stores metadata about Telegram channels. Top-le
 
 * **`count`**
 
-  * `> 0` → number of V2Ray configurations found in the channel
+  * `> 0` → number of V2Ray configurations in an active channel (`count = 1`)
   * `= 0` → nothing found, or channel temporarily unavailable (`last_id = -1`)
   * `< 0` → number of failed attempts to access the channel
 
