@@ -4,6 +4,7 @@
 import json
 import os
 import re
+import urllib.parse
 
 # anytls://password@host:port/path?params#name
 # anytls://password@host:port?params#name
@@ -44,7 +45,7 @@ pattern_ss = re.compile(
             r'(?P<method>[^\s:@#]+)'
             r':(?P<password>(?:(?!://).)+)(?![^@])'
         r'|'
-            r'(?P<base64>[\w+/%]+={0,2})(?![^\s@#])'
+            r'(?P<base64>[\w+/]+={0,2})(?![^\s@#])'
         r')'
         r'(?:'
             r'@(?P<host>[^\s@]+)'
@@ -165,7 +166,7 @@ def main(path_configs_raw: str = "v2ray-configs-raw.txt",
     path_configs_clean: str = "v2ray-configs-clean.txt") -> None:
     try:
         with open(create_file(path_configs_raw), "r", encoding="utf-8") as file:
-            v2ray = file.read()
+            v2ray = urllib.parse.unquote(file.read())
         print(f"[LOAD] Loaded v2ray raw-configs from '{path_configs_raw}'!")
 
         with open(path_configs_clean, "w", encoding="utf-8") as file:
