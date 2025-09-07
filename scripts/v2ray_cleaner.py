@@ -5,6 +5,20 @@ import json
 import os
 import re
 
+# anytls://password@host:port/path?params#name
+# anytls://password@host:port?params#name
+pattern_anytls = re.compile(
+    r'(?P<url>'
+        r'(?P<protocol>anytls)://'
+        r'(?P<password>(?:(?!://).)+)'
+        r'@(?P<host>[^\s@]+)'
+        r':(?P<port>\d{1,5})'
+        r'(?P<path>/[^\s?#]*){0,1}'
+        r'(?:\?(?P<params>(?:(?!://)[^\s#])*)){0,1}'
+        r'(?:#(?P<name>[^\s/]*)){0,1}'
+    r')'
+)
+
 # hy2://password@host:port/path?params#name
 # hy2://password@host:port?params#name
 # hysteria2://password@host:port/path?params#name
@@ -64,6 +78,21 @@ pattern_trojan = re.compile(
     r')'
 )
 
+# tuic://uuid:password@host:port/path?params#name
+# tuic://uuid:password@host:port?params#name
+pattern_tuic = re.compile(
+    r'(?P<url>'
+        r'(?P<protocol>tuic)://'
+        r'(?P<uuid>(?:(?!://).)+)'
+        r':(?P<password>(?:(?!://).)+)'
+        r'@(?P<host>[^\s@]+)'
+        r':(?P<port>\d{1,5})'
+        r'(?P<path>/[^\s?#]*){0,1}'
+        r'(?:\?(?P<params>(?:(?!://)[^\s#])*)){0,1}'
+        r'(?:#(?P<name>[^\s/]*)){0,1}'
+    r')'
+)
+
 # vless://password@host:port/path?params#name
 # vless://password@host:port?params#name
 pattern_vless = re.compile(
@@ -112,10 +141,12 @@ pattern_wireguard = re.compile(
 )
 
 list_patterns = [
+    pattern_anytls,
     pattern_hysteria2,
     pattern_ss,
     pattern_ssr,
     pattern_trojan,
+    pattern_tuic,
     pattern_vless,
     pattern_vmess,
     pattern_wireguard,

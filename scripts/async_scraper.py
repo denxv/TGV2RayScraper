@@ -23,6 +23,8 @@ XPATH_V2RAY = "//div[@class='tgme_widget_message_text js-message_text']//text()"
 XPATH_POST_ID = "//div[@class='tgme_widget_message text_not_supported_wrap js-widget_message']/@data-post"
 RE_V2RAY = re.compile(
     r'(?:'
+        r'anytls'
+    r'|'
         r'hy2'
     r'|'
         r'hysteria2'
@@ -32,6 +34,8 @@ RE_V2RAY = re.compile(
         r'ssr'
     r'|'
         r'trojan'
+    r'|'
+        r'tuic'
     r'|'
         r'vless'
     r'|'

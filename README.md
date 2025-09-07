@@ -152,12 +152,20 @@ The cleaned configuration file (`v2ray/configs-clean.txt`) contains entries in o
 
 ---
 
+### **AnyTLS**
+
+```text
+anytls://password@host:port/path?params#name
+anytls://password@host:port?params#name
+```
+
+---
+
 ### **Hy2 / Hysteria2**
 
 ```text
 hy2://password@host:port/path?params#name
 hy2://password@host:port?params#name
-
 hysteria2://password@host:port/path?params#name
 hysteria2://password@host:port?params#name
 ```
@@ -170,7 +178,6 @@ hysteria2://password@host:port?params#name
 ss://base64(method:password)@host64:port64#name
 ss://method:password@host:port#name
 ss://base64(method:password@host:port)#name
-
 ssr://base64(host:port:protocol:method:obfs:base64(password))
 ```
 
@@ -181,6 +188,15 @@ ssr://base64(host:port:protocol:method:obfs:base64(password))
 ```text
 trojan://password@host:port/path?params#name
 trojan://password@host:port?params#name
+```
+
+---
+
+### **TUIC**
+
+```text
+tuic://uuid:password@host:port/path?params#name
+tuic://uuid:password@host:port?params#name
 ```
 
 ---
