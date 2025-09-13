@@ -59,24 +59,8 @@ def format_channel_id(channel_info: dict) -> str:
     return f"{channel_info['current_id']:>{LEN_NUMBER}} / {channel_info['last_id']:<{LEN_NUMBER}} (+{diff})"
 
 
-def get_configs_by_channel(channel_name: str, channel_info: dict, \
-    path_configs: str = "v2ray-configs-raw.txt") -> int:
-    v2ray_count = 0
-    bar_format = " {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt} "
-    range_channel_id = range(channel_info["current_id"], channel_info["last_id"], 20)
-    print(f"[EXTR] Extracting configs from channel '{channel_name}'...")
-
-    for current_id in tqdm(range_channel_id, ascii=True, bar_format=bar_format, leave=False):
-        channel_info["current_id"] = current_id
-        response = SESSION_TG.get(FURL_TG_AFTER.format(name=channel_name, id=current_id))
-        html_text = html.fromstring(response.content)
-        if v2ray_configs := list(filter(RE_V2RAY.match, html_text.xpath(XPATH_V2RAY))):
-            v2ray_count = v2ray_count + len(v2ray_configs)
-            channel_info["count"] = channel_info.get("count", 0) + len(v2ray_configs)
-            write_configs(v2ray_configs, path_configs=path_configs, mode="a")
-    else:
-        channel_info["current_id"] = channel_info["last_id"]
-    return v2ray_count
+def get_filtered_keys(channels: dict) -> list:
+    return list(filter(lambda name: current_less_last(channels[name]), channels.keys()))
 
 
 def get_last_id(channel_name: str) -> int:
@@ -85,8 +69,9 @@ def get_last_id(channel_name: str) -> int:
     return int(list_post[-1].split("/")[-1]) if list_post else -1
 
 
-def get_sorted_keys(channels: dict) -> list:
-    return sorted(channels.keys(), key=lambda name: diff_channel_id(channels[name]))
+def get_sorted_keys(channels: dict, filtering: bool = False, reverse: bool = False) -> list:
+    channel_names = get_filtered_keys(channels) if filtering else channels.keys()
+    return sorted(channel_names, key=lambda name: diff_channel_id(channels[name]), reverse=reverse)
 
 
 def load_channels(path_channels: str = "tg-channels-current.json") -> list:
@@ -110,6 +95,26 @@ def print_channel_info(channels: dict) -> None:
 def save_channels(channels: list, path_channels: str = "tg-channels-current.json") -> None:
     with open(path_channels, "w", encoding="utf-8") as file:
         json.dump(channels, file, indent=4, sort_keys=True)
+
+
+def save_channel_configs(channel_name: str, channel_info: dict, \
+    path_configs: str = "v2ray-configs-raw.txt") -> None:
+    v2ray_count = 0
+    bar_format = " {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt} "
+    range_channel_id = range(channel_info["current_id"], channel_info["last_id"], 20)
+    print(f"[EXTR] Extracting configs from channel '{channel_name}'...")
+
+    for current_id in tqdm(range_channel_id, ascii=True, bar_format=bar_format, leave=False):
+        channel_info["current_id"] = current_id
+        response = SESSION_TG.get(FURL_TG_AFTER.format(name=channel_name, id=current_id))
+        html_text = html.fromstring(response.content)
+        if v2ray_configs := list(filter(RE_V2RAY.match, html_text.xpath(XPATH_V2RAY))):
+            v2ray_count = v2ray_count + len(v2ray_configs)
+            channel_info["count"] = channel_info.get("count", 0) + len(v2ray_configs)
+            write_configs(v2ray_configs, path_configs=path_configs, mode="a")
+    else:
+        channel_info["current_id"] = channel_info["last_id"]
+        print(f"[EXTR] Found: {v2ray_count} configs!", end="\n\n")
 
 
 def update_info(channels: dict) -> None:
@@ -149,11 +154,8 @@ def main(path_channels: str = "tg-channels-current.json",
             load_channels(path_channels=path_channels)
         update_info(channels)
         print_channel_info(channels)
-        for name in get_sorted_keys(channels):
-            channel_info = channels[name]
-            if current_less_last(channel_info):
-                length = get_configs_by_channel(name, channel_info, path_configs=path_configs)
-                print(f"[EXTR] Found: {length} configs!", end="\n\n")
+        for name in get_sorted_keys(channels, filtering=True):
+            save_channel_configs(name, channels[name], path_configs=path_configs)
     except KeyboardInterrupt:
         print(f"[ERROR] Exit from the program!")
     except Exception as exception:

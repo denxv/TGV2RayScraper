@@ -61,8 +61,48 @@ def format_channel_id(channel_info: dict) -> str:
     return f"{channel_info['current_id']:>{LEN_NUMBER}} / {channel_info['last_id']:<{LEN_NUMBER}} (+{diff})"
 
 
-async def get_configs_by_channel(session: aiohttp.ClientSession, channel_name: str, \
-    channel_info: dict, batch_size: int = 20, path_configs: str = "v2ray-configs-raw.txt") -> int:
+def get_filtered_keys(channels: dict) -> list:
+    return list(filter(lambda name: current_less_last(channels[name]), channels.keys()))
+
+
+async def get_last_id(session: aiohttp.ClientSession, channel_name: str) -> int:
+    async with session.get(FURL_TG.format(name=channel_name)) as response:
+        content = await response.text()
+        list_post = html.fromstring(content).xpath(XPATH_POST_ID)
+        return int(list_post[-1].split("/")[-1]) if list_post else -1
+
+
+def get_sorted_keys(channels: dict, filtering: bool = False, reverse: bool = False) -> list:
+    channel_names = get_filtered_keys(channels) if filtering else channels.keys()
+    return sorted(channel_names, key=lambda name: diff_channel_id(channels[name]), reverse=reverse)
+
+
+async def load_channels(path_channels: str = "tg-channels-current.json") -> dict:
+    async with aiofiles.open(path_channels, "r", encoding="utf-8") as file:
+        data = await file.read()
+    return json.loads(data)
+
+
+def print_channel_info(channels: dict) -> None:
+    channels_count = 0
+    print(f"[INFO] Showing information about the remaining channels...")
+    for channel_name, channel_info in channels.items():
+        if current_less_last(channel_info):
+            channels_count = channels_count + 1
+            print(f" <SS>  {channel_name:<{LEN_NAME}}{format_channel_id(channel_info)}")
+    else:
+        print(f"\n[INFO] Total channels are available for extracting configs: {len(channels)}")
+        print(f"[INFO] Channels left to check: {channels_count}")
+        print(f"[INFO] Total messages on channels: {TOTAL_CHANNELS_POST:,}", end="\n\n")
+
+
+async def save_channels(channels: dict, path_channels: str = "tg-channels-current.json") -> None:
+    async with aiofiles.open(path_channels, "w", encoding="utf-8") as file:
+        await file.write(json.dumps(channels, indent=4, sort_keys=True, ensure_ascii=False))
+
+
+async def save_channel_configs(session: aiohttp.ClientSession, channel_name: str, \
+    channel_info: dict, batch_size: int = 20, path_configs: str = "v2ray-configs-raw.txt") -> None:
     v2ray_count = 0
     list_channel_id = list(range(channel_info["current_id"], channel_info["last_id"], 20))
     batch_range = range(0, len(list_channel_id), batch_size)
@@ -88,42 +128,7 @@ async def get_configs_by_channel(session: aiohttp.ClientSession, channel_name: s
                 await write_configs(configs, path_configs=path_configs, mode="a")
 
     channel_info["current_id"] = channel_info["last_id"]
-    return v2ray_count
-
-
-async def get_last_id(session: aiohttp.ClientSession, channel_name: str) -> int:
-    async with session.get(FURL_TG.format(name=channel_name)) as response:
-        content = await response.text()
-        list_post = html.fromstring(content).xpath(XPATH_POST_ID)
-        return int(list_post[-1].split("/")[-1]) if list_post else -1
-
-
-def get_sorted_keys(channels: dict) -> list:
-    return sorted(channels.keys(), key=lambda name: diff_channel_id(channels[name]))
-
-
-async def load_channels(path_channels: str = "tg-channels-current.json") -> dict:
-    async with aiofiles.open(path_channels, "r", encoding="utf-8") as file:
-        data = await file.read()
-    return json.loads(data)
-
-
-def print_channel_info(channels: dict) -> None:
-    channels_count = 0
-    print(f"[INFO] Showing information about the remaining channels...")
-    for channel_name, channel_info in channels.items():
-        if current_less_last(channel_info):
-            channels_count = channels_count + 1
-            print(f" <SS>  {channel_name:<{LEN_NAME}}{format_channel_id(channel_info)}")
-    else:
-        print(f"\n[INFO] Total channels are available for extracting configs: {len(channels)}")
-        print(f"[INFO] Channels left to check: {channels_count}")
-        print(f"[INFO] Total messages on channels: {TOTAL_CHANNELS_POST:,}", end="\n\n")
-
-
-async def save_channels(channels: dict, path_channels: str = "tg-channels-current.json") -> None:
-    async with aiofiles.open(path_channels, "w", encoding="utf-8") as file:
-        await file.write(json.dumps(channels, indent=4, sort_keys=True, ensure_ascii=False))
+    print(f"[EXTR] Found: {v2ray_count} configs!", end="\n\n")
 
 
 async def update_info(session: aiohttp.ClientSession, channels: dict) -> None:
@@ -169,12 +174,9 @@ async def main(path_channels: str = "tg-channels-current.json",
         async with aiohttp.ClientSession() as session:
             await update_info(session, channels)
             print_channel_info(channels)
-            for name in get_sorted_keys(channels):
-                channel_info = channels[name]
-                if current_less_last(channel_info):
-                    length = await get_configs_by_channel(session, name, channel_info, \
-                        path_configs=path_configs)
-                    print(f"[EXTR] Found: {length} configs!", end="\n\n")
+            for name in get_sorted_keys(channels, filtering=True):
+                await save_channel_configs(session, name, channels[name], \
+                    batch_size=20, path_configs=path_configs)
     except (asyncio.CancelledError, KeyboardInterrupt):
         print(f"[ERROR] Exit from the program!")
     except Exception as exception:
