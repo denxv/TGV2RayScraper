@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import argparse
 import json
 import os
 import re
@@ -154,31 +155,61 @@ list_patterns = [
 ]
 
 
-def create_file(file_path: str, data: str = "") -> str:
-    if not os.path.exists(file_path):
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        with open(file_path, "w", encoding="utf-8") as file:
-            file.write(data)
-    return file_path
+def abs_path(path: str) -> str:
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), path))
 
 
-def main(path_configs_raw: str = "v2ray-configs-raw.txt",
-    path_configs_clean: str = "v2ray-configs-clean.txt") -> None:
+def existing_file(path: str) -> str:
+    abs_path = os.path.abspath(path)
+    if not os.path.isfile(abs_path):
+        raise argparse.ArgumentTypeError(f"The file does not exist: {abs_path}")
+    return abs_path
+
+
+def parse_args() -> argparse.Namespace:
+    raw_rel_path = "../v2ray/configs-raw.txt"
+    clean_rel_path = "../v2ray/configs-clean.txt"
+
+    parser = argparse.ArgumentParser(
+        description="Clean and normalize V2Ray configs"
+    )
+
+    parser.add_argument(
+        "-i", "--input",
+        dest="input",
+        type=existing_file,
+        default=abs_path(raw_rel_path),
+        help=f"Path to the raw V2Ray configs (default: {raw_rel_path})",
+        metavar="FILE"
+    )
+
+    parser.add_argument(
+        "-o", "--output",
+        dest="output",
+        type=existing_file,
+        default=abs_path(clean_rel_path),
+        help=f"Path to save cleaned V2Ray configs (default: {clean_rel_path})",
+        metavar="FILE"
+    )
+
+    return parser.parse_args()
+
+
+def main() -> None:
     try:
-        with open(create_file(path_configs_raw), "r", encoding="utf-8") as file:
+        args = parse_args()
+        with open(args.input, "r", encoding="utf-8") as file:
             v2ray = urllib.parse.unquote(file.read())
-        print(f"[LOAD] Loaded v2ray raw-configs from '{path_configs_raw}'!")
+        print(f"[LOAD] Loaded v2ray raw-configs from '{args.input}'!")
 
-        with open(path_configs_clean, "w", encoding="utf-8") as file:
+        with open(args.output, "w", encoding="utf-8") as file:
             for pattern in list_patterns:
                 file.writelines([f"{config.groupdict(default='').get('url', '')}\n" \
                     for config in pattern.finditer(v2ray)])
-        print(f"[SAVE] Saved v2ray clean-configs in '{path_configs_clean}'!")
+        print(f"[SAVE] Saved v2ray clean-configs in '{args.output}'!")
     except Exception as exception:
         print(f"[ERROR] {exception}")
 
 
 if __name__ == '__main__':
-    clean_txt = os.path.join(os.path.dirname(__file__), "../v2ray/configs-clean.txt")
-    raw_txt = os.path.join(os.path.dirname(__file__), "../v2ray/configs-raw.txt")
-    main(path_configs_raw=raw_txt, path_configs_clean=clean_txt)
+    main()

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import argparse
 import json
 import os
 import re
@@ -13,6 +14,10 @@ T = TypeVar("T")
 REGEX_CHANNELS_NAME = re.compile(r"http[s]?://t.me/[s/]{0,2}([\w]+)")
 
 
+def abs_path(path: str) -> str:
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), path))
+
+
 def condition_delete_channels(channel_info: dict) -> bool:
     return channel_info["count"] <= -3 or channel_info["count"] <= 0 and \
         channel_info["current_id"] >= channel_info["last_id"] != -1
@@ -22,12 +27,11 @@ def condition_reset_channels(channel_info: dict) -> bool:
     return channel_info["last_id"] == -1
 
 
-def create_file(file_path: str, data: str = "") -> str:
-    if not os.path.exists(file_path):
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        with open(file_path, "w", encoding="utf-8") as file:
-            file.write(data)
-    return file_path
+def existing_file(path: str) -> str:
+    abs_path = os.path.abspath(path)
+    if not os.path.isfile(abs_path):
+        raise argparse.ArgumentTypeError(f"The file does not exist: {abs_path}")
+    return abs_path
 
 
 def make_backup(files: list[str]) -> None:
@@ -40,6 +44,39 @@ def make_backup(files: list[str]) -> None:
         backup_path = os.path.join(os.path.dirname(path), backup)
         os.rename(path, backup_path)
         print(f"[BACK] File '{base}' was renamed to '{backup}' for backup!")
+
+
+def parse_args() -> argparse.Namespace:
+    channels_rel_path = "../channels/current.json"
+    urls_rel_path = "../channels/urls.txt"
+
+    parser = argparse.ArgumentParser(
+        description="Update Telegram channels: merge new URLs and create backups",
+    )
+
+    parser.add_argument(
+        "-c", "--channels",
+        dest="channels",
+        type=existing_file,
+        default=abs_path(channels_rel_path),
+        help=f"Path to the current channels JSON file (default: {channels_rel_path})",
+        metavar="FILE",
+    )
+
+    parser.add_argument(
+        "-u", "--urls",
+        dest="urls",
+        type=existing_file,
+        default=abs_path(urls_rel_path),
+        help=f"Path to the text file containing new channel URLs (default: {urls_rel_path})",
+        metavar="FILE",
+    )
+
+    return parser.parse_args()
+
+
+def sort_channel_names(channel_names: list) -> list:
+    return sorted([name.lower() for name in channel_names])
 
 
 def status(tag: str, start: str, end: str = "", tracking: bool = False) -> \
@@ -69,11 +106,16 @@ def delete_channels(channels: dict) -> None:
 
 
 @status(tag="load", start="Loading channels...", end="Loaded channels!")
-def load_channels(path_channels: str = "tg-channels-current.json", 
+def load_channels(path_channels: str = "tg-channels-current.json", \
     path_urls: str = "tg-channels-urls.txt") -> Tuple[dict, list]:
-    with open(create_file(path_channels, "{}"), "r", encoding="utf-8") as channels, \
-        open(create_file(path_urls), "r", encoding="utf-8") as tg_urls:
-        return json.load(channels), REGEX_CHANNELS_NAME.findall(tg_urls.read())
+    with open(path_channels, "r", encoding="utf-8") as file:
+        try:
+            channels = json.load(file)
+        except json.JSONDecodeError:
+            channels = {}
+    with open(path_urls, "r", encoding="utf-8") as file:
+        urls = REGEX_CHANNELS_NAME.findall(file.read())
+    return channels, urls
 
 
 @status(tag="rest", start="Reseting channels...", end="Reseted channels!")
@@ -94,31 +136,25 @@ def save_channels(channels: dict, path_channels: str = "tg-channels-current.json
         print(f"[SAVE] Saved {len(channels)} channels in '{path_channels}'!")
 
 
-def sorted_channels_name(channel_names: list) -> list:
-    return sorted([name.lower() for name in channel_names])
-
-
 @status(tag="updt", start="Updating channels...", \
     end="Updated channels!", tracking=True)
 def update_channels(current_channels: dict, channel_names: list) -> None:
-    for name in sorted_channels_name(channel_names):
+    for name in sort_channel_names(channel_names):
         if name not in current_channels:
             current_channels.setdefault(name, dict(current_id=1, last_id=-1, count=0))
 
 
-def main(path_channels: str = "tg-channels-current.json", \
-    path_urls: str = "tg-channels-urls.txt") -> None:
+def main() -> None:
     try:
+        args = parse_args()
         current_channels, list_channel_names = \
-            load_channels(path_channels=path_channels, path_urls=path_urls)
+            load_channels(path_channels=args.channels, path_urls=args.urls)
         update_channels(current_channels, list_channel_names)
         delete_channels(current_channels)
-        save_channels(current_channels, path_channels=path_channels, path_urls=path_urls)
+        save_channels(current_channels, path_channels=args.channels, path_urls=args.urls)
     except Exception as exception:
         print(f"[ERROR] {exception}")
 
 
 if __name__ == "__main__":
-    current_json = os.path.join(os.path.dirname(__file__), "../channels/current.json")
-    urls_txt = os.path.join(os.path.dirname(__file__), "../channels/urls.txt")
-    main(path_channels=current_json, path_urls=urls_txt)
+    main()

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import argparse
 import json
 import os
 import re
@@ -44,12 +45,23 @@ RE_V2RAY = re.compile(
 )
 
 
+def abs_path(path: str) -> str:
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), path))
+
+
 def current_less_last(channel_info: dict) -> bool:
     return channel_info["current_id"] < channel_info["last_id"]
 
 
 def diff_channel_id(channel_info: dict) -> int:
     return channel_info["last_id"] - channel_info["current_id"]
+
+
+def existing_file(path: str) -> str:
+    abs_path = os.path.abspath(path)
+    if not os.path.isfile(abs_path):
+        raise argparse.ArgumentTypeError(f"The file does not exist: {abs_path}")
+    return abs_path
 
 
 def format_channel_id(channel_info: dict) -> str:
@@ -74,27 +86,58 @@ def get_sorted_keys(channels: dict, filtering: bool = False, reverse: bool = Fal
     return sorted(channel_names, key=lambda name: diff_channel_id(channels[name]), reverse=reverse)
 
 
-def load_channels(path_channels: str = "tg-channels-current.json") -> list:
+def load_channels(path_channels: str = "tg-channels-current.json") -> dict:
     with open(path_channels, "r", encoding="utf-8") as file:
-        return json.load(file)
+        try:
+            return json.load(file)
+        except json.JSONDecodeError:
+            return {}
+
+
+def parse_args() -> argparse.Namespace:
+    channels_rel_path = "../channels/current.json"
+    configs_rel_path = "../v2ray/configs-raw.txt"
+
+    parser = argparse.ArgumentParser(
+        description="Synchronous Telegram channel scraper (simpler, slower)",
+    )
+
+    parser.add_argument(
+        "-c", "--channels",
+        dest="channels",
+        type=existing_file,
+        default=abs_path(channels_rel_path),
+        help=f"Path to the current channels JSON file (default: {channels_rel_path})",
+        metavar="FILE"
+    )
+
+    parser.add_argument(
+        "-s", "--save",
+        dest="configs",
+        type=existing_file,
+        default=abs_path(configs_rel_path),
+        help=f"Path to save scraped V2Ray configs (default: {configs_rel_path})",
+        metavar="FILE"
+    )
+
+    return parser.parse_args()
 
 
 def print_channel_info(channels: dict) -> None:
-    channels_count = 0
     print(f"[INFO] Showing information about the remaining channels...")
-    for channel_name, channel_info in channels.items():
-        if current_less_last(channel_info):
-            channels_count = channels_count + 1
-            print(f" <SS>  {channel_name:<{LEN_NAME}}{format_channel_id(channel_info)}")
+    channel_names = get_sorted_keys(channels, filtering=True)
+    for name in channel_names:
+        print(f" <SS>  {name:<{LEN_NAME}}{format_channel_id(channels[name])}")
     else:
         print(f"\n[INFO] Total channels are available for extracting configs: {len(channels)}")
-        print(f"[INFO] Channels left to check: {channels_count}")
+        print(f"[INFO] Channels left to check: {len(channel_names)}")
         print(f"[INFO] Total messages on channels: {TOTAL_CHANNELS_POST:,}", end="\n\n")
 
 
 def save_channels(channels: list, path_channels: str = "tg-channels-current.json") -> None:
     with open(path_channels, "w", encoding="utf-8") as file:
         json.dump(channels, file, indent=4, sort_keys=True)
+        print(f"[INFO] Saved channel data in '{path_channels}'!")
 
 
 def save_channel_configs(channel_name: str, channel_info: dict, \
@@ -147,25 +190,21 @@ def write_configs(configs: list, \
         file.writelines(f"{config}\n" for config in configs)
 
 
-def main(path_channels: str = "tg-channels-current.json", 
-    path_configs: str = "v2ray-configs-raw.txt") -> None:
+def main() -> None:
+    args = parse_args()
     try:
-        channels = dict() if not os.path.exists(path_channels) else \
-            load_channels(path_channels=path_channels)
+        channels = load_channels(path_channels=args.channels)
         update_info(channels)
         print_channel_info(channels)
         for name in get_sorted_keys(channels, filtering=True):
-            save_channel_configs(name, channels[name], path_configs=path_configs)
+            save_channel_configs(name, channels[name], path_configs=args.configs)
     except KeyboardInterrupt:
         print(f"[ERROR] Exit from the program!")
     except Exception as exception:
         print(f"[ERROR] {exception}")
     finally:
-        save_channels(channels, path_channels=path_channels)
-        print(f"[INFO] Saved channel data in '{path_channels}'!")
+        save_channels(channels, path_channels=args.channels)
 
 
 if __name__ == "__main__":
-    current_json = os.path.join(os.path.dirname(__file__), "../channels/current.json")
-    raw_txt = os.path.join(os.path.dirname(__file__), "../v2ray/configs-raw.txt")
-    main(path_channels=current_json, path_configs=raw_txt)
+    main()
