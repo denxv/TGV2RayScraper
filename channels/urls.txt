@@ -5,7 +5,6 @@ https://t.me/s/abrivpn
 https://t.me/s/abv2ray
 https://t.me/s/academi_vpn
 https://t.me/s/adamak_vpn
-https://t.me/s/ae_proxy
 https://t.me/s/ai_duet
 https://t.me/s/ailumao
 https://t.me/s/aklisvpn
@@ -311,13 +310,11 @@ https://t.me/s/hibyevpnn
 https://t.me/s/hiddify_f
 https://t.me/s/hiddify_nexttt
 https://t.me/s/hideng_app
-https://t.me/s/hitechvplus
 https://t.me/s/hkaa0
 https://t.me/s/holderproxy
 https://t.me/s/hoorvpn
 https://t.me/s/hope_net
 https://t.me/s/hopev2ray
-https://t.me/s/hormozvpn
 https://t.me/s/hosseinstore_za
 https://t.me/s/http_injector99
 https://t.me/s/httpproxygo
@@ -361,7 +358,6 @@ https://t.me/s/itenvpn
 https://t.me/s/itsecuritycomputer
 https://t.me/s/itsproxy
 https://t.me/s/itv2ray
-https://t.me/s/javidnamaniran
 https://t.me/s/jd_vpn
 https://t.me/s/jedal_vpn
 https://t.me/s/jetupnet
@@ -559,7 +555,6 @@ https://t.me/s/proxy_emperor
 https://t.me/s/proxy_iranio
 https://t.me/s/proxy_league
 https://t.me/s/proxy_mtproto_vpns_free
-https://t.me/s/proxy_n1
 https://t.me/s/proxy_t_a_k
 https://t.me/s/proxy_v2box
 https://t.me/s/proxyaio
@@ -835,12 +830,10 @@ https://t.me/s/v2rayngfreee
 https://t.me/s/v2rayngim
 https://t.me/s/v2rayngn
 https://t.me/s/v2rayngninja
-https://t.me/s/v2rayngns
 https://t.me/s/v2rayngraisi
 https://t.me/s/v2rayngrit
 https://t.me/s/v2rayngrr13
 https://t.me/s/v2rayngseven
-https://t.me/s/v2rayngte
 https://t.me/s/v2rayngup
 https://t.me/s/v2rayngv
 https://t.me/s/v2rayngvpn_1
@@ -848,7 +841,6 @@ https://t.me/s/v2rayngvpnn
 https://t.me/s/v2rayngvvpn
 https://t.me/s/v2raynselling
 https://t.me/s/v2rayopen
-https://t.me/s/v2rayping
 https://t.me/s/v2rayprotocol
 https://t.me/s/v2rayproxy
 https://t.me/s/v2rayrb6
@@ -1063,5 +1055,4 @@ https://t.me/s/zerov2shop
 https://t.me/s/zetatech_ir2
 https://t.me/s/zilv2ray_service
 https://t.me/s/zotpo
-https://t.me/s/zvpnn
 https://t.me/s/zyfxlnn
