@@ -105,14 +105,24 @@ python main.py
 
 ```json
 {
-    "channel_name1": {
+    "channel_new_default": {
         "count": 0,
         "current_id": 1,
         "last_id": -1
     },
-    "channel_name2": {
-        "count": 0,
-        "current_id": 1,
+    "channel_is_not_live": {
+        "count": -1,
+        "current_id": 100,
+        "last_id": -1
+    },
+    "channel_live": {
+        "count": 500,
+        "current_id": 100,
+        "last_id": 100
+    },
+    "channel_will_be_deleted": {
+        "count": -3,
+        "current_id": 100,
         "last_id": -1
     }
 }
