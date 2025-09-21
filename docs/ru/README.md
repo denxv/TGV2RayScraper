@@ -185,7 +185,7 @@ hysteria2://password@host:port?params#name
 ### **Shadowsocks / ShadowsocksR**
 
 ```text
-ss://base64(method:password)@host64:port64#name
+ss://base64(method:password)@host:port#name
 ss://method:password@host:port#name
 ss://base64(method:password@host:port)#name
 ssr://base64(host:port:protocol:method:obfs:base64(password))

@@ -9,7 +9,7 @@ import urllib.parse
 
 # anytls://password@host:port/path?params#name
 # anytls://password@host:port?params#name
-pattern_anytls = re.compile(
+ANYTLS_URL_PATTERN = re.compile(
     r'(?P<url>'
         r'(?P<protocol>anytls)://'
         r'(?P<password>(?:(?!://).)+)'
@@ -25,7 +25,7 @@ pattern_anytls = re.compile(
 # hy2://password@host:port?params#name
 # hysteria2://password@host:port/path?params#name
 # hysteria2://password@host:port?params#name
-pattern_hysteria2 = re.compile(
+HYSTERIA2_URL_PATTERN = re.compile(
     r'(?P<url>'
         r'(?P<protocol>hy2\b|hysteria2\b)://'
         r'(?P<password>(?:(?!://).)+)'
@@ -37,14 +37,14 @@ pattern_hysteria2 = re.compile(
     r')'
 )
 
-# ss://base64(method:password)@host64:port64#name
 # ss://method:password@host:port#name
+# ss://base64(method:password)@host:port#name
 # ss://base64(method:password@host:port)#name
-pattern_ss = re.compile(
+SS_URL_PATTERN = re.compile(
     r'(?P<url>(?P<protocol>\bss\b)://'
         r'(?:'
             r'(?P<method>[^\s:@#]+)'
-            r':(?P<password>(?:(?!://).)+)(?![^@])'
+            r':(?P<password>(?:(?!://).)+)(?=@)'
         r'|'
             r'(?P<base64>[\w+/]+={0,2})(?![^\s@#])'
         r')'
@@ -52,13 +52,13 @@ pattern_ss = re.compile(
             r'@(?P<host>[^\s@]+)'
             r':(?P<port>\d{1,5})'
         r'){0,1}'
-        r'(?=(?:[\s#]))(?!\?)'
+        r'(?=(?:[\s#]|$))(?!\?)'
         r'(?:#(?P<name>[^\s/]*)){0,1}'
     r')'
 )
 
-# ssr://base64(host:port:protocol:method:obfs:base64(password))
-pattern_ssr = re.compile(
+# ssr://base64(host:port:protocol:method:obfs:base64(password)/?param=base64(value))
+SSR_URL_PATTERN = re.compile(
     r'(?P<url>'
         r'(?P<protocol>\bssr\b)://'
         r'(?P<base64>[\w+/-]+={0,2})'
@@ -66,9 +66,24 @@ pattern_ssr = re.compile(
     r')'
 )
 
+# ssr://host:port:protocol:method:obfs:base64(password)/?param=base64(value)
+SSR_PLAIN_PATTERN = re.compile(
+    r'(?P<url>'
+        r'(?P<protocol>ssr)://'
+        r'(?P<host>[^\s]+)'
+        r':(?P<port>\d{1,5})'
+        r':(?P<origin>[^\s:]+)'
+        r':(?P<method>[^\s:]+)'
+        r':(?P<obfs>[^\s:]+)'
+        r':(?P<password>[\w+/-]+={0,2})(?=/)'
+        r'(?P<path>/[^\s?#]*){0,1}'
+        r'(?:\?(?P<params>(?:(?!://)[^\s#])*)){0,1}'
+    r')'
+)
+
 # trojan://password@host:port/path?params#name
 # trojan://password@host:port?params#name
-pattern_trojan = re.compile(
+TROJAN_URL_PATTERN = re.compile(
     r'(?P<url>'
         r'(?P<protocol>trojan\b)://'
         r'(?P<password>(?:(?!://).)+)'
@@ -82,7 +97,7 @@ pattern_trojan = re.compile(
 
 # tuic://uuid:password@host:port/path?params#name
 # tuic://uuid:password@host:port?params#name
-pattern_tuic = re.compile(
+TUIC_URL_PATTERN = re.compile(
     r'(?P<url>'
         r'(?P<protocol>tuic)://'
         r'(?P<uuid>(?:(?!://).)+)'
@@ -97,7 +112,7 @@ pattern_tuic = re.compile(
 
 # vless://password@host:port/path?params#name
 # vless://password@host:port?params#name
-pattern_vless = re.compile(
+VLESS_URL_PATTERN = re.compile(
     r'(?P<url>'
         r'(?P<protocol>vless\b)://'
         r'(?P<password>(?:(?!://).)+)'
@@ -112,7 +127,7 @@ pattern_vless = re.compile(
 # vmess://base64(json)
 # vmess://password@host:port/path?params#name
 # vmess://password@host:port?params#name
-pattern_vmess = re.compile(
+VMESS_URL_PATTERN = re.compile(
     r'(?P<url>'
         r'(?P<protocol>vmess\b)://'
         r'(?:'
@@ -130,7 +145,7 @@ pattern_vmess = re.compile(
 
 # wireguard://password@host:port/path?params#name
 # wireguard://password@host:port?params#name
-pattern_wireguard = re.compile(
+WIREGUARD_URL_PATTERN = re.compile(
     r'(?P<url>'
         r'(?P<protocol>wireguard\b)://'
         r'(?P<password>(?:(?!://).)+)'
@@ -142,16 +157,16 @@ pattern_wireguard = re.compile(
     r')'
 )
 
-list_patterns = [
-    pattern_anytls,
-    pattern_hysteria2,
-    pattern_ss,
-    pattern_ssr,
-    pattern_trojan,
-    pattern_tuic,
-    pattern_vless,
-    pattern_vmess,
-    pattern_wireguard,
+URL_PATTERNS = [
+    ANYTLS_URL_PATTERN,
+    HYSTERIA2_URL_PATTERN,
+    SS_URL_PATTERN,
+    SSR_URL_PATTERN,
+    TROJAN_URL_PATTERN,
+    TUIC_URL_PATTERN,
+    VLESS_URL_PATTERN,
+    VMESS_URL_PATTERN,
+    WIREGUARD_URL_PATTERN,
 ]
 
 
@@ -203,7 +218,7 @@ def main() -> None:
         print(f"[LOAD] Loaded v2ray raw-configs from '{args.input}'!")
 
         with open(args.output, "w", encoding="utf-8") as file:
-            for pattern in list_patterns:
+            for pattern in URL_PATTERNS:
                 file.writelines([f"{config.groupdict(default='').get('url', '')}\n" \
                     for config in pattern.finditer(v2ray)])
         print(f"[SAVE] Saved v2ray clean-configs in '{args.output}'!")
