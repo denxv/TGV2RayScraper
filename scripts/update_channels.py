@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import argparse
 import json
 import os
 import re
+from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, Namespace 
 from datetime import datetime
 from functools import wraps
 from typing import Callable, TypeVar, Tuple, ParamSpec
@@ -30,7 +30,7 @@ def condition_reset_channels(channel_info: dict) -> bool:
 def existing_file(path: str) -> str:
     abs_path = os.path.abspath(path)
     if not os.path.isfile(abs_path):
-        raise argparse.ArgumentTypeError(f"The file does not exist: {abs_path}")
+        raise ArgumentTypeError(f"The file does not exist: {abs_path}")
     return abs_path
 
 
@@ -46,30 +46,36 @@ def make_backup(files: list[str]) -> None:
         print(f"[BACK] File '{base}' was renamed to '{backup}' for backup!")
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args() -> Namespace:
     channels_rel_path = "../channels/current.json"
     urls_rel_path = "../channels/urls.txt"
 
-    parser = argparse.ArgumentParser(
+    parser = ArgumentParser(
         description="Update Telegram channels: merge new URLs and create backups",
+        epilog="Example: python %(prog)s --channels channels.json --urls urls.txt",
+        formatter_class=lambda prog: HelpFormatter(
+            prog=prog,
+            max_help_position=30,
+            width=100,
+        ),
     )
 
     parser.add_argument(
-        "-c", "--channels",
-        dest="channels",
-        type=existing_file,
+        "-C", "--channels",
         default=abs_path(channels_rel_path),
-        help=f"Path to the current channels JSON file (default: {channels_rel_path})",
+        dest="channels",
+        help="Path to the current channels JSON file (default: %(default)s).",
         metavar="FILE",
+        type=existing_file,
     )
 
     parser.add_argument(
-        "-u", "--urls",
-        dest="urls",
-        type=existing_file,
+        "-U", "--urls",
         default=abs_path(urls_rel_path),
-        help=f"Path to the text file containing new channel URLs (default: {urls_rel_path})",
+        dest="urls",
+        help="Path to the text file containing new channel URLs (default: %(default)s).",
         metavar="FILE",
+        type=existing_file,
     )
 
     return parser.parse_args()

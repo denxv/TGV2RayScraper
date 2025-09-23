@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import argparse
 import asyncio
 import json
 import os
 import re
 import aiofiles
 import aiohttp
+from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, Namespace
 from lxml import html
 from tqdm.asyncio import tqdm
 from typing import Union
@@ -62,7 +62,7 @@ def diff_channel_id(channel_info: dict) -> int:
 def existing_file(path: str) -> str:
     abs_path = os.path.abspath(path)
     if not os.path.isfile(abs_path):
-        raise argparse.ArgumentTypeError(f"The file does not exist: {abs_path}")
+        raise ArgumentTypeError(f"The file does not exist: {abs_path}")
     return abs_path
 
 
@@ -92,7 +92,7 @@ def get_sorted_keys(channels: dict, filtering: bool = False, reverse: bool = Fal
 def int_in_range(value: str, min_value: int = 1, max_value: int = 100) -> int:
     ivalue = int(value)
     if ivalue < min_value or ivalue > max_value:
-        raise argparse.ArgumentTypeError(f"Expected {min_value} to {max_value}, got {ivalue}")
+        raise ArgumentTypeError(f"Expected {min_value} to {max_value}, got {ivalue}")
     return ivalue
 
 
@@ -105,39 +105,45 @@ async def load_channels(path_channels: str = "tg-channels-current.json") -> dict
             return {}
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args() -> Namespace:
     channels_rel_path = "../channels/current.json"
     configs_rel_path = "../v2ray/configs-raw.txt"
 
-    parser = argparse.ArgumentParser(
+    parser = ArgumentParser(
         description = "Asynchronous Telegram channel scraper (faster, experimental)",
+        epilog="Example: python %(prog)s -B 20 --channels channels.json --output configs.txt",
+        formatter_class=lambda prog: HelpFormatter(
+            prog=prog,
+            max_help_position=30,
+            width=100,
+        ),
     )
 
     parser.add_argument(
-        "-b", "--batch",
-        dest="batch",
-        type=lambda value: int_in_range(value, min_value=1, max_value=100),
+        "-B", "--batch",
         default=20,
-        help="Number of IDs to process per batch (positive integer, default: 20)",
-        metavar="N"
+        dest="batch",
+        help="Number of IDs to process per batch (positive integer, default: %(default)s).",
+        metavar="N",
+        type=lambda value: int_in_range(value, min_value=1, max_value=100),
     )
 
     parser.add_argument(
-        "-c", "--channels",
-        dest="channels",
-        type=existing_file,
+        "-C", "--channels",
         default=abs_path(channels_rel_path),
-        help=f"Path to the current channels JSON file (default: {channels_rel_path})",
-        metavar="FILE"
+        dest="channels",
+        help="Path to the current channels JSON file (default: %(default)s).",
+        metavar="FILE",
+        type=existing_file,
     )
 
     parser.add_argument(
-        "-s", "--save",
-        dest="configs",
-        type=existing_file,
+        "-O", "--output",
         default=abs_path(configs_rel_path),
-        help=f"Path to save scraped V2Ray configs (default: {configs_rel_path})",
-        metavar="FILE"
+        dest="configs",
+        help="Path to save scraped V2Ray configs (default: %(default)s).",
+        metavar="FILE",
+        type=existing_file,
     )
 
     return parser.parse_args()

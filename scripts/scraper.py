@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import argparse
 import json
 import os
 import re
 import requests
+from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, Namespace
 from lxml import html
 from tqdm import tqdm
 
@@ -60,7 +60,7 @@ def diff_channel_id(channel_info: dict) -> int:
 def existing_file(path: str) -> str:
     abs_path = os.path.abspath(path)
     if not os.path.isfile(abs_path):
-        raise argparse.ArgumentTypeError(f"The file does not exist: {abs_path}")
+        raise ArgumentTypeError(f"The file does not exist: {abs_path}")
     return abs_path
 
 
@@ -94,30 +94,36 @@ def load_channels(path_channels: str = "tg-channels-current.json") -> dict:
             return {}
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args() -> Namespace:
     channels_rel_path = "../channels/current.json"
     configs_rel_path = "../v2ray/configs-raw.txt"
 
-    parser = argparse.ArgumentParser(
+    parser = ArgumentParser(
         description="Synchronous Telegram channel scraper (simpler, slower)",
+        epilog="Example: python %(prog)s --channels channels.json --output configs.txt",
+        formatter_class=lambda prog: HelpFormatter(
+            prog=prog,
+            max_help_position=30,
+            width=100,
+        ),
     )
 
     parser.add_argument(
-        "-c", "--channels",
-        dest="channels",
-        type=existing_file,
+        "-C", "--channels",
         default=abs_path(channels_rel_path),
-        help=f"Path to the current channels JSON file (default: {channels_rel_path})",
-        metavar="FILE"
+        dest="channels",
+        help="Path to the current channels JSON file (default: %(default)s).",
+        metavar="FILE",
+        type=existing_file,
     )
 
     parser.add_argument(
-        "-s", "--save",
-        dest="configs",
-        type=existing_file,
+        "-O", "--output",
         default=abs_path(configs_rel_path),
-        help=f"Path to save scraped V2Ray configs (default: {configs_rel_path})",
-        metavar="FILE"
+        dest="configs",
+        help="Path to save scraped V2Ray configs (default: %(default)s).",
+        metavar="FILE",
+        type=existing_file,
     )
 
     return parser.parse_args()
