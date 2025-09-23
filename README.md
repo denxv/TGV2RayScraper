@@ -1,6 +1,6 @@
 # TGV2RayScraper
 
-TGV2RayScraper is a Python project designed to collect Telegram channel data, extract V2Ray configurations, clean and normalize them, and maintain up-to-date channel information. It supports both synchronous and asynchronous scraping and includes tools for managing channel lists.
+TGV2RayScraper is a Python project designed to collect Telegram channel data, extract V2Ray configurations, and process them by cleaning, normalizing, and deduplicating, while maintaining up-to-date channel information. It supports both synchronous and asynchronous scraping and includes tools for managing channel lists.
 
 For Russian version, see [README.md](docs/ru/README.md)
 
@@ -64,6 +64,7 @@ The project requires the following Python libraries:
 
 * **aiohttp** – asynchronous HTTP client
 * **aiofiles** – asynchronous file operations
+* **asteval** – safe evaluation of Python expressions (used for filtering configs)
 * **lxml** – parsing and processing HTML/XML
 * **requests** – synchronous HTTP client
 * **tqdm** – progress bar for long-running tasks
@@ -81,19 +82,19 @@ Other dependencies are listed in [`requirements.txt`](requirements.txt).
 
 * **scripts/** – data processing scripts
 
-  * `async_scraper.py` – collects channel data asynchronously
-  * `scraper.py` – collects channel data synchronously
+  * `async_scraper.py` – asynchronously collects data from Telegram channels
+  * `scraper.py` – synchronously collects data from Telegram channels
   * `update_channels.py` – updates the channel list
-  * `v2ray_cleaner.py` – cleans and normalizes V2Ray configurations
+  * `v2ray_cleaner.py` – utility for processing V2Ray and proxy configs: cleaning, normalization, filtering, deduplication, and sorting
 
-* **v2ray/** – stores V2Ray configuration files
+* **v2ray/** – stores proxy configuration files
 
-  * `configs-clean.txt` – cleaned and normalized configs
-  * `configs-raw.txt` – raw configs
+  * `configs-clean.txt` – cleaned, normalized, filtered, and deduplicated configs
+  * `configs-raw.txt` – raw proxy configs collected from various sources
 
-* **requirements.txt** – project dependencies
+* **requirements.txt** – lists all Python libraries required to run the project
 
-* **main.py** – main script to run project operations
+* **main.py** – main script to run all project operations, including channel updates, data scraping, and proxy config processing
 
 ---
 
@@ -136,8 +137,8 @@ The file `channels/current.json` stores metadata about Telegram channels. Top-le
   * `= 0` → nothing found, or channel temporarily unavailable (`last_id = -1`)
   * `< 0` → number of failed attempts to access the channel
 
-    * Each failed attempt decreases the value (`-1, -2, …`)
-    * When `count <= -3`, the channel is considered inactive and removed from `current.json` and `urls.txt`
+    * Each failed attempt decreases the value (`-1, -2, …`).
+    * When `count <= -3`, the channel is considered inactive and removed from `current.json` and `urls.txt`.
 
 * **`current_id`**
 
@@ -188,7 +189,7 @@ hysteria2://password@host:port?params#name
 ss://base64(method:password)@host:port#name
 ss://method:password@host:port#name
 ss://base64(method:password@host:port)#name
-ssr://base64(host:port:protocol:method:obfs:base64(password))
+ssr://base64(host:port:protocol:method:obfs:base64(password)/?param=base64(value))
 ```
 
 ---
@@ -214,8 +215,8 @@ tuic://uuid:password@host:port?params#name
 ### **VLESS**
 
 ```text
-vless://password@host:port/path?params#name
-vless://password@host:port?params#name
+vless://uuid@host:port/path?params#name
+vless://uuid@host:port?params#name
 ```
 
 ---
@@ -224,8 +225,8 @@ vless://password@host:port?params#name
 
 ```text
 vmess://base64(json)
-vmess://password@host:port/path?params#name
-vmess://password@host:port?params#name
+vmess://uuid@host:port/path?params#name
+vmess://uuid@host:port?params#name
 ```
 
 ---
@@ -233,8 +234,8 @@ vmess://password@host:port?params#name
 ### **WireGuard**
 
 ```text
-wireguard://password@host:port/path?params#name
-wireguard://password@host:port?params#name
+wireguard://privatekey@host:port/path?params#name
+wireguard://privatekey@host:port?params#name
 ```
 
 ---
@@ -249,14 +250,25 @@ wireguard://password@host:port?params#name
 python scripts/update_channels.py
 ```
 
+You can also run the script with `-h` to see all available options:
+
+```bash
+python scripts/update_channels.py -h
+```
+
+**Options include:**
+
+* `-C, --channels FILE` — Path to the current channels JSON file (default: `channels/current.json`).
+* `-U, --urls FILE` — Path to the text file containing new channel URLs (default: `channels/urls.txt`).
+
 ---
 
 The script:
 
-* Reads the current channel list (`channels/current.json`)
-* Merges with new URLs from `channels/urls.txt`
-* Creates timestamped backups of both files
-* Saves the updated list back to `current.json` and `urls.txt`
+* Reads the current channel list (`channels/current.json`).
+* Merges with new URLs from `channels/urls.txt`.
+* Creates timestamped backups of both files.
+* Saves the updated list back to `current.json` and `urls.txt`.
 
 ---
 
@@ -268,6 +280,18 @@ The script:
 python scripts/async_scraper.py
 ```
 
+You can run with `-h` to see all available options:
+
+```bash
+python scripts/async_scraper.py -h
+```
+
+**Options include:**
+
+* `-B, --batch N` — Number of IDs to process per batch (default: 20).
+* `-C, --channels FILE` — Path to the current channels JSON file (default: `channels/current.json`).
+* `-O, --output FILE` — Path to save scraped V2Ray configs (default: `v2ray/configs-raw.txt`).
+
 ---
 
 * **Synchronous Scraper** (simpler, slower)
@@ -275,6 +299,17 @@ python scripts/async_scraper.py
 ```bash
 python scripts/scraper.py
 ```
+
+You can run with `-h` to see all available options:
+
+```bash
+python scripts/scraper.py -h
+```
+
+**Options include:**
+
+* `-C, --channels FILE` — Path to the current channels JSON file (default: `channels/current.json`).
+* `-O, --output FILE` — Path to save scraped V2Ray configs (default: `v2ray/configs-raw.txt`).
 
 ---
 
@@ -284,13 +319,39 @@ python scripts/scraper.py
 python scripts/v2ray_cleaner.py
 ```
 
+You can also run the script with `-h` to see all available options:
+
+```bash
+python scripts/v2ray_cleaner.py -h
+```
+
+**Options include:**
+
+* `-D, --duplicate [FIELDS]` — Remove duplicate entries by specified comma-separated fields. If used without value (e.g., `-D`), the default fields are `protocol,host,port`. If omitted, duplicates are not removed.
+* `-F, --filter CONDITION` — Filter entries using a Python-like condition. Example: `"host == '1.1.1.1' and port > 1000"`. Only matching entries are kept.
+* `-I, --input FILE` — Path to the file with raw configs (default: `v2ray/configs-raw.txt`).
+* `-N, --no-normalize` — Disable normalization (enabled by default).
+* `-O, --output FILE` — File path to save cleaned and processed configs (default: `v2ray/configs-clean.txt`).
+* `-R, --reverse` — Sort entries in descending order (only applies with `--sort`).
+* `-S, --sort [FIELDS]` — Sort entries by comma-separated fields. If used without value (e.g., `-S`), the default fields are `host,port`. If omitted, entries are not sorted.
+
 ---
 
 The script:
 
-* Reads raw configs from `v2ray/configs-raw.txt`
-* Applies regex-based filters and normalization
-* Saves cleaned configs to `v2ray/configs-clean.txt`
+* Reads raw configs from `v2ray/configs-raw.txt`.
+* Applies regex-based filters and normalization.
+* Removes duplicates (if `--duplicate` is used).
+* Sorts entries (if `--sort` is used).
+* Saves cleaned and processed configs to `v2ray/configs-clean.txt`.
+
+---
+
+**Example usage:**
+
+```bash
+python scripts/v2ray_cleaner.py --filter "host == '1.1.1.1'" --duplicate --sort
+```
 
 ---
 
@@ -305,10 +366,10 @@ python main.py
 Executes scripts in order:
 
 1. `update_channels.py` – update the channel list
-2. `async_scraper.py` – collect Telegram channel data asynchronously
-3. `v2ray_cleaner.py` – clean and normalize configurations
+2. `async_scraper.py` – collects channel data asynchronously from Telegram
+3. `v2ray_cleaner.py` – cleans, normalizes, and processes proxy configuration files
 
-Provides a one-step way to update channels, scrape data, and clean configurations.
+Enables updating channels, scraping data, and cleaning configurations in a single step.
 
 ---
 
