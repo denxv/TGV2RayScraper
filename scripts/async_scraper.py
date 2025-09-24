@@ -111,21 +111,12 @@ def parse_args() -> Namespace:
 
     parser = ArgumentParser(
         description = "Asynchronous Telegram channel scraper (faster, experimental)",
-        epilog="Example: python %(prog)s -B 20 --channels channels.json --output configs.txt",
+        epilog="Example: python %(prog)s -E 20 -U 100 --channels channels.json --output configs.txt",
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
             max_help_position=30,
             width=100,
         ),
-    )
-
-    parser.add_argument(
-        "-B", "--batch",
-        default=20,
-        dest="batch",
-        help="Number of IDs to process per batch (positive integer, default: %(default)s).",
-        metavar="N",
-        type=lambda value: int_in_range(value, min_value=1, max_value=100),
     )
 
     parser.add_argument(
@@ -138,12 +129,30 @@ def parse_args() -> Namespace:
     )
 
     parser.add_argument(
+        "-E", "--batch-extract",
+        default=20,
+        dest="batch_extract",
+        help="Number of concurrent pages to extract v2ray configs from (default: %(default)s).",
+        metavar="N",
+        type=lambda value: int_in_range(value, min_value=1, max_value=100),
+    )
+
+    parser.add_argument(
         "-O", "--output",
         default=abs_path(configs_rel_path),
         dest="configs",
         help="Path to save scraped V2Ray configs (default: %(default)s).",
         metavar="FILE",
         type=existing_file,
+    )
+
+    parser.add_argument(
+        "-U", "--batch-update",
+        default=100,
+        dest="batch_update",
+        help="Max number of concurrent channels to update info for (default: %(default)s).",
+        metavar="N",
+        type=lambda value: int_in_range(value, min_value=1, max_value=1000),
     )
 
     return parser.parse_args()
@@ -196,7 +205,7 @@ async def save_channel_configs(session: aiohttp.ClientSession, channel_name: str
     print(f"[EXTR] Found: {v2ray_count} configs!", end="\n\n")
 
 
-async def update_info(session: aiohttp.ClientSession, channels: dict) -> None:
+async def update_info(session: aiohttp.ClientSession, channels: dict, batch_size: int = 100) -> None:
     print(f"[INFO] Updating info channels...")
 
     async def update_channel(channel_name: str, channel_info: dict) -> None:
@@ -217,12 +226,15 @@ async def update_info(session: aiohttp.ClientSession, channels: dict) -> None:
         elif channel_info["current_id"] > channel_info["last_id"] != -1:
             channel_info["current_id"] = channel_info["last_id"]
 
-    tasks = [
-        asyncio.create_task(update_channel(name, channels[name]))
-        for name in channels.keys()
-    ]
-    await asyncio.gather(*tasks)
-    print(end="\n")
+    channel_names = list(channels.keys())
+    for i in range(0, len(channel_names), batch_size):
+        tasks = [
+            asyncio.create_task(update_channel(name, channels[name]))
+            for name in channel_names[i:i + batch_size]
+        ]
+        await asyncio.gather(*tasks)
+    else:
+        print(end="\n")
 
 
 async def write_configs(configs: list, \
@@ -236,11 +248,11 @@ async def main() -> None:
     try:
         channels = await load_channels(path_channels=args.channels)
         async with aiohttp.ClientSession() as session:
-            await update_info(session, channels)
+            await update_info(session, channels, batch_size=args.batch_update)
             print_channel_info(channels)
             for name in get_sorted_keys(channels, filtering=True):
                 await save_channel_configs(session, name, channels[name], \
-                    batch_size=args.batch, path_configs=args.configs)
+                    batch_size=args.batch_extract, path_configs=args.configs)
     except (asyncio.CancelledError, KeyboardInterrupt):
         print(f"[ERROR] Exit from the program!")
     except Exception as exception:

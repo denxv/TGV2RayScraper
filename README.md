@@ -288,9 +288,10 @@ python scripts/async_scraper.py -h
 
 **Options include:**
 
-* `-B, --batch N` — Number of IDs to process per batch (default: 20).
 * `-C, --channels FILE` — Path to the current channels JSON file (default: `channels/current.json`).
+* `-E, --batch-extract N` — Number of concurrent pages to extract V2Ray configs from (default: 20).
 * `-O, --output FILE` — Path to save scraped V2Ray configs (default: `v2ray/configs-raw.txt`).
+* `-U, --batch-update N` — Max number of concurrent channels to update info for (default: 100).
 
 ---
 
