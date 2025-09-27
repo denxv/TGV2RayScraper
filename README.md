@@ -76,19 +76,16 @@ Other dependencies are listed in [`requirements.txt`](requirements.txt).
 ## Project Structure
 
 * **channels/** – stores channel data
-
   * `current.json` – JSON file with up-to-date channel data
   * `urls.txt` – text file with Telegram channel URLs
 
 * **scripts/** – data processing scripts
-
   * `async_scraper.py` – asynchronously collects data from Telegram channels
   * `scraper.py` – synchronously collects data from Telegram channels
   * `update_channels.py` – updates the channel list
   * `v2ray_cleaner.py` – utility for processing V2Ray and proxy configs: cleaning, normalization, filtering, deduplication, and sorting
 
 * **v2ray/** – stores proxy configuration files
-
   * `configs-clean.txt` – cleaned, normalized, filtered, and deduplicated configs
   * `configs-raw.txt` – raw proxy configs collected from various sources
 
@@ -132,24 +129,19 @@ The file `channels/current.json` stores metadata about Telegram channels. Top-le
 ### Field Description
 
 * **`count`**
-
   * `> 0` → number of V2Ray configurations in an active channel (`count = 1`)
   * `= 0` → nothing found, or channel temporarily unavailable (`last_id = -1`)
   * `< 0` → number of failed attempts to access the channel
-
     * Each failed attempt decreases the value (`-1, -2, …`).
     * When `count <= -3`, the channel is considered inactive and removed from `current.json` and `urls.txt`.
 
 * **`current_id`**
-
   * starting message ID for scraping
   * `1` → start from the beginning of the channel
   * negative → take the last N messages
-
     * Example: if `last_id = 150` and `current_id = -100`, the effective `current_id` is `150 - 100 = 50`. Scraping will start from message 50 and move toward the last message (`last_id = 150`).
 
 * **`last_id`**
-
   * latest message ID in the channel
   * updated on each run
   * `-1` → channel temporarily or permanently unavailable
@@ -258,8 +250,8 @@ python scripts/update_channels.py -h
 
 **Options include:**
 
-* `-C, --channels FILE` — Path to the current channels JSON file (default: `channels/current.json`).
-* `-U, --urls FILE` — Path to the text file containing new channel URLs (default: `channels/urls.txt`).
+* `-C, --channels FILE` — Path to the input JSON file containing the list of channels (default: `channels/current.json`).
+* `-U, --urls FILE` — Path to a text file containing new channel URLs (default: `channels/urls.txt`).
 
 ---
 
@@ -272,9 +264,17 @@ The script:
 
 ---
 
+**Example usage:**
+
+```bash
+python scripts/update_channels.py -C channels/current.json -U channels/urls.txt
+```
+
+---
+
 ### **2. Running Scrapers**
 
-* **Asynchronous Scraper** (faster, experimental)
+#### **Asynchronous Scraper** (faster, experimental)
 
 ```bash
 python scripts/async_scraper.py
@@ -288,14 +288,22 @@ python scripts/async_scraper.py -h
 
 **Options include:**
 
-* `-C, --channels FILE` — Path to the current channels JSON file (default: `channels/current.json`).
-* `-E, --batch-extract N` — Number of concurrent pages to extract V2Ray configs from (default: 20).
-* `-O, --output FILE` — Path to save scraped V2Ray configs (default: `v2ray/configs-raw.txt`).
-* `-U, --batch-update N` — Max number of concurrent channels to update info for (default: 100).
+* `-C, --channels FILE` — Path to the input JSON file containing the list of channels (default: `channels/current.json`).
+* `-E, --batch-extract N` — Number of messages processed in parallel to extract V2Ray configs (default: 20).
+* `-R, --configs-raw FILE` — Path to the output file for saving scraped V2Ray configs (default: `v2ray/configs-raw.txt`).
+* `-U, --batch-update N` — Maximum number of channels updated in parallel (default: 100).
 
 ---
 
-* **Synchronous Scraper** (simpler, slower)
+**Example usage:**
+
+```bash
+python scripts/async_scraper.py -E 20 -U 100 -C channels/current.json -R v2ray/configs-raw.txt
+```
+
+---
+
+#### **Synchronous Scraper** (simpler, slower)
 
 ```bash
 python scripts/scraper.py
@@ -309,8 +317,16 @@ python scripts/scraper.py -h
 
 **Options include:**
 
-* `-C, --channels FILE` — Path to the current channels JSON file (default: `channels/current.json`).
-* `-O, --output FILE` — Path to save scraped V2Ray configs (default: `v2ray/configs-raw.txt`).
+* `-C, --channels FILE` — Path to the input JSON file containing the list of channels (default: `channels/current.json`).
+* `-R, --configs-raw FILE` — Path to the output file for saving scraped V2Ray configs (default: `v2ray/configs-raw.txt`).
+
+---
+
+**Example usage:**
+
+```bash
+python scripts/scraper.py -C channels/current.json -R v2ray/configs-raw.txt
+```
 
 ---
 
@@ -330,9 +346,9 @@ python scripts/v2ray_cleaner.py -h
 
 * `-D, --duplicate [FIELDS]` — Remove duplicate entries by specified comma-separated fields. If used without value (e.g., `-D`), the default fields are `protocol,host,port`. If omitted, duplicates are not removed.
 * `-F, --filter CONDITION` — Filter entries using a Python-like condition. Example: `"host == '1.1.1.1' and port > 1000"`. Only matching entries are kept.
-* `-I, --input FILE` — Path to the file with raw configs (default: `v2ray/configs-raw.txt`).
+* `-I, --configs-raw FILE` — Path to the input file with raw V2Ray configs (default: `v2ray/configs-raw.txt`).
 * `-N, --no-normalize` — Disable normalization (enabled by default).
-* `-O, --output FILE` — File path to save cleaned and processed configs (default: `v2ray/configs-clean.txt`).
+* `-O, --configs-clean FILE` — Path to the output file for cleaned and processed configs (default: `v2ray/configs-clean.txt`).
 * `-R, --reverse` — Sort entries in descending order (only applies with `--sort`).
 * `-S, --sort [FIELDS]` — Sort entries by comma-separated fields. If used without value (e.g., `-S`), the default fields are `host,port`. If omitted, entries are not sorted.
 
@@ -351,7 +367,7 @@ The script:
 **Example usage:**
 
 ```bash
-python scripts/v2ray_cleaner.py --filter "host == '1.1.1.1'" --duplicate --sort
+python scripts/v2ray_cleaner.py -I v2ray/configs-raw.txt -O v2ray/configs-clean.txt --filter "re_search(r'speedtest|google', host)" -D "host, port" -S "protocol, host, port" --reverse
 ```
 
 ---
@@ -362,15 +378,40 @@ python scripts/v2ray_cleaner.py --filter "host == '1.1.1.1'" --duplicate --sort
 python main.py
 ```
 
+You can also run with `-h` or `--help-scripts` to see all available options:
+
+```bash
+python main.py -h
+```
+
+```bash
+python main.py --help-scripts
+```
+
+**Options include:**
+
+* `-H, --help-scripts` — Display help information for all internal pipeline scripts.
+* `-N, --no-async` — Use slower but simpler synchronous scraping mode instead of the default asynchronous mode.
+
 ---
 
-Executes scripts in order:
+The script:
 
-1. `update_channels.py` – update the channel list
-2. `async_scraper.py` – collects channel data asynchronously from Telegram
-3. `v2ray_cleaner.py` – cleans, normalizes, and processes proxy configuration files
+* Executes all pipeline steps in order:
+  1. `update_channels.py` – updates the list of channels.
+  2. `async_scraper.py` – collects channel data from Telegram asynchronously (faster, used by default).
+  3. `scraper.py` – collects channel data synchronously if `--no-async` is used (slower, simpler).
+  4. `v2ray_cleaner.py` – cleans, normalizes, and processes the scraped proxy configuration files.
 
-Enables updating channels, scraping data, and cleaning configurations in a single step.
+* Collects only relevant arguments for each script automatically.
+
+---
+
+**Example usage:**
+
+```bash
+python main.py --batch-extract 10 --batch-update 100 --filter "host and port" --duplicate --sort "protocol" --reverse
+```
 
 ---
 
