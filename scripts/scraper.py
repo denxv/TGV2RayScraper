@@ -4,11 +4,13 @@
 import json
 import re
 import requests
-from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, Namespace
+from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, Namespace, SUPPRESS
 from lxml import html
 from pathlib import Path
 from tqdm import tqdm
 
+DEFAULT_PATH_CHANNELS = "../channels/current.json"
+DEFAULT_PATH_CONFIGS_RAW = "../v2ray/configs-raw.txt"
 LEN_NAME = 32
 LEN_NUMBER = 7
 TOTAL_CHANNELS_POST = 0
@@ -95,33 +97,37 @@ def load_channels(path_channels: str = "tg-channels-current.json") -> dict:
 
 
 def parse_args() -> Namespace:
-    channels_rel_path = "../channels/current.json"
-    configs_rel_path = "../v2ray/configs-raw.txt"
-
     parser = ArgumentParser(
-        description="Synchronous Telegram channel scraper (simpler, slower)",
-        epilog="Example: python %(prog)s --channels channels.json --output configs.txt",
+        add_help=False,
+        description="Synchronous Telegram channel scraper (simpler, slower).",
+        epilog="Example: python %(prog)s -C channels.json --configs-raw configs-raw.txt",
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
             max_help_position=30,
-            width=100,
+            width=120,
         ),
     )
 
     parser.add_argument(
         "-C", "--channels",
-        default=abs_path(channels_rel_path),
+        default=abs_path(DEFAULT_PATH_CHANNELS),
         dest="channels",
-        help="Path to the current channels JSON file (default: %(default)s).",
+        help="Path to the input JSON file containing the list of channels (default: %(default)s).",
         metavar="FILE",
         type=existing_file,
     )
 
     parser.add_argument(
-        "-O", "--output",
-        default=abs_path(configs_rel_path),
-        dest="configs",
-        help="Path to save scraped V2Ray configs (default: %(default)s).",
+        "-h", "--help",
+        action="help",
+        help=SUPPRESS,
+    )
+
+    parser.add_argument(
+        "-R", "--configs-raw",
+        default=abs_path(DEFAULT_PATH_CONFIGS_RAW),
+        dest="configs_raw",
+        help="Path to the output file for saving scraped V2Ray configs (default: %(default)s).",
         metavar="FILE",
         type=existing_file,
     )
@@ -197,19 +203,23 @@ def write_configs(configs: list, \
 
 
 def main() -> None:
-    args = parse_args()
+    parsed_args = parse_args()
     try:
-        channels = load_channels(path_channels=args.channels)
+        channels = load_channels(path_channels=parsed_args.channels)
         update_info(channels)
         print_channel_info(channels)
         for name in get_sorted_keys(channels, filtering=True):
-            save_channel_configs(name, channels[name], path_configs=args.configs)
+            save_channel_configs(
+                channel_name=name, 
+                channel_info=channels[name], 
+                path_configs=parsed_args.configs_raw,
+            )
     except KeyboardInterrupt:
         print(f"[ERROR] Exit from the program!")
     except Exception as exception:
         print(f"[ERROR] {exception}")
     finally:
-        save_channels(channels, path_channels=args.channels)
+        save_channels(channels, path_channels=parsed_args.channels)
 
 
 if __name__ == "__main__":

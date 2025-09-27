@@ -4,11 +4,14 @@
 import base64
 import json
 import re
-from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, Namespace 
+from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, Namespace, SUPPRESS
 from asteval import Interpreter
 from pathlib import Path
 from typing import Any, Callable, Iterator
 from urllib.parse import parse_qs, unquote
+
+DEFAULT_PATH_CONFIGS_CLEAN = "../v2ray/configs-clean.txt"
+DEFAULT_PATH_CONFIGS_RAW = "../v2ray/configs-raw.txt"
 
 # anytls://password@host:port/path?params#name
 # anytls://password@host:port?params#name
@@ -372,6 +375,140 @@ def normalize_vmess_base64(config: dict[str, Any]) -> None:
     })
 
 
+def parse_args() -> Namespace:
+    parser = ArgumentParser(
+        add_help=False,
+        description="Utility to normalize, filter, deduplicate, and sort proxy configuration entries.",
+        epilog=(
+            "Example: python %(prog)s -I configs-raw.txt -O configs-clean.txt --filter "
+            "\"re_search(r'speedtest|google', host)\" -D \"host, port\" -S \"protocol, host, port\""
+        ),
+        formatter_class=lambda prog: HelpFormatter(
+            prog=prog,
+            max_help_position=30,
+            width=120,
+        ),
+    )
+
+    parser.add_argument(
+        "-D", "--duplicate",
+        const="protocol,host,port",
+        dest="duplicate",
+        help=(
+            "Remove duplicate entries by specified comma-separated fields. "
+            "If used without value (e.g., '-D'), the default fields are '%(const)s'. "
+            "If omitted, duplicates are not removed."
+        ),
+        metavar="FIELDS",
+        nargs="?",
+        type=parse_valid_params,
+    )
+
+    parser.add_argument(
+        "-h", "--help",
+        action="help",
+        help=SUPPRESS,
+    )
+
+    parser.add_argument(
+        "-F", "--filter",
+        dest="filter",
+        help=(
+            "Filter entries using a Python-like condition. "
+            "Example: \"host == '1.1.1.1' and port > 1000\". "
+            "Only matching entries are kept. "
+            "If omitted, no filtering is applied."
+        ),
+        metavar="CONDITION",
+        type=str,
+    )
+
+    parser.add_argument(
+        "-I", "--configs-raw",
+        default=abs_path(DEFAULT_PATH_CONFIGS_RAW),
+        dest="configs_raw",
+        help="Path to the input file with raw V2Ray configs (default: %(default)s).",
+        metavar="FILE",
+        type=existing_file,
+    )
+
+    parser.add_argument(
+        "-N", "--no-normalize",
+        action="store_false",
+        dest="normalize",
+        help="Disable normalization (enabled by default).",
+    )
+
+    parser.add_argument(
+        "-O", "--configs-clean",
+        default=abs_path(DEFAULT_PATH_CONFIGS_CLEAN),
+        dest="configs_clean",
+        help="Path to the output file for cleaned and processed configs (default: %(default)s).",
+        metavar="FILE",
+        type=existing_file,
+    )
+
+    parser.add_argument(
+        "-R", "--reverse",
+        action="store_true",
+        dest="reverse",
+        help="Sort in descending order (only applies with --sort).",
+    )
+
+    parser.add_argument(
+        "-S", "--sort",
+        const="protocol",
+        dest="sort",
+        help=(
+            "Sort entries by comma-separated fields. "
+            "If used without value (e.g., '-S'), the default fields are '%(const)s'. "
+            "If omitted, entries are not sorted."
+        ),
+        metavar="FIELDS",
+        nargs="?",
+        type=parse_valid_params,
+    )
+
+    return parser.parse_args()
+
+
+def parse_valid_params(params: str) -> list[str]:
+    if not isinstance(params, str):
+        raise ArgumentTypeError(f"Expected string, got {type(params).__name__!r}")
+
+    seen = set()
+
+    def check_param(param: str) -> str:
+        if not re.fullmatch(r"\w+(?:\.\w+)*", param):
+            raise ArgumentTypeError(f"Invalid parameter: {param!r}")
+        if param in seen:
+            raise ArgumentTypeError(f"Duplicate parameter: {param!r}")
+        seen.add(param)
+        return param
+
+    valid_params = [
+        check_param(param) 
+        for param in re.split(r"[ ,]+", params.strip())
+    ]
+
+    if not valid_params:
+        raise ArgumentTypeError("No parameters provided")
+
+    return valid_params
+
+
+def process_configs(configs: list[dict[str, Any]], args: Namespace) -> list[dict[str, Any]]:
+    if args.normalize:
+        configs = normalize(configs=configs)
+    if args.filter:
+        configs = filter_by_condition(configs=configs, condition=args.filter)
+    if args.duplicate:
+        configs = remove_duplicates_by_params(configs=configs, params=args.duplicate)
+    if args.sort:
+        configs = sort_by_params(configs=configs, params=args.sort, reverse=args.reverse)
+    return configs
+
+
 def remove_duplicates_by_params(configs: list[dict[str, Any]], \
     params: list[str]) -> list[dict[str, Any]]:
     print(f"[DUPL] Removing duplicates from {len(configs)} configs by keys: {params}...")
@@ -432,110 +569,6 @@ def re_search(pattern: str, string: str) -> bool:
     return bool(re.search(pattern, string))
 
 
-def parse_args() -> Namespace:
-    raw_rel_path = "../v2ray/configs-raw.txt"
-    clean_rel_path = "../v2ray/configs-clean.txt"
-
-    parser = ArgumentParser(
-        description="Utility to normalize, filter, deduplicate, and sort proxy configuration entries.",
-        epilog="Example: python %(prog)s --filter \"host == '1.1.1.1'\" --duplicate --sort",
-        formatter_class=lambda prog: HelpFormatter(
-            prog=prog,
-            max_help_position=30,
-            width=120,
-        ),
-    )
-
-    parser.add_argument(
-        "-D", "--duplicate",
-        const="protocol,host,port",
-        default=None,
-        dest="duplicate",
-        help=(
-            "Remove duplicate entries by specified comma-separated fields. "
-            "If used without value (e.g., '-D'), the default fields are '%(const)s'. "
-            "If omitted, duplicates are not removed."
-        ),
-        metavar="FIELDS",
-        nargs="?",
-        type=split_valid_params,
-    )
-
-    parser.add_argument(
-        "-F", "--filter",
-        dest="filter",
-        help=(
-            "Filter entries using a Python-like condition. "
-            "Example: \"host == '1.1.1.1' and port > 1000\". "
-            "Only matching entries are kept. "
-            "If omitted, no filtering is applied."
-        ),
-        metavar="CONDITION",
-        type=str,
-    )
-
-    parser.add_argument(
-        "-I", "--input",
-        default=abs_path(raw_rel_path),
-        dest="input",
-        help="Path to the file with raw configs (default: %(default)s).",
-        metavar="FILE",
-        type=existing_file,
-    )
-
-    parser.add_argument(
-        "-N", "--no-normalize",
-        action="store_false",
-        dest="normalize",
-        help="Disable normalization (enabled by default).",
-    )
-
-    parser.add_argument(
-        "-O", "--output",
-        default=abs_path(clean_rel_path),
-        dest="output",
-        help="Path to save cleaned and processed configs (default: %(default)s).",
-        metavar="FILE",
-        type=existing_file,
-    )
-
-    parser.add_argument(
-        "-R", "--reverse",
-        action="store_true",
-        dest="reverse",
-        help="Sort in descending order (only applies with --sort).",
-    )
-
-    parser.add_argument(
-        "-S", "--sort",
-        const="host,port",
-        default=None,
-        dest="sort",
-        help=(
-            "Sort entries by comma-separated fields. "
-            "If used without value (e.g., '-S'), the default fields are '%(const)s'. "
-            "If omitted, entries are not sorted."
-        ),
-        metavar="FIELDS",
-        nargs="?",
-        type=split_valid_params,
-    )
-
-    return parser.parse_args()
-
-
-def process_configs(configs: list[dict[str, Any]], args: Namespace) -> list[dict[str, Any]]:
-    if args.normalize:
-        configs = normalize(configs=configs)
-    if args.filter:
-        configs = filter_by_condition(configs=configs, condition=args.filter)
-    if args.duplicate:
-        configs = remove_duplicates_by_params(configs=configs, params=args.duplicate)
-    if args.sort:
-        configs = sort_by_params(configs=configs, params=args.sort, reverse=args.reverse)
-    return configs
-
-
 def save_configs(configs: list[dict[str, Any]], \
     path_configs_clean: str = "v2ray-configs-clean.txt", mode: str = "w") -> None:
     print(f"[SAVE] Saving configs...")
@@ -564,37 +597,12 @@ def sort_by_params(configs: list[dict[str, Any]], params: list[str], \
     return sorted_configs
 
 
-def split_valid_params(params: str) -> list[str]:
-    if not isinstance(params, str):
-        raise ArgumentTypeError(f"Expected string, got {type(params).__name__!r}")
-
-    seen = set()
-
-    def check_param(param: str) -> str:
-        if not re.fullmatch(r"\w+(?:\.\w+)*", param):
-            raise ArgumentTypeError(f"Invalid parameter: {param!r}")
-        if param in seen:
-            raise ArgumentTypeError(f"Duplicate parameter: {param!r}")
-        seen.add(param)
-        return param
-
-    valid_params = [
-        check_param(param) 
-        for param in re.split(r"[ ,]+", params.strip())
-    ]
-
-    if not valid_params:
-        raise ArgumentTypeError("No parameters provided")
-
-    return valid_params
-
-
 def main() -> None:
     try:
-        args = parse_args()
-        configs = load_configs(path_configs_raw=args.input)
-        configs = process_configs(configs=configs, args=args)
-        save_configs(configs=configs, path_configs_clean=args.output)
+        parsed_args = parse_args()
+        configs = load_configs(path_configs_raw=parsed_args.configs_raw)
+        configs = process_configs(configs=configs, args=parsed_args)
+        save_configs(configs=configs, path_configs_clean=parsed_args.configs_clean)
     except KeyboardInterrupt:
         print(f"[ERROR] Exit from the program!")
     except Exception as exception:

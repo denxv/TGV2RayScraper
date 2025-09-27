@@ -3,12 +3,14 @@
 
 import json
 import re
-from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, Namespace 
+from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, Namespace, SUPPRESS
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
 from typing import Callable, TypeVar, Tuple, ParamSpec
 
+DEFAULT_PATH_CHANNELS = "../channels/current.json"
+DEFAULT_PATH_URLS = "../channels/urls.txt"
 P = ParamSpec("P")
 T = TypeVar("T")
 REGEX_CHANNELS_NAME = re.compile(r"http[s]?://t.me/[s/]{0,2}([\w]+)")
@@ -45,33 +47,37 @@ def make_backup(files: list[str]) -> None:
 
 
 def parse_args() -> Namespace:
-    channels_rel_path = "../channels/current.json"
-    urls_rel_path = "../channels/urls.txt"
-
     parser = ArgumentParser(
-        description="Update Telegram channels: merge new URLs and create backups",
-        epilog="Example: python %(prog)s --channels channels.json --urls urls.txt",
+        add_help=False,
+        description="Backup, merge new channels from URLs, and update Telegram channel data.",
+        epilog="Example: python %(prog)s -C channels.json --urls urls.txt",
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
             max_help_position=30,
-            width=100,
+            width=120,
         ),
     )
 
     parser.add_argument(
         "-C", "--channels",
-        default=abs_path(channels_rel_path),
+        default=abs_path(DEFAULT_PATH_CHANNELS),
         dest="channels",
-        help="Path to the current channels JSON file (default: %(default)s).",
+        help="Path to the input JSON file containing the list of channels (default: %(default)s).",
         metavar="FILE",
         type=existing_file,
     )
 
     parser.add_argument(
+        "-h", "--help",
+        action="help",
+        help=SUPPRESS,
+    )
+
+    parser.add_argument(
         "-U", "--urls",
-        default=abs_path(urls_rel_path),
+        default=abs_path(DEFAULT_PATH_URLS),
         dest="urls",
-        help="Path to the text file containing new channel URLs (default: %(default)s).",
+        help="Path to a text file containing new channel URLs (default: %(default)s).",
         metavar="FILE",
         type=existing_file,
     )
@@ -150,12 +156,18 @@ def update_channels(current_channels: dict, channel_names: list) -> None:
 
 def main() -> None:
     try:
-        args = parse_args()
-        current_channels, list_channel_names = \
-            load_channels(path_channels=args.channels, path_urls=args.urls)
+        parsed_args = parse_args()
+        current_channels, list_channel_names = load_channels(
+            path_channels=parsed_args.channels, 
+            path_urls=parsed_args.urls,
+        )
         update_channels(current_channels, list_channel_names)
         delete_channels(current_channels)
-        save_channels(current_channels, path_channels=args.channels, path_urls=args.urls)
+        save_channels(
+            channels=current_channels, 
+            path_channels=parsed_args.channels, 
+            path_urls=parsed_args.urls,
+        )
     except Exception as exception:
         print(f"[ERROR] {exception}")
 

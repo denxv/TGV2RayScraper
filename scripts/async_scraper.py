@@ -6,12 +6,14 @@ import json
 import re
 import aiofiles
 import aiohttp
-from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, Namespace
+from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, Namespace, SUPPRESS
 from lxml import html
 from pathlib import Path
 from tqdm.asyncio import tqdm
 from typing import Union
 
+DEFAULT_PATH_CHANNELS = "../channels/current.json"
+DEFAULT_PATH_CONFIGS_RAW = "../v2ray/configs-raw.txt"
 LEN_NAME = 32
 LEN_NUMBER = 7
 TOTAL_CHANNELS_POST = 0
@@ -89,11 +91,12 @@ def get_sorted_keys(channels: dict, filtering: bool = False, reverse: bool = Fal
     return sorted(channel_names, key=lambda name: diff_channel_id(channels[name]), reverse=reverse)
 
 
-def int_in_range(value: str, min_value: int = 1, max_value: int = 100) -> int:
+def int_in_range(value: str, min_value: int = 1, max_value: int = 100, \
+    as_str: bool = False) -> int | str:
     ivalue = int(value)
     if ivalue < min_value or ivalue > max_value:
         raise ArgumentTypeError(f"Expected {min_value} to {max_value}, got {ivalue}")
-    return ivalue
+    return str(ivalue) if as_str else ivalue
 
 
 async def load_channels(path_channels: str = "tg-channels-current.json") -> dict:
@@ -106,42 +109,46 @@ async def load_channels(path_channels: str = "tg-channels-current.json") -> dict
 
 
 def parse_args() -> Namespace:
-    channels_rel_path = "../channels/current.json"
-    configs_rel_path = "../v2ray/configs-raw.txt"
-
     parser = ArgumentParser(
-        description = "Asynchronous Telegram channel scraper (faster, experimental)",
-        epilog="Example: python %(prog)s -E 20 -U 100 --channels channels.json --output configs.txt",
+        add_help=False,
+        description = "Asynchronous Telegram channel scraper (faster, experimental).",
+        epilog="Example: python %(prog)s -E 20 -U 100 --channels channels.json -R configs-raw.txt",
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
             max_help_position=30,
-            width=100,
+            width=120,
         ),
     )
 
     parser.add_argument(
         "-C", "--channels",
-        default=abs_path(channels_rel_path),
+        default=abs_path(DEFAULT_PATH_CHANNELS),
         dest="channels",
-        help="Path to the current channels JSON file (default: %(default)s).",
+        help="Path to the input JSON file containing the list of channels (default: %(default)s).",
         metavar="FILE",
         type=existing_file,
+    )
+
+    parser.add_argument(
+        "-h", "--help",
+        action="help",
+        help=SUPPRESS,
     )
 
     parser.add_argument(
         "-E", "--batch-extract",
         default=20,
         dest="batch_extract",
-        help="Number of concurrent pages to extract v2ray configs from (default: %(default)s).",
+        help="Number of messages processed in parallel to extract V2Ray configs (default: %(default)s).",
         metavar="N",
         type=lambda value: int_in_range(value, min_value=1, max_value=100),
     )
 
     parser.add_argument(
-        "-O", "--output",
-        default=abs_path(configs_rel_path),
-        dest="configs",
-        help="Path to save scraped V2Ray configs (default: %(default)s).",
+        "-R", "--configs-raw",
+        default=abs_path(DEFAULT_PATH_CONFIGS_RAW),
+        dest="configs_raw",
+        help="Path to the output file for saving scraped V2Ray configs (default: %(default)s).",
         metavar="FILE",
         type=existing_file,
     )
@@ -150,7 +157,7 @@ def parse_args() -> Namespace:
         "-U", "--batch-update",
         default=100,
         dest="batch_update",
-        help="Max number of concurrent channels to update info for (default: %(default)s).",
+        help="Maximum number of channels updated in parallel (default: %(default)s).",
         metavar="N",
         type=lambda value: int_in_range(value, min_value=1, max_value=1000),
     )
@@ -244,21 +251,26 @@ async def write_configs(configs: list, \
 
 
 async def main() -> None:
-    args = parse_args()
+    parsed_args = parse_args()
     try:
-        channels = await load_channels(path_channels=args.channels)
+        channels = await load_channels(path_channels=parsed_args.channels)
         async with aiohttp.ClientSession() as session:
-            await update_info(session, channels, batch_size=args.batch_update)
+            await update_info(session, channels, batch_size=parsed_args.batch_update)
             print_channel_info(channels)
             for name in get_sorted_keys(channels, filtering=True):
-                await save_channel_configs(session, name, channels[name], \
-                    batch_size=args.batch_extract, path_configs=args.configs)
+                await save_channel_configs(
+                    session=session, 
+                    channel_name=name, 
+                    channel_info=channels[name], 
+                    batch_size=parsed_args.batch_extract, 
+                    path_configs=parsed_args.configs_raw,
+                )
     except (asyncio.CancelledError, KeyboardInterrupt):
         print(f"[ERROR] Exit from the program!")
     except Exception as exception:
         print(f"[ERROR] {exception}")
     finally:
-        await save_channels(channels, path_channels=args.channels)
+        await save_channels(channels, path_channels=parsed_args.channels)
 
 
 if __name__ == "__main__":
