@@ -3,10 +3,10 @@
 
 import base64
 import json
-import os
 import re
 from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, Namespace 
 from asteval import Interpreter
+from pathlib import Path
 from typing import Any, Callable, Iterator
 from urllib.parse import parse_qs, unquote
 
@@ -174,7 +174,7 @@ URL_PATTERNS = [
 
 
 def abs_path(path: str) -> str:
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), path))
+    return str((Path(__file__).parent / path).resolve())
 
 
 def b64decode_safe(string: str) -> str:
@@ -194,10 +194,10 @@ def b64encode_safe(string: str) -> str:
 
 
 def existing_file(path: str) -> str:
-    abs_path = os.path.abspath(path)
-    if not os.path.isfile(abs_path):
-        raise ArgumentTypeError(f"The file does not exist: {abs_path}")
-    return abs_path
+    filepath = Path(path).resolve()
+    if not filepath.is_file():
+        raise ArgumentTypeError(f"The file does not exist: {filepath}")
+    return str(filepath)
 
 
 def filter_by_condition(configs: list[dict[str, Any]], condition: str) -> list[dict[str, Any]]:

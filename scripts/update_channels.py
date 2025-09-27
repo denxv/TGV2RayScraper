@@ -2,11 +2,11 @@
 # coding: utf-8
 
 import json
-import os
 import re
 from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, Namespace 
 from datetime import datetime
 from functools import wraps
+from pathlib import Path
 from typing import Callable, TypeVar, Tuple, ParamSpec
 
 P = ParamSpec("P")
@@ -15,7 +15,7 @@ REGEX_CHANNELS_NAME = re.compile(r"http[s]?://t.me/[s/]{0,2}([\w]+)")
 
 
 def abs_path(path: str) -> str:
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), path))
+    return str((Path(__file__).parent / path).resolve())
 
 
 def condition_delete_channels(channel_info: dict) -> bool:
@@ -28,22 +28,20 @@ def condition_reset_channels(channel_info: dict) -> bool:
 
 
 def existing_file(path: str) -> str:
-    abs_path = os.path.abspath(path)
-    if not os.path.isfile(abs_path):
-        raise ArgumentTypeError(f"The file does not exist: {abs_path}")
-    return abs_path
+    filepath = Path(path).resolve()
+    if not filepath.is_file():
+        raise ArgumentTypeError(f"The file does not exist: {filepath}")
+    return str(filepath)
 
 
 def make_backup(files: list[str]) -> None:
-    for path in files:
-        if not os.path.exists(path):
+    for file in files:
+        src = Path(file).resolve()
+        if not src.exists():
             continue
-        base = os.path.basename(path)
-        name, ext = os.path.splitext(base)
-        backup = f"{name}-backup-{datetime.now():%Y%m%d-%H%M%s}{ext}"
-        backup_path = os.path.join(os.path.dirname(path), backup)
-        os.rename(path, backup_path)
-        print(f"[BACK] File '{base}' was renamed to '{backup}' for backup!")
+        backup_name = f"{src.stem}-backup-{datetime.now():%Y%m%d-%H%M%s}{src.suffix}"
+        src.rename(src.parent / backup_name)
+        print(f"[BKUP] File '{src.name}' was renamed to '{backup_name}' for backup!")
 
 
 def parse_args() -> Namespace:

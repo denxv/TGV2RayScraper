@@ -3,12 +3,12 @@
 
 import asyncio
 import json
-import os
 import re
 import aiofiles
 import aiohttp
 from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, Namespace
 from lxml import html
+from pathlib import Path
 from tqdm.asyncio import tqdm
 from typing import Union
 
@@ -48,7 +48,7 @@ RE_V2RAY = re.compile(
 
 
 def abs_path(path: str) -> str:
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), path))
+    return str((Path(__file__).parent / path).resolve())
 
 
 def current_less_last(channel_info: dict) -> bool:
@@ -60,10 +60,10 @@ def diff_channel_id(channel_info: dict) -> int:
 
 
 def existing_file(path: str) -> str:
-    abs_path = os.path.abspath(path)
-    if not os.path.isfile(abs_path):
-        raise ArgumentTypeError(f"The file does not exist: {abs_path}")
-    return abs_path
+    filepath = Path(path).resolve()
+    if not filepath.is_file():
+        raise ArgumentTypeError(f"The file does not exist: {filepath}")
+    return str(filepath)
 
 
 def format_channel_id(channel_info: dict) -> str:

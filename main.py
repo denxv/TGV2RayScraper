@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import os
 import sys
 import subprocess
+from pathlib import Path
 
-SCRIPTS_DIR = os.path.join(os.path.dirname(__file__), 'scripts')
+SCRIPTS_DIR = Path(__file__).parent / "scripts"
 
 
 def run_script(script_name: str = "async_scraper.py") -> None:
     print('=' * 111)
     print(f"[INFO] Starting script '{script_name}'...")
     print('-' * 111)
-    args = [sys.executable, os.path.join(SCRIPTS_DIR, script_name)]
+    args = [sys.executable, str(SCRIPTS_DIR / script_name)]
     if subprocess.run(args=args).returncode:
         raise Exception(f"Script '{script_name}' exited with an error!")
     print('-' * 111)
