@@ -16,7 +16,7 @@ T = TypeVar("T")
 REGEX_CHANNELS_NAME = re.compile(r"http[s]?://t.me/[s/]{0,2}([\w]+)")
 
 
-def abs_path(path: str) -> str:
+def abs_path(path: str | Path) -> str:
     return str((Path(__file__).parent / path).resolve())
 
 
@@ -29,14 +29,7 @@ def condition_reset_channels(channel_info: dict) -> bool:
     return channel_info["last_id"] == -1
 
 
-def existing_file(path: str) -> str:
-    filepath = Path(path).resolve()
-    if not filepath.is_file():
-        raise ArgumentTypeError(f"The file does not exist: {filepath}")
-    return str(filepath)
-
-
-def make_backup(files: list[str]) -> None:
+def make_backup(files: list[str | Path]) -> None:
     for file in files:
         src = Path(file).resolve()
         if not src.exists():
@@ -64,7 +57,7 @@ def parse_args() -> Namespace:
         dest="channels",
         help="Path to the input JSON file containing the list of channels (default: %(default)s).",
         metavar="FILE",
-        type=existing_file,
+        type=lambda path: validate_file_path(path, must_be_file=True),
     )
 
     parser.add_argument(
@@ -79,7 +72,7 @@ def parse_args() -> Namespace:
         dest="urls",
         help="Path to a text file containing new channel URLs (default: %(default)s).",
         metavar="FILE",
-        type=existing_file,
+        type=lambda path: validate_file_path(path, must_be_file=True),
     )
 
     return parser.parse_args()
@@ -105,6 +98,21 @@ def status(tag: str, start: str, end: str = "", tracking: bool = False) -> \
             return result
         return wrapper
     return decorator
+
+
+def validate_file_path(path: str | Path, must_be_file: bool = True) -> str:
+    filepath = Path(path).resolve()
+
+    if not filepath.parent.exists():
+        raise ArgumentTypeError(f"Parent directory does not exist: '{filepath.parent}'.")
+
+    if filepath.exists() and filepath.is_dir():
+        raise ArgumentTypeError(f"'{filepath}' is a directory, expected a file.")
+
+    if must_be_file and not filepath.is_file():
+        raise ArgumentTypeError(f"The file does not exist: '{filepath}'.")
+    
+    return str(filepath)
 
 
 @status(tag="delt", start="Deleting channels...", \

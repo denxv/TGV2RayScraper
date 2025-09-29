@@ -49,7 +49,7 @@ RE_V2RAY = re.compile(
 )
 
 
-def abs_path(path: str) -> str:
+def abs_path(path: str | Path) -> str:
     return str((Path(__file__).parent / path).resolve())
 
 
@@ -59,13 +59,6 @@ def current_less_last(channel_info: dict) -> bool:
 
 def diff_channel_id(channel_info: dict) -> int:
     return channel_info["last_id"] - channel_info["current_id"]
-
-
-def existing_file(path: str) -> str:
-    filepath = Path(path).resolve()
-    if not filepath.is_file():
-        raise ArgumentTypeError(f"The file does not exist: {filepath}")
-    return str(filepath)
 
 
 def format_channel_id(channel_info: dict) -> str:
@@ -126,7 +119,7 @@ def parse_args() -> Namespace:
         dest="channels",
         help="Path to the input JSON file containing the list of channels (default: %(default)s).",
         metavar="FILE",
-        type=existing_file,
+        type=lambda path: validate_file_path(path, must_be_file=True),
     )
 
     parser.add_argument(
@@ -150,7 +143,7 @@ def parse_args() -> Namespace:
         dest="configs_raw",
         help="Path to the output file for saving scraped V2Ray configs (default: %(default)s).",
         metavar="FILE",
-        type=existing_file,
+        type=lambda path: validate_file_path(path, must_be_file=False),
     )
 
     parser.add_argument(
@@ -242,6 +235,21 @@ async def update_info(session: aiohttp.ClientSession, channels: dict, batch_size
         await asyncio.gather(*tasks)
     else:
         print(end="\n")
+
+
+def validate_file_path(path: str | Path, must_be_file: bool = True) -> str:
+    filepath = Path(path).resolve()
+
+    if not filepath.parent.exists():
+        raise ArgumentTypeError(f"Parent directory does not exist: '{filepath.parent}'.")
+
+    if filepath.exists() and filepath.is_dir():
+        raise ArgumentTypeError(f"'{filepath}' is a directory, expected a file.")
+
+    if must_be_file and not filepath.is_file():
+        raise ArgumentTypeError(f"The file does not exist: '{filepath}'.")
+    
+    return str(filepath)
 
 
 async def write_configs(configs: list, \

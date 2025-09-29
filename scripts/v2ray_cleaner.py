@@ -176,7 +176,7 @@ URL_PATTERNS = [
 ]
 
 
-def abs_path(path: str) -> str:
+def abs_path(path: str | Path) -> str:
     return str((Path(__file__).parent / path).resolve())
 
 
@@ -194,13 +194,6 @@ def b64decode_safe(string: str) -> str:
 
 def b64encode_safe(string: str) -> str:
     return base64.b64encode(string.encode('utf-8')).decode('ascii')
-
-
-def existing_file(path: str) -> str:
-    filepath = Path(path).resolve()
-    if not filepath.is_file():
-        raise ArgumentTypeError(f"The file does not exist: {filepath}")
-    return str(filepath)
 
 
 def filter_by_condition(configs: list[dict[str, Any]], condition: str) -> list[dict[str, Any]]:
@@ -429,7 +422,7 @@ def parse_args() -> Namespace:
         dest="configs_raw",
         help="Path to the input file with raw V2Ray configs (default: %(default)s).",
         metavar="FILE",
-        type=existing_file,
+        type=lambda path: validate_file_path(path, must_be_file=True),
     )
 
     parser.add_argument(
@@ -445,7 +438,7 @@ def parse_args() -> Namespace:
         dest="configs_clean",
         help="Path to the output file for cleaned and processed configs (default: %(default)s).",
         metavar="FILE",
-        type=existing_file,
+        type=lambda path: validate_file_path(path, must_be_file=False),
     )
 
     parser.add_argument(
@@ -595,6 +588,21 @@ def sort_by_params(configs: list[dict[str, Any]], params: list[str], \
         end="\n\n",
     )
     return sorted_configs
+
+
+def validate_file_path(path: str | Path, must_be_file: bool = True) -> str:
+    filepath = Path(path).resolve()
+
+    if not filepath.parent.exists():
+        raise ArgumentTypeError(f"Parent directory does not exist: '{filepath.parent}'.")
+
+    if filepath.exists() and filepath.is_dir():
+        raise ArgumentTypeError(f"'{filepath}' is a directory, expected a file.")
+
+    if must_be_file and not filepath.is_file():
+        raise ArgumentTypeError(f"The file does not exist: '{filepath}'.")
+    
+    return str(filepath)
 
 
 def main() -> None:

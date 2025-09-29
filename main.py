@@ -56,13 +56,6 @@ def collect_args(args: Namespace, flags: list[str]) -> list[str]:
     return params
 
 
-def existing_file(path: str) -> str:
-    filepath = Path(path).resolve()
-    if not filepath.is_file():
-        raise ArgumentTypeError(f"The file does not exist: {filepath}")
-    return str(filepath)
-
-
 def flag_to_name(flag: str) -> str:
     return flag.lstrip('-').replace('-', '_')
 
@@ -109,19 +102,19 @@ def parse_args() -> Namespace:
     parser.add_argument(
         "--channels",
         help=SUPPRESS,
-        type=existing_file,
+        type=lambda path: validate_file_path(path, must_be_file=True),
     )
 
     parser.add_argument(
         "--configs-clean",
         help=SUPPRESS,
-        type=existing_file,
+        type=lambda path: validate_file_path(path, must_be_file=False),
     )
 
     parser.add_argument(
         "--configs-raw",
         help=SUPPRESS,
-        type=existing_file,
+        type=lambda path: validate_file_path(path, must_be_file=False),
     )
 
     parser.add_argument(
@@ -184,7 +177,7 @@ def parse_args() -> Namespace:
     parser.add_argument(
         "--urls",
         help=SUPPRESS,
-        type=existing_file,
+        type=lambda path: validate_file_path(path, must_be_file=True),
     )
 
     return parser.parse_args()
@@ -236,6 +229,21 @@ def run_script(script_name: str = "async_scraper.py", args: list = []) -> None:
 def show_scripts_help() -> None:
     for script_name in SCRIPTS_CONFIG:
         run_script(script_name, args=["--help"])
+
+
+def validate_file_path(path: str | Path, must_be_file: bool = True) -> str:
+    filepath = Path(path).resolve()
+
+    if not filepath.parent.exists():
+        raise ArgumentTypeError(f"Parent directory does not exist: '{filepath.parent}'.")
+
+    if filepath.exists() and filepath.is_dir():
+        raise ArgumentTypeError(f"'{filepath}' is a directory, expected a file.")
+
+    if must_be_file and not filepath.is_file():
+        raise ArgumentTypeError(f"The file does not exist: '{filepath}'.")
+    
+    return str(filepath)
 
 
 def main() -> None:
