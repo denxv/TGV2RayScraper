@@ -8,10 +8,11 @@ from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, Namespace
 from asteval import Interpreter
 from pathlib import Path
 from typing import Any, Callable, Iterator
-from urllib.parse import parse_qs, unquote
+from urllib.parse import parse_qs, unquote, urlencode
 
 DEFAULT_PATH_CONFIGS_CLEAN = "../v2ray/configs-clean.txt"
 DEFAULT_PATH_CONFIGS_RAW = "../v2ray/configs-raw.txt"
+FORMAT_CONFIG_NAME = "{protocol}-{host}-{port}"
 
 # anytls://password@host:port/path?params#name
 # anytls://password@host:port?params#name
@@ -23,7 +24,7 @@ ANYTLS_URL_PATTERN = re.compile(
         r':(?P<port>\d{1,5})'
         r'(?P<path>/[^\s?#]*){0,1}'
         r'(?:\?(?P<params>(?:(?!://)[^\s#])*)){0,1}'
-        r'(?:#(?P<name>[^\s/]*)){0,1}'
+        r'(?P<name>){0,1}'
     r')'
 )
 
@@ -33,13 +34,13 @@ ANYTLS_URL_PATTERN = re.compile(
 # hysteria2://password@host:port?params#name
 HYSTERIA2_URL_PATTERN = re.compile(
     r'(?P<url>'
-        r'(?P<protocol>hy2\b|hysteria2\b)://'
+        r'(?P<protocol>hy2|hysteria2)://'
         r'(?P<password>(?:(?!://).)+)'
         r'@(?P<host>[\w\-\[:%\].]+)'
         r':(?P<port>\d{1,5})'
         r'(?P<path>/[^\s?#]*){0,1}'
         r'(?:\?(?P<params>(?:(?!://)[^\s#])*)){0,1}'
-        r'(?:#(?P<name>[^\s/]*)){0,1}'
+        r'(?P<name>){0,1}'
     r')'
 )
 
@@ -47,10 +48,10 @@ HYSTERIA2_URL_PATTERN = re.compile(
 # ss://base64(method:password)@host:port#name
 # ss://base64(method:password@host:port)#name
 SS_URL_PATTERN = re.compile(
-    r'(?P<url>(?P<protocol>\bss\b)://'
+    r'(?P<url>(?P<protocol>\bss)://'
         r'(?:'
             r'(?P<method>[^\s:@#]+)'
-            r':(?P<password>(?:(?!://).)+)(?=@)'
+            r':(?P<password>(?:(?!//).)+)(?=@)'
         r'|'
             r'(?P<base64>[\w+/]+={0,2})(?![^\s@#])'
         r')'
@@ -59,16 +60,16 @@ SS_URL_PATTERN = re.compile(
             r':(?P<port>\d{1,5})'
         r'){0,1}'
         r'(?=(?:[\s#]|$))(?!\?)'
-        r'(?:#(?P<name>[^\s/]*)){0,1}'
+        r'(?P<name>){0,1}'
     r')'
 )
 
 # ssr://base64(host:port:protocol:method:obfs:base64(password)/?param=base64(value))
 SSR_URL_PATTERN = re.compile(
     r'(?P<url>'
-        r'(?P<protocol>\bssr\b)://'
+        r'(?P<protocol>ssr)://'
         r'(?P<base64>[\w+/-]+={0,2})'
-        r'(?:#(?P<name>[^\s/]*)){0,1}'
+        r'(?P<name>){0,1}'
     r')'
 )
 
@@ -91,13 +92,13 @@ SSR_PLAIN_PATTERN = re.compile(
 # trojan://password@host:port?params#name
 TROJAN_URL_PATTERN = re.compile(
     r'(?P<url>'
-        r'(?P<protocol>trojan\b)://'
+        r'(?P<protocol>trojan)://'
         r'(?P<password>(?:(?!://).)+)'
         r'@(?P<host>[\w\-\[:%\].]+)'
         r':(?P<port>\d{1,5})'
         r'(?P<path>/[^\s?#]*){0,1}'
         r'(?:\?(?P<params>(?:(?!://)[^\s#])*)){0,1}'
-        r'(?:#(?P<name>[^\s/]*)){0,1}'
+        r'(?P<name>){0,1}'
     r')'
 )
 
@@ -107,12 +108,12 @@ TUIC_URL_PATTERN = re.compile(
     r'(?P<url>'
         r'(?P<protocol>tuic)://'
         r'(?P<uuid>(?:(?!://).)+)'
-        r':(?P<password>(?:(?!://).)+)'
+        r':(?P<password>(?:(?!//).)+)'
         r'@(?P<host>[\w\-\[:%\].]+)'
         r':(?P<port>\d{1,5})'
         r'(?P<path>/[^\s?#]*){0,1}'
         r'(?:\?(?P<params>(?:(?!://)[^\s#])*)){0,1}'
-        r'(?:#(?P<name>[^\s/]*)){0,1}'
+        r'(?P<name>){0,1}'
     r')'
 )
 
@@ -120,13 +121,13 @@ TUIC_URL_PATTERN = re.compile(
 # vless://uuid@host:port?params#name
 VLESS_URL_PATTERN = re.compile(
     r'(?P<url>'
-        r'(?P<protocol>vless\b)://'
+        r'(?P<protocol>vless)://'
         r'(?P<uuid>(?:(?!://).)+)'
         r'@(?P<host>[\w\-\[:%\].]+)'
         r':(?P<port>\d{1,5})'
         r'(?P<path>/[^\s?#]*){0,1}'
         r'(?:\?(?P<params>(?:(?!://)[^\s#])*)){0,1}'
-        r'(?:#(?P<name>[^\s/]*)){0,1}'
+        r'(?P<name>){0,1}'
     r')'
 )
 
@@ -135,14 +136,14 @@ VLESS_URL_PATTERN = re.compile(
 # vmess://uuid@host:port?params#name
 VMESS_URL_PATTERN = re.compile(
     r'(?P<url>'
-        r'(?P<protocol>vmess\b)://'
+        r'(?P<protocol>vmess)://'
         r'(?:'
             r'(?P<uuid>(?:(?!://).)+)'
             r'@(?P<host>[\w\-\[:%\].]+)'
             r':(?P<port>\d{1,5})'
             r'(?P<path>/[^\s?#]*){0,1}'
             r'(?:\?(?P<params>(?:(?!://)[^\s#])*)){0,1}'
-            r'(?:#(?P<name>[^\s/]*)){0,1}'
+            r'(?P<name>){0,1}'
         r'|'
             r'(?P<base64>[\w+/]+={0,2})'
         r')'
@@ -153,13 +154,13 @@ VMESS_URL_PATTERN = re.compile(
 # wireguard://privatekey@host:port?params#name
 WIREGUARD_URL_PATTERN = re.compile(
     r'(?P<url>'
-        r'(?P<protocol>wireguard\b)://'
+        r'(?P<protocol>wireguard)://'
         r'(?P<privatekey>(?:(?!://).)+)'
         r'@(?P<host>[\w\-\[:%\].]+)'
         r':(?P<port>\d{1,5})'
         r'(?P<path>/[^\s?#]*){0,1}'
         r'(?:\?(?P<params>(?:(?!://)[^\s#])*)){0,1}'
-        r'(?:#(?P<name>[^\s/]*)){0,1}'
+        r'(?P<name>){0,1}'
     r')'
 )
 
@@ -274,24 +275,32 @@ def normalize(configs: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def normalize_config(config: dict[str, Any]) -> None:
-    if "base64" in config:
+    if config.get("base64"):
         normalize_config_base64(config)
+    else:
+        config.pop("base64", None)
 
-    if isinstance(port := config.get("port", ""), str):
+    if not (config.get("host") and config.get("port") and config.get("url")):
+        raise Exception
+
+    if isinstance(port := config.get("port"), str):
         config["port"] = int(port)
-
-    if not (config.get("host") and config.get("port")):
-        config.clear()
 
     params = config.get("params", None)
     if isinstance(params, str):
         config.update({
             "params": {                      
                 key: value[0] 
-                for key, value in parse_qs(params.replace('+', '%2B'), \
-                    keep_blank_values=True).items()
+                for key, value in parse_qs(
+                    params.replace('+', '%2B'), 
+                    keep_blank_values=True, 
+                ).items()
             }
         })
+
+    if not (config.get("protocol") in ["ssr", "vmess"] and config.get("name")):
+        config["name"] = FORMAT_CONFIG_NAME.format(**config)
+        config["url"] = "{url}#{name}".format(**config)
 
 
 def normalize_config_base64(config: dict[str, Any]) -> None:
@@ -307,65 +316,99 @@ def normalize_config_base64(config: dict[str, Any]) -> None:
 
 
 def normalize_ss_base64(config: dict[str, Any]) -> None:
-    protocol = config.get("protocol", "")
-    base64 = config.pop("base64", "")
+    if not (base64 := config.pop("base64", None)):
+        return
+
+    protocol = config.get("protocol", "ss")
     host = config.get("host", "").strip()
     port = config.get("port", "").strip()
-    name = config.get("name", "").strip()
 
-    url = f"{protocol}://{b64decode_safe(base64)}{f'@{host}:{port}' if host and port else ''}#{name}"
-    if ss := SS_URL_PATTERN.search(url):
-        config.update(ss.groupdict(default=''))
-        config.pop("base64", None)
-    else:
-        config.clear()
+    url = f"{protocol}://{b64decode_safe(base64)}"
+    if host and port:
+        url += f"@{host}:{port}"
+
+    if not (ss := SS_URL_PATTERN.search(url)):
+        raise Exception
+    
+    config.update(ss.groupdict(default=''))
+    config.pop("base64", None)
 
 
 def normalize_ssr_base64(config: dict[str, Any]) -> None:
-    protocol = config.get("protocol", "")
-    base64 = config.pop("base64", "")
+    if not (base64 := config.pop("base64", None)):
+        raise Exception
+
+    protocol = config.get("protocol", "ssr")
     url = f"{protocol}://{b64decode_safe(base64)}"
 
-    if (ssr := SSR_PLAIN_PATTERN.search(url)):
-        ssr_config = ssr.groupdict(default='')
-        ssr_config.pop("url", "")
-        params = ssr_config.get("params", "")
-        ssr_config.update({
-            "password": b64decode_safe(ssr_config.get("password", "")),
-            "params": {                      
-                key: b64decode_safe(value[0]) 
-                for key, value in parse_qs(params, keep_blank_values=True).items()
-            }
-        })
+    if not (ssr := SSR_PLAIN_PATTERN.search(url)):
+        raise Exception
 
-        ssr_config.update({
-            "name": ssr_config.get("params", {}).get("remarks", "")
-        })
+    ssr_config = ssr.groupdict(default='')
+    params = ssr_config.get("params", "")
 
-        config.update(ssr_config)
+    ssr_params = {                      
+        key: b64decode_safe(value[0]) 
+        for key, value in parse_qs(params.replace('+', '%2B'), keep_blank_values=True).items()
+    }
+
+    ssr_params.update({
+        "remarks": FORMAT_CONFIG_NAME.format(**ssr_config),
+    })
+
+    ssr_config["params"] = urlencode({
+        key: b64encode_safe(value)
+        for key, value in ssr_params.items()
+    })
+
+    body = "{host}:{port}:{origin}:{method}:{obfs}:{password}/?{params}".format(**ssr_config)
+    ssr_config.update({
+        "url": f"{protocol}://{b64encode_safe(body)}",
+        "password": b64decode_safe(ssr_config.get("password", "")),
+        "params": ssr_params,
+        "name": ssr_params.get("remarks", ""),
+    })
+
+    config.update(ssr_config)
 
 
 def normalize_vmess_base64(config: dict[str, Any]) -> None:
-    if not (vmess_config := repair_broken_vmess(config)):
+    if not (base64 := config.pop("base64", None)):
         return
 
-    config.update({
-        "url": vmess_config.get("url", ""),
-        "method": vmess_config.get("scy", ""),
-        "uuid": vmess_config.get("id", ""),
-        "host": vmess_config.get("add", ""),
-        "port": vmess_config.get("port", ""),
-        "path": vmess_config.get("path", ""),
-        "params": {
-            "alterId": vmess_config.get("aid", ""),
-            "fp": vmess_config.get("fp", ""),
-            "sni": vmess_config.get("sni", ""),
-            "tls": vmess_config.get("tls", ""),
-            "transport": vmess_config.get("net", ""),
-            "type": vmess_config.get("type", ""),
-        },
-        "name": vmess_config.get("ps", ""),
-    })
+    if not (vmess := re.search(r'(?P<json>{.*})', b64decode_safe(base64), re.DOTALL)):
+        raise Exception
+
+    try:
+        vmess_config = json.loads(vmess.group("json"))
+        vmess_config.update({
+            "ps": FORMAT_CONFIG_NAME.format(
+                protocol=config.get("protocol", "vmess"),
+                host=vmess_config.get("add", "0.0.0.0"),
+                port=vmess_config.get("port", "0"),
+            ),
+        })
+        base64 = b64encode_safe(json.dumps(vmess_config, separators=(',', ':')))
+
+        config.update({
+            "url": f"{config.get("protocol", "vmess")}://{base64}",
+            "method": vmess_config.get("scy", ""),
+            "uuid": vmess_config.get("id", ""),
+            "host": vmess_config.get("add", ""),
+            "port": vmess_config.get("port", ""),
+            "path": vmess_config.get("path", ""),
+            "params": {
+                "alterId": vmess_config.get("aid", ""),
+                "fp": vmess_config.get("fp", ""),
+                "sni": vmess_config.get("sni", ""),
+                "tls": vmess_config.get("tls", ""),
+                "transport": vmess_config.get("net", ""),
+                "type": vmess_config.get("type", ""),
+            },
+            "name": vmess_config.get("ps", ""),
+        })
+    except Exception:
+        raise Exception
 
 
 def parse_args() -> Namespace:
@@ -530,24 +573,6 @@ def remove_duplicates_by_params(configs: list[dict[str, Any]], \
         end="\n\n",
     )
     return unique_configs
-
-
-def repair_broken_vmess(config: dict[str, Any]) -> dict[str, Any] | None:
-    if not (base64 := config.pop("base64", "")):
-        return
-
-    if not (vmess := re.search(r'(?P<json>{.*})', b64decode_safe(base64), re.DOTALL)):
-        config.clear()
-        return
-
-    try:
-        vmess_config = json.loads(vmess.group("json"))
-        base64 = b64encode_safe(json.dumps(vmess_config, separators=(',', ':')))
-        vmess_config.update({"url": f"{config.get("protocol", "vmess")}://{base64}"})
-        return vmess_config
-    except Exception:
-        config.clear()
-        return
 
 
 def re_fullmatch(pattern: str, string: str) -> bool:
