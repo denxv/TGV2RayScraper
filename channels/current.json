@@ -509,11 +509,6 @@
         "current_id": 1,
         "last_id": -1
     },
-    "configfast": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "configforvpn": {
         "count": 0,
         "current_id": 1,
@@ -1144,11 +1139,6 @@
         "current_id": 1,
         "last_id": -1
     },
-    "free_netplus": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "free_nettm": {
         "count": 0,
         "current_id": 1,
@@ -1290,11 +1280,6 @@
         "last_id": -1
     },
     "freevpnhomes": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
-    "freevpnn11": {
         "count": 0,
         "current_id": 1,
         "last_id": -1
@@ -2229,11 +2214,6 @@
         "current_id": 1,
         "last_id": -1
     },
-    "mr_technofa": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "mrconfig_channel": {
         "count": 0,
         "current_id": 1,
@@ -2674,11 +2654,6 @@
         "current_id": 1,
         "last_id": -1
     },
-    "proxy_confiig": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "proxy_confiingir": {
         "count": 0,
         "current_id": 1,
@@ -2845,11 +2820,6 @@
         "last_id": -1
     },
     "pydriclub": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
-    "qafor_1": {
         "count": 0,
         "current_id": 1,
         "last_id": -1
@@ -3460,11 +3430,6 @@
         "last_id": -1
     },
     "v2net_iran": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
-    "v2ngfast": {
         "count": 0,
         "current_id": 1,
         "last_id": -1
@@ -5015,11 +4980,6 @@
         "last_id": -1
     },
     "yxjnode": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
-    "z_v2ray": {
         "count": 0,
         "current_id": 1,
         "last_id": -1

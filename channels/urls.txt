@@ -100,7 +100,6 @@ https://t.me/s/config_vip7
 https://t.me/s/configasli
 https://t.me/s/configeston
 https://t.me/s/configfa
-https://t.me/s/configfast
 https://t.me/s/configforvpn
 https://t.me/s/configforvpn01
 https://t.me/s/configfree_1
@@ -227,7 +226,6 @@ https://t.me/s/free1_vpn
 https://t.me/s/free1ss
 https://t.me/s/free4allvpn
 https://t.me/s/free_httpcustom
-https://t.me/s/free_netplus
 https://t.me/s/free_nettm
 https://t.me/s/free_outline_keys
 https://t.me/s/free_serverir
@@ -257,7 +255,6 @@ https://t.me/s/freevpn3327
 https://t.me/s/freevpnatm
 https://t.me/s/freevpnchina
 https://t.me/s/freevpnhomes
-https://t.me/s/freevpnn11
 https://t.me/s/freevpnproxycustom
 https://t.me/s/freevv2rayng
 https://t.me/s/frev2rayng
@@ -444,7 +441,6 @@ https://t.me/s/moon_ping
 https://t.me/s/mowjproxy
 https://t.me/s/mpmehi
 https://t.me/s/mpproxy
-https://t.me/s/mr_technofa
 https://t.me/s/mrconfig_channel
 https://t.me/s/mrdarc
 https://t.me/s/mrsoulb
@@ -533,7 +529,6 @@ https://t.me/s/prossh
 https://t.me/s/proxie
 https://t.me/s/proxiiraniii
 https://t.me/s/proxy48
-https://t.me/s/proxy_confiig
 https://t.me/s/proxy_confiingir
 https://t.me/s/proxy_daemi
 https://t.me/s/proxy_emperor
@@ -568,7 +563,6 @@ https://t.me/s/public504
 https://t.me/s/puni_shop_v2rayng
 https://t.me/s/pusyvpn
 https://t.me/s/pydriclub
-https://t.me/s/qafor_1
 https://t.me/s/qrv2ray
 https://t.me/s/raiv2mmr
 https://t.me/s/rasadvpn
@@ -691,7 +685,6 @@ https://t.me/s/v2graphy
 https://t.me/s/v2hamid
 https://t.me/s/v2logy
 https://t.me/s/v2net_iran
-https://t.me/s/v2ngfast
 https://t.me/s/v2ngnet
 https://t.me/s/v2pedia
 https://t.me/s/v2proxy
@@ -1002,7 +995,6 @@ https://t.me/s/yasv2ray
 https://t.me/s/yebekhe
 https://t.me/s/yekoyekvpn
 https://t.me/s/yxjnode
-https://t.me/s/z_v2ray
 https://t.me/s/zar_vpn
 https://t.me/s/zdyz2
 https://t.me/s/zed_vpn
