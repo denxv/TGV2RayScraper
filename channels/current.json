@@ -2989,11 +2989,6 @@
         "current_id": 1,
         "last_id": -1
     },
-    "server_free2": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "server_housing03": {
         "count": 0,
         "current_id": 1,
@@ -3300,11 +3295,6 @@
         "last_id": -1
     },
     "tm_vpn_ogrysy": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
-    "tokavpn": {
         "count": 0,
         "current_id": 1,
         "last_id": -1
@@ -3815,11 +3805,6 @@
         "last_id": -1
     },
     "v2raymelliii": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
-    "v2rayminer": {
         "count": 0,
         "current_id": 1,
         "last_id": -1
