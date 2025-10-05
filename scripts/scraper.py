@@ -19,7 +19,7 @@ from tqdm import tqdm
 from logger import logger, log_debug_object
 
 DEFAULT_PATH_CHANNELS = "../channels/current.json"
-DEFAULT_PATH_CONFIGS_RAW = "../v2ray/configs-raw.txt"
+DEFAULT_PATH_CONFIGS_RAW = "../configs/v2ray-raw.txt"
 LEN_NAME = 32
 LEN_NUMBER = 7
 TOTAL_CHANNELS_POST = 0

@@ -19,8 +19,8 @@ from asteval import Interpreter
 
 from logger import logger, log_debug_object
 
-DEFAULT_PATH_CONFIGS_CLEAN = "../v2ray/configs-clean.txt"
-DEFAULT_PATH_CONFIGS_RAW = "../v2ray/configs-raw.txt"
+DEFAULT_PATH_CONFIGS_CLEAN = "../configs/v2ray-clean.txt"
+DEFAULT_PATH_CONFIGS_RAW = "../configs/v2ray-raw.txt"
 FORMAT_CONFIG_NAME = "{protocol}-{host}-{port}"
 
 # anytls://password@host:port/path?params#name

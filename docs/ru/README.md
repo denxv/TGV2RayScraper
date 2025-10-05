@@ -79,15 +79,23 @@ python main.py
   * `current.json` – JSON-файл с актуальными данными каналов
   * `urls.txt` – текстовый файл с URL-адресами Telegram-каналов
 
+* **configs/** – папка с файлами конфигураций прокси
+  * `v2ray-clean.txt` – очищенные, нормализованные, отфильтрованные и без дубликатов конфигурации прокси
+  * `v2ray-raw.txt` – сырые конфигурации прокси, собранные из разных источников
+
+* **docs/** – папка с документацией
+  * **ru/** – документация на русском языке
+    * `LICENSE` – файл лицензии для документации
+    * `README.md` – основной файл документации на русском
+
+* **logs/** – папка для хранения логов работы и обработки конфигураций
+
 * **scripts/** – скрипты для обработки данных
   * `async_scraper.py` – асинхронный сбор данных с каналов Telegram
+  * `logger.py` – утилита для логирования с цветным выводом в консоль и метками времени с микросекундами, используется во всех скриптах
   * `scraper.py` – синхронный сбор данных с каналов Telegram
   * `update_channels.py` – обновление списка каналов
   * `v2ray_cleaner.py` – утилита для обработки конфигураций V2Ray и других прокси: очистка, нормализация, фильтрация, удаление дубликатов и сортировка
-
-* **v2ray/** – хранение V2Ray-конфигураций
-  * `configs-clean.txt` – очищенные, нормализованные, отфильтрованные и без дубликатов конфигурации
-  * `configs-raw.txt` – сырые конфигурации прокси, собранные из разных источников
 
 * **requirements.txt** — список всех библиотек Python, необходимых для работы проекта
 
@@ -151,7 +159,7 @@ python main.py
 
 ## Поддерживаемые протоколы
 
-Файл с очищенными конфигурациями (`v2ray/configs-clean.txt`) содержит записи в одном из следующих форматов:
+Файл с очищенными конфигурациями (`configs/v2ray-clean.txt`) содержит записи в одном из следующих форматов:
 
 ---
 
@@ -290,7 +298,7 @@ python scripts/async_scraper.py -h
 
 * `-C, --channels FILE` — Путь к входному JSON-файлу со списком каналов (по умолчанию: `channels/current.json`).
 * `-E, --batch-extract N` — Количество сообщений, обрабатываемых параллельно для извлечения V2Ray конфигураций (по умолчанию: 20).
-* `-R, --configs-raw FILE` — Путь к выходному файлу для сохранения собранных V2Ray конфигураций (по умолчанию: `v2ray/configs-raw.txt`).
+* `-R, --configs-raw FILE` — Путь к выходному файлу для сохранения собранных V2Ray конфигураций (по умолчанию: `configs/v2ray-raw.txt`).
 * `-U, --batch-update N` — Максимальное количество каналов, обновляемых параллельно (по умолчанию: 100).
 
 ---
@@ -298,7 +306,7 @@ python scripts/async_scraper.py -h
 **Пример использования:**
 
 ```bash
-python scripts/async_scraper.py -E 20 -U 100 -C channels/current.json -R v2ray/configs-raw.txt
+python scripts/async_scraper.py -E 20 -U 100 -C channels/current.json -R configs/v2ray-raw.txt
 ```
 
 ---
@@ -318,14 +326,14 @@ python scripts/scraper.py -h
 **Опции:**
 
 * `-C, --channels FILE` — Путь к входному JSON-файлу со списком каналов (по умолчанию: `channels/current.json`).
-* `-R, --configs-raw FILE` — Путь к выходному файлу для сохранения собранных V2Ray конфигураций (по умолчанию: `v2ray/configs-raw.txt`).
+* `-R, --configs-raw FILE` — Путь к выходному файлу для сохранения собранных V2Ray конфигураций (по умолчанию: `configs/v2ray-raw.txt`).
 
 ---
 
 **Пример использования:**
 
 ```bash
-python scripts/scraper.py -C channels/current.json -R v2ray/configs-raw.txt
+python scripts/scraper.py -C channels/current.json -R configs/v2ray-raw.txt
 ```
 
 ---
@@ -346,9 +354,9 @@ python scripts/v2ray_cleaner.py -h
 
 * `-D, --duplicate [FIELDS]` — Удалить дубликаты по указанным полям через запятую. Если указано без значения (например, `-D`), по умолчанию используются `protocol,host,port`. Если не указано, дубликаты не удаляются.
 * `-F, --filter CONDITION` — Фильтровать записи с использованием Python-подобного условия. Пример: `"host == '1.1.1.1' and port > 1000"`. Сохраняются только подходящие записи.
-* `-I, --configs-raw FILE` — Путь к входному файлу с сырыми V2Ray конфигурациями (по умолчанию: `v2ray/configs-raw.txt`).
+* `-I, --configs-raw FILE` — Путь к входному файлу с сырыми V2Ray конфигурациями (по умолчанию: `configs/v2ray-raw.txt`).
 * `-N, --no-normalize` — Отключить нормализацию (по умолчанию включена).
-* `-O, --configs-clean FILE` — Путь к выходному файлу для очищенных и обработанных конфигураций (по умолчанию: `v2ray/configs-clean.txt`).
+* `-O, --configs-clean FILE` — Путь к выходному файлу для очищенных и обработанных конфигураций (по умолчанию: `configs/v2ray-clean.txt`).
 * `-R, --reverse` — Сортировать записи в порядке убывания (только при использовании `--sort`).
 * `-S, --sort [FIELDS]` — Сортировать записи по указанным полям через запятую. Если указано без значения (например, `-S`), используются поля `host,port`. Если не указано, сортировка не применяется.
 
@@ -356,18 +364,18 @@ python scripts/v2ray_cleaner.py -h
 
 Скрипт:
 
-* Читает сырые конфигурации из `v2ray/configs-raw.txt`.
+* Читает сырые конфигурации из `configs/v2ray-raw.txt`.
 * Применяет фильтры на основе регулярных выражений и нормализацию.
 * Удаляет дубликаты (если используется `--duplicate`).
 * Сортирует записи (если используется `--sort`).
-* Сохраняет очищенные и обработанные конфигурации в `v2ray/configs-clean.txt`.
+* Сохраняет очищенные и обработанные конфигурации в `configs/v2ray-clean.txt`.
 
 ---
 
 **Пример использования:**
 
 ```bash
-python scripts/v2ray_cleaner.py -I v2ray/configs-raw.txt -O v2ray/configs-clean.txt --filter "re_search(r'speedtest|google', host)" -D "host, port" -S "protocol, host, port" --reverse
+python scripts/v2ray_cleaner.py -I configs/v2ray-raw.txt -O configs/v2ray-clean.txt --filter "re_search(r'speedtest|google', host)" -D "host, port" -S "protocol, host, port" --reverse
 ```
 
 ---
