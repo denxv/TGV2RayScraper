@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import base64
 import json
 import re
 from pathlib import Path
@@ -17,8 +16,8 @@ from argparse import (
 
 from asteval import Interpreter
 
-from logger import logger, log_debug_object
-from const import (
+from .logger import logger, log_debug_object
+from .const import (
     DEFAULT_PATH_CONFIGS_CLEAN,
     DEFAULT_PATH_CONFIGS_RAW,
     FORMAT_CONFIG_NAME,
@@ -26,26 +25,15 @@ from const import (
     SSR_PLAIN_PATTERN,
     URL_PATTERNS,
 )
-
-
-def abs_path(path: str | Path) -> str:
-    return str((Path(__file__).parent / path).resolve())
-
-
-def b64decode_safe(string: str) -> str:
-    if not isinstance(string, str) or not (string := string.strip()):
-        return ""
-    string = f"{string}{'=' * (-len(string) % 4)}"
-    for b64decode in (base64.urlsafe_b64decode, base64.b64decode):
-        try:
-            return b64decode(string).decode('utf-8', errors='replace')
-        except Exception:
-            continue
-    return ""
-
-
-def b64encode_safe(string: str) -> str:
-    return base64.b64encode(string.encode('utf-8')).decode('ascii')
+from .utils import (
+    abs_path,
+    b64decode_safe,
+    b64encode_safe,
+    parse_valid_params,
+    re_fullmatch,
+    re_search,
+    validate_file_path,
+)
 
 
 def filter_by_condition(configs: list[dict[str, Any]], condition: str) -> list[dict[str, Any]]:
@@ -353,31 +341,6 @@ def parse_args() -> Namespace:
     return args
 
 
-def parse_valid_params(params: str) -> list[str]:
-    if not isinstance(params, str):
-        raise ArgumentTypeError(f"Expected string, got {type(params).__name__!r}")
-
-    seen = set()
-
-    def check_param(param: str) -> str:
-        if not re.fullmatch(r"\w+(?:\.\w+)*", param):
-            raise ArgumentTypeError(f"Invalid parameter: {param!r}")
-        if param in seen:
-            raise ArgumentTypeError(f"Duplicate parameter: {param!r}")
-        seen.add(param)
-        return param
-
-    valid_params = [
-        check_param(param) 
-        for param in re.split(r"[ ,]+", params.strip())
-    ]
-
-    if not valid_params:
-        raise ArgumentTypeError("No parameters provided")
-
-    return valid_params
-
-
 def process_configs(configs: list[dict[str, Any]], args: Namespace) -> list[dict[str, Any]]:
     if args.normalize:
         configs = normalize(configs=configs)
@@ -420,18 +383,6 @@ def remove_duplicates_by_params(
     return unique_configs
 
 
-def re_fullmatch(pattern: str, string: str) -> bool:
-    if not isinstance(string, str):
-        string = str(string)
-    return bool(re.fullmatch(pattern, string))
-
-
-def re_search(pattern: str, string: str) -> bool:
-    if not isinstance(string, str):
-        string = str(string)
-    return bool(re.search(pattern, string))
-
-
 def save_configs(
     configs: list[dict[str, Any]],
     path_configs_clean: str = "v2ray-configs-clean.txt",
@@ -463,21 +414,6 @@ def sort_by_params(
         f"Sorting completed. {len(sorted_configs)} configs sorted successfully.",
     )
     return sorted_configs
-
-
-def validate_file_path(path: str | Path, must_be_file: bool = True) -> str:
-    filepath = Path(path).resolve()
-
-    if not filepath.parent.exists():
-        raise ArgumentTypeError(f"Parent directory does not exist: '{filepath.parent}'.")
-
-    if filepath.exists() and filepath.is_dir():
-        raise ArgumentTypeError(f"'{filepath}' is a directory, expected a file.")
-
-    if must_be_file and not filepath.is_file():
-        raise ArgumentTypeError(f"The file does not exist: '{filepath}'.")
-    
-    return str(filepath)
 
 
 def main() -> None:

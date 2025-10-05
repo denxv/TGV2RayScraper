@@ -2,22 +2,20 @@
 # coding: utf-8
 
 import json
-import re
 from pathlib import Path
 from argparse import (
     ArgumentParser,
-    ArgumentTypeError,
     HelpFormatter,
     Namespace,
     SUPPRESS,
 )
 
-import requests
 from lxml import html
+from requests import Session
 from tqdm import tqdm
 
-from logger import logger, log_debug_object
-from const import (
+from .logger import logger, log_debug_object
+from .const import (
     DEFAULT_PATH_CHANNELS,
     DEFAULT_PATH_CONFIGS_RAW,
     FURL_TG,
@@ -25,50 +23,23 @@ from const import (
     LEN_NAME,
     LEN_NUMBER,
     REGEX_V2RAY,
-    TOTAL_CHANNELS_POST,
     XPATH_POST_ID,
     XPATH_V2RAY,
 )
+from .utils import (
+    abs_path,
+    get_sorted_keys,
+    print_channel_info,
+    validate_file_path,
+)
 
-SESSION_TG = requests.Session()
-
-
-def abs_path(path: str | Path) -> str:
-    return str((Path(__file__).parent / path).resolve())
-
-
-def current_less_last(channel_info: dict) -> bool:
-    return channel_info["current_id"] < channel_info["last_id"]
-
-
-def diff_channel_id(channel_info: dict) -> int:
-    return channel_info["last_id"] - channel_info["current_id"]
-
-
-def format_channel_id(channel_info: dict) -> str:
-    global TOTAL_CHANNELS_POST
-    diff = diff_channel_id(channel_info)
-    TOTAL_CHANNELS_POST = TOTAL_CHANNELS_POST + diff
-    return (
-        f"{channel_info['current_id']:>{LEN_NUMBER}} "
-        f"/ {channel_info['last_id']:<{LEN_NUMBER}} "
-        f"(+{diff})"
-    )
-
-
-def get_filtered_keys(channels: dict) -> list:
-    return list(filter(lambda name: current_less_last(channels[name]), channels.keys()))
+SESSION_TG = Session()
 
 
 def get_last_id(channel_name: str) -> int:
     response = SESSION_TG.get(FURL_TG.format(name=channel_name))
     list_post = html.fromstring(response.content).xpath(XPATH_POST_ID)
     return int(list_post[-1].split("/")[-1]) if list_post else -1
-
-
-def get_sorted_keys(channels: dict, filtering: bool = False, reverse: bool = False) -> list:
-    channel_names = get_filtered_keys(channels) if filtering else channels.keys()
-    return sorted(channel_names, key=lambda name: diff_channel_id(channels[name]), reverse=reverse)
 
 
 def load_channels(path_channels: str = "tg-channels-current.json") -> dict:
@@ -121,17 +92,6 @@ def parse_args() -> Namespace:
     return args
 
 
-def print_channel_info(channels: dict) -> None:
-    logger.info(f"Showing information about the remaining channels...")
-    channel_names = get_sorted_keys(channels, filtering=True)
-    for name in channel_names:
-        logger.info(f" <SS>  {name:<{LEN_NAME}}{format_channel_id(channels[name])}")
-    else:
-        logger.info(f"Total channels are available for extracting configs: {len(channels)}")
-        logger.info(f"Channels left to check: {len(channel_names)}")
-        logger.info(f"Total messages on channels: {TOTAL_CHANNELS_POST:,}")
-
-
 def save_channels(channels: list, path_channels: str = "tg-channels-current.json") -> None:
     with open(path_channels, "w", encoding="utf-8") as file:
         json.dump(channels, file, indent=4, sort_keys=True)
@@ -181,21 +141,6 @@ def update_info(channels: dict) -> None:
             channel_info["current_id"] = diff if diff > 0 else 1
         elif channel_info["current_id"] > channel_info["last_id"] != -1:
             channel_info["current_id"] = channel_info["last_id"]
-
-
-def validate_file_path(path: str | Path, must_be_file: bool = True) -> str:
-    filepath = Path(path).resolve()
-
-    if not filepath.parent.exists():
-        raise ArgumentTypeError(f"Parent directory does not exist: '{filepath.parent}'.")
-
-    if filepath.exists() and filepath.is_dir():
-        raise ArgumentTypeError(f"'{filepath}' is a directory, expected a file.")
-
-    if must_be_file and not filepath.is_file():
-        raise ArgumentTypeError(f"The file does not exist: '{filepath}'.")
-    
-    return str(filepath)
 
 
 def write_configs(configs: list, \

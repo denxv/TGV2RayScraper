@@ -1,10 +1,13 @@
 from re import compile
+from pathlib import Path
 from typing import ParamSpec, TypeVar
 
-DEFAULT_PATH_CHANNELS = "../channels/current.json"
-DEFAULT_PATH_URLS = "../channels/urls.txt"
-DEFAULT_PATH_CONFIGS_CLEAN = "../configs/v2ray-clean.txt"
-DEFAULT_PATH_CONFIGS_RAW = "../configs/v2ray-raw.txt"
+from .common import abs_path
+
+DEFAULT_PATH_CHANNELS = abs_path("../channels/current.json")
+DEFAULT_PATH_URLS = abs_path("../channels/urls.txt")
+DEFAULT_PATH_CONFIGS_CLEAN = abs_path("../configs/v2ray-clean.txt")
+DEFAULT_PATH_CONFIGS_RAW = abs_path("../configs/v2ray-raw.txt")
 
 FORMAT_CONFIG_NAME = "{protocol}-{host}-{port}"
 FURL_TG = "https://t.me/s/{name}"
@@ -18,14 +21,14 @@ P = ParamSpec("P")
 T = TypeVar("T")
 
 SCRIPTS_CONFIG = {
-    "update_channels.py": {
+    "update_channels": {
         "flags": [
             "--channels",
             "--urls",
         ],
         "mode": "any",
     },
-    "async_scraper.py": {
+    "async_scraper": {
         "flags": [
             "--batch-extract",
             "--batch-update",
@@ -34,14 +37,14 @@ SCRIPTS_CONFIG = {
         ],
         "mode": "async",
     },
-    "scraper.py": {
+    "scraper": {
         "flags": [
             "--channels",
             "--configs-raw",
         ],
         "mode": "sync",
     },
-    "v2ray_cleaner.py": {
+    "v2ray_cleaner": {
         "flags": [
             "--configs-clean",
             "--configs-raw",

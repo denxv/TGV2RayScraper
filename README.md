@@ -92,10 +92,12 @@ Other dependencies are listed in [`requirements.txt`](requirements.txt).
 
 * **scripts/** – data processing scripts
   * `async_scraper.py` – asynchronously collects data from Telegram channels
+  * `common.py` – utilities for consistent path resolution
   * `const.py` – project constants, default paths, URL templates, regex patterns, and script flags
   * `logger.py` – logging utility with colorized console output and microsecond timestamps, used across all scripts
   * `scraper.py` – synchronously collects data from Telegram channels
   * `update_channels.py` – updates the channel list
+  * `utils.py` – centralized shared functions for all scripts
   * `v2ray_cleaner.py` – utility for processing V2Ray and proxy configs: cleaning, normalization, filtering, deduplication, and sorting
 
 * **requirements.txt** – lists all Python libraries required to run the project
@@ -248,13 +250,13 @@ wireguard://privatekey@host:port?params#name
 ### **1. Updating Channels**
 
 ```bash
-python scripts/update_channels.py
+python -m scripts.update_channels
 ```
 
 You can also run the script with `-h` to see all available options:
 
 ```bash
-python scripts/update_channels.py -h
+python -m scripts.update_channels -h
 ```
 
 **Options include:**
@@ -276,7 +278,7 @@ The script:
 **Example usage:**
 
 ```bash
-python scripts/update_channels.py -C channels/current.json -U channels/urls.txt
+python -m scripts.update_channels -C channels/current.json -U channels/urls.txt
 ```
 
 ---
@@ -286,13 +288,13 @@ python scripts/update_channels.py -C channels/current.json -U channels/urls.txt
 #### **Asynchronous Scraper** (faster, experimental)
 
 ```bash
-python scripts/async_scraper.py
+python -m scripts.async_scraper
 ```
 
 You can run with `-h` to see all available options:
 
 ```bash
-python scripts/async_scraper.py -h
+python -m scripts.async_scraper -h
 ```
 
 **Options include:**
@@ -307,7 +309,7 @@ python scripts/async_scraper.py -h
 **Example usage:**
 
 ```bash
-python scripts/async_scraper.py -E 20 -U 100 -C channels/current.json -R configs/v2ray-raw.txt
+python -m scripts.async_scraper -E 20 -U 100 -C channels/current.json -R configs/v2ray-raw.txt
 ```
 
 ---
@@ -315,13 +317,13 @@ python scripts/async_scraper.py -E 20 -U 100 -C channels/current.json -R configs
 #### **Synchronous Scraper** (simpler, slower)
 
 ```bash
-python scripts/scraper.py
+python -m scripts.scraper
 ```
 
 You can run with `-h` to see all available options:
 
 ```bash
-python scripts/scraper.py -h
+python -m scripts.scraper -h
 ```
 
 **Options include:**
@@ -334,7 +336,7 @@ python scripts/scraper.py -h
 **Example usage:**
 
 ```bash
-python scripts/scraper.py -C channels/current.json -R configs/v2ray-raw.txt
+python -m scripts.scraper -C channels/current.json -R configs/v2ray-raw.txt
 ```
 
 ---
@@ -342,13 +344,13 @@ python scripts/scraper.py -C channels/current.json -R configs/v2ray-raw.txt
 ### **3. Cleaning V2Ray Configurations**
 
 ```bash
-python scripts/v2ray_cleaner.py
+python -m scripts.v2ray_cleaner
 ```
 
 You can also run the script with `-h` to see all available options:
 
 ```bash
-python scripts/v2ray_cleaner.py -h
+python -m scripts.v2ray_cleaner -h
 ```
 
 **Options include:**
@@ -376,7 +378,7 @@ The script:
 **Example usage:**
 
 ```bash
-python scripts/v2ray_cleaner.py -I configs/v2ray-raw.txt -O configs/v2ray-clean.txt --filter "re_search(r'speedtest|google', host)" -D "host, port" -S "protocol, host, port" --reverse
+python -m scripts.v2ray_cleaner -I configs/v2ray-raw.txt -O configs/v2ray-clean.txt --filter "re_search(r'speedtest|google', host)" -D "host, port" -S "protocol, host, port" --reverse
 ```
 
 ---

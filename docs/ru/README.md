@@ -92,10 +92,12 @@ python main.py
 
 * **scripts/** – скрипты для обработки данных
   * `async_scraper.py` – асинхронный сбор данных с каналов Telegram
+  * `common.py` – утилиты для единообразного получения абсолютных путей
   * `const.py` – константы проекта, пути по умолчанию, шаблоны URL, регулярные выражения и флаги скриптов
   * `logger.py` – утилита для логирования с цветным выводом в консоль и метками времени с микросекундами, используется во всех скриптах
   * `scraper.py` – синхронный сбор данных с каналов Telegram
   * `update_channels.py` – обновление списка каналов
+  * `utils.py` – централизованные общие функции для всех скриптов
   * `v2ray_cleaner.py` – утилита для обработки конфигураций V2Ray и других прокси: очистка, нормализация, фильтрация, удаление дубликатов и сортировка
 
 * **requirements.txt** — список всех библиотек Python, необходимых для работы проекта
@@ -248,13 +250,13 @@ wireguard://privatekey@host:port?params#name
 ### **1. Обновление каналов**
 
 ```bash
-python scripts/update_channels.py
+python -m scripts.update_channels
 ```
 
 Можно также использовать `-h`, чтобы увидеть все доступные опции:
 
 ```bash
-python scripts/update_channels.py -h
+python -m scripts.update_channels -h
 ```
 
 **Опции:**
@@ -276,7 +278,7 @@ python scripts/update_channels.py -h
 **Пример использования:**
 
 ```bash
-python scripts/update_channels.py -C channels/current.json -U channels/urls.txt
+python -m scripts.update_channels -C channels/current.json -U channels/urls.txt
 ```
 
 ---
@@ -286,13 +288,13 @@ python scripts/update_channels.py -C channels/current.json -U channels/urls.txt
 #### **Асинхронный скрапер** (быстрее, экспериментальный)
 
 ```bash
-python scripts/async_scraper.py
+python -m scripts.async_scraper
 ```
 
 Можно использовать `-h` для просмотра всех опций:
 
 ```bash
-python scripts/async_scraper.py -h
+python -m scripts.async_scraper -h
 ```
 
 **Опции:**
@@ -307,7 +309,7 @@ python scripts/async_scraper.py -h
 **Пример использования:**
 
 ```bash
-python scripts/async_scraper.py -E 20 -U 100 -C channels/current.json -R configs/v2ray-raw.txt
+python -m scripts.async_scraper -E 20 -U 100 -C channels/current.json -R configs/v2ray-raw.txt
 ```
 
 ---
@@ -315,13 +317,13 @@ python scripts/async_scraper.py -E 20 -U 100 -C channels/current.json -R configs
 #### **Синхронный скрапер** (проще, медленнее)
 
 ```bash
-python scripts/scraper.py
+python -m scripts.scraper
 ```
 
 Можно использовать `-h` для просмотра всех опций:
 
 ```bash
-python scripts/scraper.py -h
+python -m scripts.scraper -h
 ```
 
 **Опции:**
@@ -334,7 +336,7 @@ python scripts/scraper.py -h
 **Пример использования:**
 
 ```bash
-python scripts/scraper.py -C channels/current.json -R configs/v2ray-raw.txt
+python -m scripts.scraper -C channels/current.json -R configs/v2ray-raw.txt
 ```
 
 ---
@@ -342,13 +344,13 @@ python scripts/scraper.py -C channels/current.json -R configs/v2ray-raw.txt
 ### **3. Очистка конфигураций V2Ray**
 
 ```bash
-python scripts/v2ray_cleaner.py
+python -m scripts.v2ray_cleaner
 ```
 
 Можно использовать `-h`, чтобы увидеть все опции:
 
 ```bash
-python scripts/v2ray_cleaner.py -h
+python -m scripts.v2ray_cleaner -h
 ```
 
 **Опции:**
@@ -376,7 +378,7 @@ python scripts/v2ray_cleaner.py -h
 **Пример использования:**
 
 ```bash
-python scripts/v2ray_cleaner.py -I configs/v2ray-raw.txt -O configs/v2ray-clean.txt --filter "re_search(r'speedtest|google', host)" -D "host, port" -S "protocol, host, port" --reverse
+python -m scripts.v2ray_cleaner -I configs/v2ray-raw.txt -O configs/v2ray-clean.txt --filter "re_search(r'speedtest|google', host)" -D "host, port" -S "protocol, host, port" --reverse
 ```
 
 ---

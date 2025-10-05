@@ -2,46 +2,28 @@
 # coding: utf-8
 
 import json
-import re
-from datetime import datetime
-from functools import wraps
 from pathlib import Path
-from typing import Callable
 from argparse import (
     ArgumentParser,
-    ArgumentTypeError,
     HelpFormatter,
     Namespace,
     SUPPRESS,
 )
 
-from logger import logger, log_debug_object
-from const import (
+from .logger import logger, log_debug_object
+from .const import (
     DEFAULT_PATH_CHANNELS,
     DEFAULT_PATH_URLS,
-    P,
     REGEX_CHANNELS_NAME,
-    T,
 )
-
-
-def abs_path(path: str | Path) -> str:
-    return str((Path(__file__).parent / path).resolve())
-
-
-def condition_delete_channels(channel_info: dict) -> bool:
-    return channel_info["count"] <= -3 or channel_info["count"] <= 0 and \
-        channel_info["current_id"] >= channel_info["last_id"] != -1
-
-
-def make_backup(files: list[str | Path]) -> None:
-    for file in files:
-        src = Path(file).resolve()
-        if not src.exists():
-            continue
-        backup_name = f"{src.stem}-backup-{datetime.now():%Y%m%d-%H%M%s}{src.suffix}"
-        src.rename(src.parent / backup_name)
-        logger.info(f"File '{src.name}' backed up as '{backup_name}'.")
+from .utils import (
+    abs_path,
+    condition_delete_channels,
+    make_backup,
+    sort_channel_names,
+    status,
+    validate_file_path,
+)
 
 
 def parse_args() -> Namespace:
@@ -84,47 +66,6 @@ def parse_args() -> Namespace:
     log_debug_object("Parsed command-line arguments", args)
 
     return args
-
-
-def sort_channel_names(channel_names: list) -> list:
-    return sorted([name.lower() for name in channel_names])
-
-
-def status(
-    start: str,
-    end: str = "",
-    tracking: bool = False,
-) -> Callable[[Callable[P, T]], Callable[P, T]]:
-    def decorator(target_func: Callable[P, T]) -> Callable[P, T]:
-        @wraps(target_func)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
-            logger.info(start)
-            old_size = len(args[0]) if tracking and args and isinstance(args[0], dict) else None
-            result = target_func(*args, **kwargs)
-            if tracking and old_size is not None:
-                new_size = len(args[0])
-                diff = new_size - old_size
-                logger.info(f"Old count: {old_size} | New count: {new_size} | ({diff:+})")
-            if end:
-                logger.info(end)
-            return result
-        return wrapper
-    return decorator
-
-
-def validate_file_path(path: str | Path, must_be_file: bool = True) -> str:
-    filepath = Path(path).resolve()
-
-    if not filepath.parent.exists():
-        raise ArgumentTypeError(f"Parent directory does not exist: '{filepath.parent}'.")
-
-    if filepath.exists() and filepath.is_dir():
-        raise ArgumentTypeError(f"'{filepath}' is a directory, expected a file.")
-
-    if must_be_file and not filepath.is_file():
-        raise ArgumentTypeError(f"The file does not exist: '{filepath}'.")
-    
-    return str(filepath)
 
 
 @status(

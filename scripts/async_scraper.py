@@ -3,24 +3,22 @@
 
 import asyncio
 import json
-import re
 from pathlib import Path
 from typing import Union
 from argparse import (
     ArgumentParser,
-    ArgumentTypeError,
     HelpFormatter,
     Namespace,
     SUPPRESS,
 )
 
 import aiofiles
-import aiohttp
+from aiohttp import ClientSession
 from lxml import html
 from tqdm.asyncio import tqdm
 
-from logger import logger, log_debug_object
-from const import (
+from .logger import logger, log_debug_object
+from .const import (
     DEFAULT_PATH_CHANNELS,
     DEFAULT_PATH_CONFIGS_RAW,
     FURL_TG,
@@ -28,57 +26,23 @@ from const import (
     LEN_NAME,
     LEN_NUMBER,
     REGEX_V2RAY,
-    TOTAL_CHANNELS_POST,
     XPATH_POST_ID,
     XPATH_V2RAY,
 )
+from .utils import (
+    abs_path,
+    get_sorted_keys,
+    int_in_range,
+    print_channel_info,
+    validate_file_path,
+)
 
 
-def abs_path(path: str | Path) -> str:
-    return str((Path(__file__).parent / path).resolve())
-
-
-def current_less_last(channel_info: dict) -> bool:
-    return channel_info["current_id"] < channel_info["last_id"]
-
-
-def diff_channel_id(channel_info: dict) -> int:
-    return channel_info["last_id"] - channel_info["current_id"]
-
-
-def format_channel_id(channel_info: dict) -> str:
-    global TOTAL_CHANNELS_POST
-    diff = diff_channel_id(channel_info)
-    TOTAL_CHANNELS_POST = TOTAL_CHANNELS_POST + diff
-    return (
-        f"{channel_info['current_id']:>{LEN_NUMBER}} "
-        f"/ {channel_info['last_id']:<{LEN_NUMBER}} "
-        f"(+{diff})"
-    )
-
-
-def get_filtered_keys(channels: dict) -> list:
-    return list(filter(lambda name: current_less_last(channels[name]), channels.keys()))
-
-
-async def get_last_id(session: aiohttp.ClientSession, channel_name: str) -> int:
+async def get_last_id(session: ClientSession, channel_name: str) -> int:
     async with session.get(FURL_TG.format(name=channel_name)) as response:
         content = await response.text()
         list_post = html.fromstring(content).xpath(XPATH_POST_ID)
         return int(list_post[-1].split("/")[-1]) if list_post else -1
-
-
-def get_sorted_keys(channels: dict, filtering: bool = False, reverse: bool = False) -> list:
-    channel_names = get_filtered_keys(channels) if filtering else channels.keys()
-    return sorted(channel_names, key=lambda name: diff_channel_id(channels[name]), reverse=reverse)
-
-
-def int_in_range(value: str, min_value: int = 1, max_value: int = 100, \
-    as_str: bool = False) -> int | str:
-    ivalue = int(value)
-    if ivalue < min_value or ivalue > max_value:
-        raise ArgumentTypeError(f"Expected {min_value} to {max_value}, got {ivalue}")
-    return str(ivalue) if as_str else ivalue
 
 
 async def load_channels(path_channels: str = "tg-channels-current.json") -> dict:
@@ -150,24 +114,13 @@ def parse_args() -> Namespace:
     return args
 
 
-def print_channel_info(channels: dict) -> None:
-    logger.info(f"Showing information about the remaining channels...")
-    channel_names = get_sorted_keys(channels, filtering=True)
-    for name in channel_names:
-        logger.info(f" <SS>  {name:<{LEN_NAME}}{format_channel_id(channels[name])}")
-    else:
-        logger.info(f"Total channels are available for extracting configs: {len(channels)}")
-        logger.info(f"Channels left to check: {len(channel_names)}")
-        logger.info(f"Total messages on channels: {TOTAL_CHANNELS_POST:,}")
-
-
 async def save_channels(channels: dict, path_channels: str = "tg-channels-current.json") -> None:
     async with aiofiles.open(path_channels, "w", encoding="utf-8") as file:
         await file.write(json.dumps(channels, indent=4, sort_keys=True, ensure_ascii=False))
         logger.info(f"Saved {len(channels)} channels in '{path_channels}'.")
 
 
-async def save_channel_configs(session: aiohttp.ClientSession, channel_name: str, \
+async def save_channel_configs(session: ClientSession, channel_name: str, \
     channel_info: dict, batch_size: int = 20, path_configs: str = "v2ray-configs-raw.txt") -> None:
     v2ray_count = 0
     list_channel_id = list(range(channel_info["current_id"], channel_info["last_id"], 20))
@@ -197,7 +150,7 @@ async def save_channel_configs(session: aiohttp.ClientSession, channel_name: str
     logger.info(f"Found: {v2ray_count} configs.")
 
 
-async def update_info(session: aiohttp.ClientSession, channels: dict, batch_size: int = 100) -> None:
+async def update_info(session: ClientSession, channels: dict, batch_size: int = 100) -> None:
     logger.info(f"Updating channel information for {len(channels)} channels...")
 
     async def update_channel(channel_name: str, channel_info: dict) -> None:
@@ -230,21 +183,6 @@ async def update_info(session: aiohttp.ClientSession, channels: dict, batch_size
         await asyncio.gather(*tasks)
 
 
-def validate_file_path(path: str | Path, must_be_file: bool = True) -> str:
-    filepath = Path(path).resolve()
-
-    if not filepath.parent.exists():
-        raise ArgumentTypeError(f"Parent directory does not exist: '{filepath.parent}'.")
-
-    if filepath.exists() and filepath.is_dir():
-        raise ArgumentTypeError(f"'{filepath}' is a directory, expected a file.")
-
-    if must_be_file and not filepath.is_file():
-        raise ArgumentTypeError(f"The file does not exist: '{filepath}'.")
-    
-    return str(filepath)
-
-
 async def write_configs(configs: list, \
     path_configs: str = "v2ray-configs-raw.txt", mode: str = "w") -> None:
     async with aiofiles.open(path_configs, mode, encoding="utf-8") as file:
@@ -255,7 +193,7 @@ async def main() -> None:
     parsed_args = parse_args()
     try:
         channels = await load_channels(path_channels=parsed_args.channels)
-        async with aiohttp.ClientSession() as session:
+        async with ClientSession() as session:
             await update_info(session, channels, batch_size=parsed_args.batch_update)
             print_channel_info(channels)
             for name in get_sorted_keys(channels, filtering=True):

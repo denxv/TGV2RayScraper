@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import re
 import subprocess
 import sys
 from pathlib import Path
 from argparse import (
     ArgumentParser,
-    ArgumentTypeError,
     HelpFormatter,
     Namespace,
     SUPPRESS,
@@ -17,33 +15,12 @@ from scripts.logger import logger, log_debug_object
 from scripts.const import (
     SCRIPTS_CONFIG,
 )
-
-SCRIPTS_DIR = Path(__file__).parent / "scripts"
-
-
-def collect_args(args: Namespace, flags: list[str]) -> list[str]:
-    params = []
-    for flag in flags:
-        value = getattr(args, flag_to_name(flag), None)
-        if value is not None:
-            params.extend([flag] if not value else [flag, value])
-    return params
-
-
-def flag_to_name(flag: str) -> str:
-    return flag.lstrip('-').replace('-', '_')
-
-
-def int_in_range(value: str, min_value: int = 1, max_value: int = 100, \
-    as_str: bool = False) -> int | str:
-    ivalue = int(value)
-    if ivalue < min_value or ivalue > max_value:
-        raise ArgumentTypeError(f"Expected {min_value} to {max_value}, got {ivalue}")
-    return str(ivalue) if as_str else ivalue
-
-
-def normalize_valid_params(params: str) -> str:
-    return ",".join(parse_valid_params(params)) if params.strip() else ""
+from scripts.utils import (
+    collect_args,
+    int_in_range,
+    normalize_valid_params,
+    validate_file_path,
+)
 
 
 def parse_args() -> Namespace:
@@ -160,41 +137,19 @@ def parse_args() -> Namespace:
     return args
 
 
-def parse_valid_params(params: str) -> list[str]:
-    if not isinstance(params, str):
-        raise ArgumentTypeError(f"Expected string, got {type(params).__name__!r}")
-
-    seen = set()
-
-    def check_param(param: str) -> str:
-        if not re.fullmatch(r"\w+(?:\.\w+)*", param):
-            raise ArgumentTypeError(f"Invalid parameter: {param!r}")
-        if param in seen:
-            raise ArgumentTypeError(f"Duplicate parameter: {param!r}")
-        seen.add(param)
-        return param
-
-    valid_params = [
-        check_param(param) 
-        for param in re.split(r"[ ,]+", params.strip())
-    ]
-
-    if not valid_params:
-        raise ArgumentTypeError("No parameters provided")
-
-    return valid_params
-
-
 def run_script(script_name: str = "async_scraper.py", args: list = []) -> None:
     repeat_count = 100
     logger.info(f"Starting script '{script_name}'...")
     logger.info('-' * repeat_count)
 
     arguments = [
-        sys.executable, 
-        str(SCRIPTS_DIR / script_name), 
+        sys.executable,
+        "-m",
+        f"scripts.{script_name}",
         *args,
     ]
+
+    log_debug_object("Script launch arguments", arguments)
     if subprocess.run(args=arguments).returncode:
         raise Exception(f"Script '{script_name}' exited with an error!")
 
@@ -208,21 +163,6 @@ def show_scripts_help() -> None:
         run_script(script_name, args=["--help"])
 
 
-def validate_file_path(path: str | Path, must_be_file: bool = True) -> str:
-    filepath = Path(path).resolve()
-
-    if not filepath.parent.exists():
-        raise ArgumentTypeError(f"Parent directory does not exist: '{filepath.parent}'.")
-
-    if filepath.exists() and filepath.is_dir():
-        raise ArgumentTypeError(f"'{filepath}' is a directory, expected a file.")
-
-    if must_be_file and not filepath.is_file():
-        raise ArgumentTypeError(f"The file does not exist: '{filepath}'.")
-    
-    return str(filepath)
-
-
 def main() -> None:
     try:
         parsed_args = parse_args()
@@ -233,7 +173,6 @@ def main() -> None:
         for script_name, script_config in SCRIPTS_CONFIG.items():
             if script_config.get("mode") == skipped_mode:
                 continue
-
             run_script(
                 script_name=script_name, 
                 args=collect_args(parsed_args, script_config.get("flags")),
