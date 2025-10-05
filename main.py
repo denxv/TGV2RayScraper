@@ -14,45 +14,11 @@ from argparse import (
 )
 
 from scripts.logger import logger, log_debug_object
+from scripts.const import (
+    SCRIPTS_CONFIG,
+)
 
 SCRIPTS_DIR = Path(__file__).parent / "scripts"
-SCRIPTS_CONFIG = {
-    "update_channels.py": {
-        "flags": [
-            "--channels",
-            "--urls",
-        ],
-        "mode": "any",
-    },
-    "async_scraper.py": {
-        "flags": [
-            "--batch-extract",
-            "--batch-update",
-            "--channels",
-            "--configs-raw",
-        ],
-        "mode": "async",
-    },
-    "scraper.py": {
-        "flags": [
-            "--channels",
-            "--configs-raw",
-        ],
-        "mode": "sync",
-    },
-    "v2ray_cleaner.py": {
-        "flags": [
-            "--configs-clean",
-            "--configs-raw",
-            "--duplicate",
-            "--filter",
-            "--no-normalize",
-            "--reverse",
-            "--sort",
-        ],
-        "mode": "any",
-    },
-}
 
 
 def collect_args(args: Namespace, flags: list[str]) -> list[str]:

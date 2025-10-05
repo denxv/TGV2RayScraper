@@ -6,7 +6,7 @@ import re
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
-from typing import Callable, TypeVar, Tuple, ParamSpec
+from typing import Callable
 from argparse import (
     ArgumentParser,
     ArgumentTypeError,
@@ -16,12 +16,13 @@ from argparse import (
 )
 
 from logger import logger, log_debug_object
-
-DEFAULT_PATH_CHANNELS = "../channels/current.json"
-DEFAULT_PATH_URLS = "../channels/urls.txt"
-P = ParamSpec("P")
-T = TypeVar("T")
-REGEX_CHANNELS_NAME = re.compile(r"http[s]?://t.me/[s/]{0,2}([\w]+)")
+from const import (
+    DEFAULT_PATH_CHANNELS,
+    DEFAULT_PATH_URLS,
+    P,
+    REGEX_CHANNELS_NAME,
+    T,
+)
 
 
 def abs_path(path: str | Path) -> str:
@@ -145,7 +146,7 @@ def delete_channels(channels: dict) -> None:
 def load_channels(
     path_channels: str = "tg-channels-current.json",
     path_urls: str = "tg-channels-urls.txt",
-) -> Tuple[dict, list]:
+) -> tuple[dict, list]:
     with open(path_channels, "r", encoding="utf-8") as file:
         try:
             channels = json.load(file)

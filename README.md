@@ -92,6 +92,7 @@ Other dependencies are listed in [`requirements.txt`](requirements.txt).
 
 * **scripts/** – data processing scripts
   * `async_scraper.py` – asynchronously collects data from Telegram channels
+  * `const.py` – project constants, default paths, URL templates, regex patterns, and script flags
   * `logger.py` – logging utility with colorized console output and microsecond timestamps, used across all scripts
   * `scraper.py` – synchronously collects data from Telegram channels
   * `update_channels.py` – updates the channel list

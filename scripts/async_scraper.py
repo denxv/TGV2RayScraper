@@ -20,41 +20,17 @@ from lxml import html
 from tqdm.asyncio import tqdm
 
 from logger import logger, log_debug_object
-
-DEFAULT_PATH_CHANNELS = "../channels/current.json"
-DEFAULT_PATH_CONFIGS_RAW = "../configs/v2ray-raw.txt"
-LEN_NAME = 32
-LEN_NUMBER = 7
-TOTAL_CHANNELS_POST = 0
-
-FURL_TG = "https://t.me/s/{name}"
-FURL_TG_AFTER = FURL_TG + "?after={id}"
-FURL_TG_BEFORE = FURL_TG + "?before={id}"
-
-XPATH_V2RAY = "//div[@class='tgme_widget_message_text js-message_text']//text()"
-XPATH_POST_ID = "//div[@class='tgme_widget_message text_not_supported_wrap js-widget_message']/@data-post"
-RE_V2RAY = re.compile(
-    r'(?:'
-        r'anytls'
-    r'|'
-        r'hy2'
-    r'|'
-        r'hysteria2'
-    r'|'
-        r'\bss\b'
-    r'|'
-        r'ssr'
-    r'|'
-        r'trojan'
-    r'|'
-        r'tuic'
-    r'|'
-        r'vless'
-    r'|'
-        r'vmess'
-    r'|'
-        r'wireguard'
-    r')://(?:(?!://)[\S])+'
+from const import (
+    DEFAULT_PATH_CHANNELS,
+    DEFAULT_PATH_CONFIGS_RAW,
+    FURL_TG,
+    FURL_TG_AFTER,
+    LEN_NAME,
+    LEN_NUMBER,
+    REGEX_V2RAY,
+    TOTAL_CHANNELS_POST,
+    XPATH_POST_ID,
+    XPATH_V2RAY,
 )
 
 
@@ -203,7 +179,7 @@ async def save_channel_configs(session: aiohttp.ClientSession, channel_name: str
         async with session.get(FURL_TG_AFTER.format(name=channel_name, id=current_id)) as response:
             content = await response.text()
             html_text = html.fromstring(content)
-            if v2ray_configs := list(filter(RE_V2RAY.match, html_text.xpath(XPATH_V2RAY))):
+            if v2ray_configs := list(filter(REGEX_V2RAY.match, html_text.xpath(XPATH_V2RAY))):
                 return current_id, v2ray_configs
             return current_id, []
 
