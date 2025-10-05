@@ -3,11 +3,19 @@
 
 import json
 import re
-from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, Namespace, SUPPRESS
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
 from typing import Callable, TypeVar, Tuple, ParamSpec
+from argparse import (
+    ArgumentParser,
+    ArgumentTypeError,
+    HelpFormatter,
+    Namespace,
+    SUPPRESS,
+)
+
+from logger import logger, log_debug_object
 
 DEFAULT_PATH_CHANNELS = "../channels/current.json"
 DEFAULT_PATH_URLS = "../channels/urls.txt"
@@ -25,10 +33,6 @@ def condition_delete_channels(channel_info: dict) -> bool:
         channel_info["current_id"] >= channel_info["last_id"] != -1
 
 
-def condition_reset_channels(channel_info: dict) -> bool:
-    return channel_info["last_id"] == -1
-
-
 def make_backup(files: list[str | Path]) -> None:
     for file in files:
         src = Path(file).resolve()
@@ -36,7 +40,7 @@ def make_backup(files: list[str | Path]) -> None:
             continue
         backup_name = f"{src.stem}-backup-{datetime.now():%Y%m%d-%H%M%s}{src.suffix}"
         src.rename(src.parent / backup_name)
-        print(f"[BKUP] File '{src.name}' was renamed to '{backup_name}' for backup!")
+        logger.info(f"File '{src.name}' backed up as '{backup_name}'.")
 
 
 def parse_args() -> Namespace:
@@ -75,26 +79,33 @@ def parse_args() -> Namespace:
         type=lambda path: validate_file_path(path, must_be_file=True),
     )
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    log_debug_object("Parsed command-line arguments", args)
+
+    return args
 
 
 def sort_channel_names(channel_names: list) -> list:
     return sorted([name.lower() for name in channel_names])
 
 
-def status(tag: str, start: str, end: str = "", tracking: bool = False) -> \
-    Callable[[Callable[P, T]], Callable[P, T]]:
+def status(
+    start: str,
+    end: str = "",
+    tracking: bool = False,
+) -> Callable[[Callable[P, T]], Callable[P, T]]:
     def decorator(target_func: Callable[P, T]) -> Callable[P, T]:
         @wraps(target_func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
-            print(f"[{tag.upper()}] {start}")
+            logger.info(start)
             old_size = len(args[0]) if tracking and args and isinstance(args[0], dict) else None
             result = target_func(*args, **kwargs)
             if tracking and old_size is not None:
                 new_size = len(args[0])
                 diff = new_size - old_size
-                print(f"[{tag.upper()}] Old: {old_size} | New: {new_size} | ({diff:+})")
-            print(f"[{tag.upper()}] {end}\n\n" if end else "", end="")
+                logger.info(f"Old count: {old_size} | New count: {new_size} | ({diff:+})")
+            if end:
+                logger.info(end)
             return result
         return wrapper
     return decorator
@@ -115,17 +126,26 @@ def validate_file_path(path: str | Path, must_be_file: bool = True) -> str:
     return str(filepath)
 
 
-@status(tag="delt", start="Deleting channels...", \
-    end="Deleted channels!", tracking=True)
+@status(
+    start="Deleting inactive channels...",
+    end="Inactive channels deleted successfully.",
+    tracking=True,
+)
 def delete_channels(channels: dict) -> None:
     for channel_name, channel_info in list(channels.items()):
         if condition_delete_channels(channel_info):
-            channels.pop(channel_name)
+            channels.pop(channel_name, None)
 
 
-@status(tag="load", start="Loading channels...", end="Loaded channels!")
-def load_channels(path_channels: str = "tg-channels-current.json", \
-    path_urls: str = "tg-channels-urls.txt") -> Tuple[dict, list]:
+@status(
+    start="Loading all channels...",
+    end="All channels loaded successfully.",
+    tracking=False,
+)
+def load_channels(
+    path_channels: str = "tg-channels-current.json",
+    path_urls: str = "tg-channels-urls.txt",
+) -> Tuple[dict, list]:
     with open(path_channels, "r", encoding="utf-8") as file:
         try:
             channels = json.load(file)
@@ -136,27 +156,30 @@ def load_channels(path_channels: str = "tg-channels-current.json", \
     return channels, urls
 
 
-@status(tag="rest", start="Reseting channels...", end="Reseted channels!")
-def reset_channels_to_default(current_channels: dict) -> None:
-    for name in current_channels:
-        if condition_reset_channels(current_channels[name]):
-            current_channels[name] = dict(current_id=1, last_id=-1, count=0)
-
-
-@status(tag="save", start="Saving channels...")
-def save_channels(channels: dict, path_channels: str = "tg-channels-current.json",
-    path_urls: str = "tg-channels-urls.txt") -> None:
+@status(
+    start="Saving all channels...",
+    end="",
+    tracking=False,
+)
+def save_channels(
+    channels: dict,
+    path_channels: str = "tg-channels-current.json",
+    path_urls: str = "tg-channels-urls.txt",
+) -> None:
     make_backup([path_urls, path_channels])
     with open(path_channels, "w", encoding="utf-8") as tg_json, \
         open(path_urls, "w", encoding="utf-8") as urls:
         json.dump(channels, tg_json, indent=4, sort_keys=True)
         urls.writelines([f"https://t.me/s/{name}\n" for name in sorted(channels)])
-        print(f"[SAVE] Saved {len(channels)} channels in '{path_channels}'!")
+    logger.info(f"Saved {len(channels)} channels in '{path_channels}'.")
 
 
-@status(tag="updt", start="Updating channels...", \
-    end="Updated channels!", tracking=True)
-def update_channels(current_channels: dict, channel_names: list) -> None:
+@status(
+    start="Adding missing channels...",
+    end="Missing channels added successfully.",
+    tracking=True,
+)
+def update_with_new_channels(current_channels: dict, channel_names: list) -> None:
     for name in sort_channel_names(channel_names):
         if name not in current_channels:
             current_channels.setdefault(name, dict(current_id=1, last_id=-1, count=0))
@@ -169,15 +192,17 @@ def main() -> None:
             path_channels=parsed_args.channels, 
             path_urls=parsed_args.urls,
         )
-        update_channels(current_channels, list_channel_names)
+        update_with_new_channels(current_channels, list_channel_names)
         delete_channels(current_channels)
         save_channels(
             channels=current_channels, 
             path_channels=parsed_args.channels, 
             path_urls=parsed_args.urls,
         )
-    except Exception as exception:
-        print(f"[ERROR] {exception}")
+    except KeyboardInterrupt:
+        logger.info("Exit from the program.")
+    except Exception:
+        logger.exception("Unexpected error occurred.")
 
 
 if __name__ == "__main__":

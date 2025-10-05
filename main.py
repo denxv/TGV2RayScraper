@@ -2,10 +2,18 @@
 # coding: utf-8
 
 import re
-import sys
 import subprocess
-from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, Namespace, SUPPRESS
+import sys
 from pathlib import Path
+from argparse import (
+    ArgumentParser,
+    ArgumentTypeError,
+    HelpFormatter,
+    Namespace,
+    SUPPRESS,
+)
+
+from scripts.logger import logger, log_debug_object
 
 SCRIPTS_DIR = Path(__file__).parent / "scripts"
 SCRIPTS_CONFIG = {
@@ -180,7 +188,10 @@ def parse_args() -> Namespace:
         type=lambda path: validate_file_path(path, must_be_file=True),
     )
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    log_debug_object("Parsed command-line arguments", args)
+
+    return args
 
 
 def parse_valid_params(params: str) -> list[str]:
@@ -209,10 +220,9 @@ def parse_valid_params(params: str) -> list[str]:
 
 
 def run_script(script_name: str = "async_scraper.py", args: list = []) -> None:
-    repeat_count = 120
-    print('=' * repeat_count)
-    print(f"[INIT] Starting script '{script_name}'...")
-    print('-' * repeat_count)
+    repeat_count = 100
+    logger.info(f"Starting script '{script_name}'...")
+    logger.info('-' * repeat_count)
 
     arguments = [
         sys.executable, 
@@ -222,8 +232,9 @@ def run_script(script_name: str = "async_scraper.py", args: list = []) -> None:
     if subprocess.run(args=arguments).returncode:
         raise Exception(f"Script '{script_name}' exited with an error!")
 
-    print('-' * repeat_count)
-    print(f"[DONE] Script '{script_name}' completed successfully!")
+    logger.info('-' * repeat_count)
+    logger.info(f"Script '{script_name}' completed successfully!")
+    logger.info('=' * repeat_count)
 
 
 def show_scripts_help() -> None:
@@ -262,9 +273,9 @@ def main() -> None:
                 args=collect_args(parsed_args, script_config.get("flags")),
             )
     except KeyboardInterrupt:
-        print(f"[ERROR] Exit from the program!")
-    except Exception as exception:
-        print(f"[ERROR] {exception}")
+        logger.info("Exit from the program.")
+    except Exception:
+        logger.exception("Unexpected error occurred.")
 
 
 if __name__ == "__main__":

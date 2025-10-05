@@ -4,13 +4,22 @@
 import asyncio
 import json
 import re
+from pathlib import Path
+from typing import Union
+from argparse import (
+    ArgumentParser,
+    ArgumentTypeError,
+    HelpFormatter,
+    Namespace,
+    SUPPRESS,
+)
+
 import aiofiles
 import aiohttp
-from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, Namespace, SUPPRESS
 from lxml import html
-from pathlib import Path
 from tqdm.asyncio import tqdm
-from typing import Union
+
+from logger import logger, log_debug_object
 
 DEFAULT_PATH_CHANNELS = "../channels/current.json"
 DEFAULT_PATH_CONFIGS_RAW = "../v2ray/configs-raw.txt"
@@ -65,7 +74,11 @@ def format_channel_id(channel_info: dict) -> str:
     global TOTAL_CHANNELS_POST
     diff = diff_channel_id(channel_info)
     TOTAL_CHANNELS_POST = TOTAL_CHANNELS_POST + diff
-    return f"{channel_info['current_id']:>{LEN_NUMBER}} / {channel_info['last_id']:<{LEN_NUMBER}} (+{diff})"
+    return (
+        f"{channel_info['current_id']:>{LEN_NUMBER}} "
+        f"/ {channel_info['last_id']:<{LEN_NUMBER}} "
+        f"(+{diff})"
+    )
 
 
 def get_filtered_keys(channels: dict) -> list:
@@ -155,24 +168,27 @@ def parse_args() -> Namespace:
         type=lambda value: int_in_range(value, min_value=1, max_value=1000),
     )
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    log_debug_object("Parsed command-line arguments", args)
+
+    return args
 
 
 def print_channel_info(channels: dict) -> None:
-    print(f"[INFO] Showing information about the remaining channels...")
+    logger.info(f"Showing information about the remaining channels...")
     channel_names = get_sorted_keys(channels, filtering=True)
     for name in channel_names:
-        print(f" <SS>  {name:<{LEN_NAME}}{format_channel_id(channels[name])}")
+        logger.info(f" <SS>  {name:<{LEN_NAME}}{format_channel_id(channels[name])}")
     else:
-        print(f"\n[INFO] Total channels are available for extracting configs: {len(channels)}")
-        print(f"[INFO] Channels left to check: {len(channel_names)}")
-        print(f"[INFO] Total messages on channels: {TOTAL_CHANNELS_POST:,}", end="\n\n")
+        logger.info(f"Total channels are available for extracting configs: {len(channels)}")
+        logger.info(f"Channels left to check: {len(channel_names)}")
+        logger.info(f"Total messages on channels: {TOTAL_CHANNELS_POST:,}")
 
 
 async def save_channels(channels: dict, path_channels: str = "tg-channels-current.json") -> None:
     async with aiofiles.open(path_channels, "w", encoding="utf-8") as file:
         await file.write(json.dumps(channels, indent=4, sort_keys=True, ensure_ascii=False))
-        print(f"[INFO] Saved channel data in '{path_channels}'!")
+        logger.info(f"Saved {len(channels)} channels in '{path_channels}'.")
 
 
 async def save_channel_configs(session: aiohttp.ClientSession, channel_name: str, \
@@ -181,7 +197,7 @@ async def save_channel_configs(session: aiohttp.ClientSession, channel_name: str
     list_channel_id = list(range(channel_info["current_id"], channel_info["last_id"], 20))
     batch_range = range(0, len(list_channel_id), batch_size)
     bar_channel_format = " {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt} "
-    print(f"[EXTR] Extracting configs from channel '{channel_name}'...")
+    logger.info(f"Extracting configs from channel '{channel_name}'...")
 
     async def fetch_and_parse(current_id: int) -> Union[int, list]:
         async with session.get(FURL_TG_AFTER.format(name=channel_name, id=current_id)) as response:
@@ -202,11 +218,11 @@ async def save_channel_configs(session: aiohttp.ClientSession, channel_name: str
                 await write_configs(configs, path_configs=path_configs, mode="a")
 
     channel_info["current_id"] = channel_info["last_id"]
-    print(f"[EXTR] Found: {v2ray_count} configs!", end="\n\n")
+    logger.info(f"Found: {v2ray_count} configs.")
 
 
 async def update_info(session: aiohttp.ClientSession, channels: dict, batch_size: int = 100) -> None:
-    print(f"[INFO] Updating info channels...")
+    logger.info(f"Updating channel information for {len(channels)} channels...")
 
     async def update_channel(channel_name: str, channel_info: dict) -> None:
         count = channel_info.get("count", 0)
@@ -215,8 +231,11 @@ async def update_info(session: aiohttp.ClientSession, channels: dict, batch_size
         if channel_info["last_id"] == last_id == -1:
             channel_info["count"] = 0 if count > 0 else count - 1
         elif channel_info["last_id"] != last_id:
-            print(f" <UU>  {channel_name:<{LEN_NAME}}\
-                {channel_info['last_id']:>{LEN_NUMBER}} -> {last_id:<{LEN_NUMBER}}")
+            logger.info(
+                f" <UU>  {channel_name:<{LEN_NAME}}"
+                f"{channel_info['last_id']:>{LEN_NUMBER}} "
+                f"-> {last_id:<{LEN_NUMBER}}"
+            )
             channel_info["last_id"] = last_id
             channel_info["count"] = 1 if count <= 0 else count
 
@@ -233,8 +252,6 @@ async def update_info(session: aiohttp.ClientSession, channels: dict, batch_size
             for name in channel_names[i:i + batch_size]
         ]
         await asyncio.gather(*tasks)
-    else:
-        print(end="\n")
 
 
 def validate_file_path(path: str | Path, must_be_file: bool = True) -> str:
@@ -274,9 +291,9 @@ async def main() -> None:
                     path_configs=parsed_args.configs_raw,
                 )
     except (asyncio.CancelledError, KeyboardInterrupt):
-        print(f"[ERROR] Exit from the program!")
-    except Exception as exception:
-        print(f"[ERROR] {exception}")
+        logger.info("Exit from the program.")
+    except Exception:
+        logger.exception("Unexpected error occurred.")
     finally:
         await save_channels(channels, path_channels=parsed_args.channels)
 

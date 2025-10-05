@@ -4,11 +4,20 @@
 import base64
 import json
 import re
-from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, Namespace, SUPPRESS
-from asteval import Interpreter
 from pathlib import Path
 from typing import Any, Callable, Iterator
 from urllib.parse import parse_qs, unquote, urlencode
+from argparse import (
+    ArgumentParser,
+    ArgumentTypeError,
+    HelpFormatter,
+    Namespace,
+    SUPPRESS,
+)
+
+from asteval import Interpreter
+
+from logger import logger, log_debug_object
 
 DEFAULT_PATH_CONFIGS_CLEAN = "../v2ray/configs-clean.txt"
 DEFAULT_PATH_CONFIGS_RAW = "../v2ray/configs-raw.txt"
@@ -198,21 +207,19 @@ def b64encode_safe(string: str) -> str:
 
 
 def filter_by_condition(configs: list[dict[str, Any]], condition: str) -> list[dict[str, Any]]:
-    print(f"[FILT] Filtering {len(configs)} configs by condition: `{condition}`...")
+    logger.info(f"Filtering {len(configs)} configs by condition: `{condition}`...")
     predicate = make_predicate(condition)
     filtered_configs = list(filter(predicate, configs))
 
     removed = len(configs) - len(filtered_configs) 
-    print(
-        f"[FILT] Filtered: {len(filtered_configs)} configs kept, "
-        f"{removed} removed by condition.", 
-        end="\n\n",
+    logger.info(
+        f"Filtered: {len(filtered_configs)} configs kept, {removed} removed by condition."
     )
     return filtered_configs
 
 
 def load_configs(path_configs_raw: str = "v2ray-configs-raw.txt") -> list[dict[str, Any]]:
-    print(f"[LOAD] Loading configs...")
+    logger.info(f"Loading configs from '{path_configs_raw}'...")
     def line_to_configs(line: str) -> Iterator[dict[str, Any]]:
         line = unquote(line.strip())
         return (
@@ -225,10 +232,7 @@ def load_configs(path_configs_raw: str = "v2ray-configs-raw.txt") -> list[dict[s
             config for line in file for config in line_to_configs(line)
         ]
 
-    print(
-        f"[LOAD] Loaded {len(configs)} configs from '{path_configs_raw}'.", 
-        end="\n\n",
-    )
+    logger.info(f"Loaded {len(configs)} configs from '{path_configs_raw}'.")
     return configs
 
 
@@ -256,7 +260,7 @@ def make_predicate(condition: str) -> Callable[[dict[str, Any]], bool]:
 
 def normalize(configs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     total_before = len(configs)
-    print(f"[NORM] Normalizing {total_before} configs...")
+    logger.info(f"Normalizing {total_before} configs...")
     for config in configs:
         try:
             normalize_config(config)
@@ -266,11 +270,7 @@ def normalize(configs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     normalized_configs = list(filter(None, configs))
     total_after = len(normalized_configs)
     removed = total_before - total_after
-    print(
-        f"[NORM] Configs normalized: {total_after} "
-        f"(removed: {removed}).", 
-        end="\n\n",
-    )
+    logger.info(f"Configs normalized: {total_after} (removed: {removed}).")
     return normalized_configs
 
 
@@ -505,7 +505,10 @@ def parse_args() -> Namespace:
         type=parse_valid_params,
     )
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    log_debug_object("Parsed command-line arguments", args)
+
+    return args
 
 
 def parse_valid_params(params: str) -> list[str]:
@@ -545,11 +548,13 @@ def process_configs(configs: list[dict[str, Any]], args: Namespace) -> list[dict
     return configs
 
 
-def remove_duplicates_by_params(configs: list[dict[str, Any]], \
-    params: list[str]) -> list[dict[str, Any]]:
-    print(f"[DUPL] Removing duplicates from {len(configs)} configs by keys: {params}...")
+def remove_duplicates_by_params(
+    configs: list[dict[str, Any]],
+    params: list[str],
+) -> list[dict[str, Any]]:
+    logger.info(f"Removing duplicates from {len(configs)} configs by keys: {params}...")
     if not params:
-        print("[DUPL] No params to deduplicate.", end="\n\n")
+        logger.warning("No params to deduplicate.")
         return configs
 
     seen = set()
@@ -567,10 +572,8 @@ def remove_duplicates_by_params(configs: list[dict[str, Any]], \
 
     unique_configs = list(filter(is_unique, configs))
     removed = len(configs) - len(unique_configs)
-    print(
-        f"[DUPL] Duplicate removal complete: "
-        f"{len(unique_configs)} remain (removed: {removed}).",
-        end="\n\n",
+    logger.info(
+        f"Duplicate removal complete: {len(unique_configs)} remain (removed: {removed}).",
     )
     return unique_configs
 
@@ -587,17 +590,23 @@ def re_search(pattern: str, string: str) -> bool:
     return bool(re.search(pattern, string))
 
 
-def save_configs(configs: list[dict[str, Any]], \
-    path_configs_clean: str = "v2ray-configs-clean.txt", mode: str = "w") -> None:
-    print(f"[SAVE] Saving configs...")
+def save_configs(
+    configs: list[dict[str, Any]],
+    path_configs_clean: str = "v2ray-configs-clean.txt",
+    mode: str = "w",
+) -> None:
+    logger.info(f"Saving {len(configs)} configs to '{path_configs_clean}'...")
     with open(path_configs_clean, mode, encoding="utf-8") as file:
         file.writelines(f"{config.get('url', '')}\n" for config in configs)
-    print(f"[SAVE] Saved {len(configs)} configs in '{path_configs_clean}'.")
+    logger.info(f"Saved {len(configs)} configs in '{path_configs_clean}'.")
 
 
-def sort_by_params(configs: list[dict[str, Any]], params: list[str], \
-    reverse: bool = False) -> list[dict[str, Any]]:
-    print(f"[SORT] Sorting {len(configs)} configs by keys: {params} ({reverse=})...")
+def sort_by_params(
+    configs: list[dict[str, Any]],
+    params: list[str],
+    reverse: bool = False,
+) -> list[dict[str, Any]]:
+    logger.info(f"Sorting {len(configs)} configs by keys: {params} ({reverse=})...")
     if not params:
         return configs
 
@@ -608,9 +617,8 @@ def sort_by_params(configs: list[dict[str, Any]], params: list[str], \
         )
 
     sorted_configs = sorted(configs, key=sort_param, reverse=reverse)
-    print(
-        f"[SORT] Sorting completed. {len(sorted_configs)} configs sorted successfully.", 
-        end="\n\n",
+    logger.info(
+        f"Sorting completed. {len(sorted_configs)} configs sorted successfully.",
     )
     return sorted_configs
 
@@ -632,14 +640,15 @@ def validate_file_path(path: str | Path, must_be_file: bool = True) -> str:
 
 def main() -> None:
     try:
+        log_debug_object("List of compiled URL regex patterns", URL_PATTERNS)
         parsed_args = parse_args()
         configs = load_configs(path_configs_raw=parsed_args.configs_raw)
         configs = process_configs(configs=configs, args=parsed_args)
         save_configs(configs=configs, path_configs_clean=parsed_args.configs_clean)
     except KeyboardInterrupt:
-        print(f"[ERROR] Exit from the program!")
-    except Exception as exception:
-        print(f"[ERROR] {exception}")
+        logger.info("Exit from the program.")
+    except Exception:
+        logger.exception("Unexpected error occurred.")
 
 
 if __name__ == '__main__':

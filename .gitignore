@@ -209,3 +209,7 @@ __marimo__/
 # Ignore files with timestamps in the channels folder
 channels/current-*.json
 channels/urls-*.txt
+
+# Ignore all log files
+logs/*
+!logs/.gitkeep

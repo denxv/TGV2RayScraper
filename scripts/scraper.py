@@ -3,11 +3,20 @@
 
 import json
 import re
-import requests
-from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, Namespace, SUPPRESS
-from lxml import html
 from pathlib import Path
+from argparse import (
+    ArgumentParser,
+    ArgumentTypeError,
+    HelpFormatter,
+    Namespace,
+    SUPPRESS,
+)
+
+import requests
+from lxml import html
 from tqdm import tqdm
+
+from logger import logger, log_debug_object
 
 DEFAULT_PATH_CHANNELS = "../channels/current.json"
 DEFAULT_PATH_CONFIGS_RAW = "../v2ray/configs-raw.txt"
@@ -63,7 +72,11 @@ def format_channel_id(channel_info: dict) -> str:
     global TOTAL_CHANNELS_POST
     diff = diff_channel_id(channel_info)
     TOTAL_CHANNELS_POST = TOTAL_CHANNELS_POST + diff
-    return f"{channel_info['current_id']:>{LEN_NUMBER}} / {channel_info['last_id']:<{LEN_NUMBER}} (+{diff})"
+    return (
+        f"{channel_info['current_id']:>{LEN_NUMBER}} "
+        f"/ {channel_info['last_id']:<{LEN_NUMBER}} "
+        f"(+{diff})"
+    )
 
 
 def get_filtered_keys(channels: dict) -> list:
@@ -125,24 +138,27 @@ def parse_args() -> Namespace:
         type=lambda path: validate_file_path(path, must_be_file=False),
     )
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    log_debug_object("Parsed command-line arguments", args)
+
+    return args
 
 
 def print_channel_info(channels: dict) -> None:
-    print(f"[INFO] Showing information about the remaining channels...")
+    logger.info(f"Showing information about the remaining channels...")
     channel_names = get_sorted_keys(channels, filtering=True)
     for name in channel_names:
-        print(f" <SS>  {name:<{LEN_NAME}}{format_channel_id(channels[name])}")
+        logger.info(f" <SS>  {name:<{LEN_NAME}}{format_channel_id(channels[name])}")
     else:
-        print(f"\n[INFO] Total channels are available for extracting configs: {len(channels)}")
-        print(f"[INFO] Channels left to check: {len(channel_names)}")
-        print(f"[INFO] Total messages on channels: {TOTAL_CHANNELS_POST:,}", end="\n\n")
+        logger.info(f"Total channels are available for extracting configs: {len(channels)}")
+        logger.info(f"Channels left to check: {len(channel_names)}")
+        logger.info(f"Total messages on channels: {TOTAL_CHANNELS_POST:,}")
 
 
 def save_channels(channels: list, path_channels: str = "tg-channels-current.json") -> None:
     with open(path_channels, "w", encoding="utf-8") as file:
         json.dump(channels, file, indent=4, sort_keys=True)
-        print(f"[INFO] Saved channel data in '{path_channels}'!")
+        logger.info(f"Saved {len(channels)} channels in '{path_channels}'.")
 
 
 def save_channel_configs(channel_name: str, channel_info: dict, \
@@ -150,7 +166,7 @@ def save_channel_configs(channel_name: str, channel_info: dict, \
     v2ray_count = 0
     bar_format = " {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt} "
     range_channel_id = range(channel_info["current_id"], channel_info["last_id"], 20)
-    print(f"[EXTR] Extracting configs from channel '{channel_name}'...")
+    logger.info(f"Extracting configs from channel '{channel_name}'...")
 
     for current_id in tqdm(range_channel_id, ascii=True, bar_format=bar_format, leave=False):
         channel_info["current_id"] = current_id
@@ -162,21 +178,24 @@ def save_channel_configs(channel_name: str, channel_info: dict, \
             write_configs(v2ray_configs, path_configs=path_configs, mode="a")
     else:
         channel_info["current_id"] = channel_info["last_id"]
-        print(f"[EXTR] Found: {v2ray_count} configs!", end="\n\n")
+        logger.info(f"Found: {v2ray_count} configs.")
 
 
 def update_info(channels: dict) -> None:
-    print(f"[INFO] Updating info channels...")
-    for key in channels.keys():
-        channel_info = channels[key]
+    logger.info(f"Updating channel information for {len(channels)} channels...")
+    for channel_name in channels.keys():
+        channel_info = channels[channel_name]
         count = channel_info.get("count", 0)
-        last_id = get_last_id(key)
+        last_id = get_last_id(channel_name)
 
         if channel_info["last_id"] == last_id == -1:
             channel_info["count"] = 0 if count > 0 else count - 1
         elif channel_info["last_id"] != last_id:
-            print(f" <UU>  {key:<{LEN_NAME}}\
-                {channel_info['last_id']:>{LEN_NUMBER}} -> {last_id:<{LEN_NUMBER}}")
+            logger.info(
+                f" <UU>  {channel_name:<{LEN_NAME}}"
+                f"{channel_info['last_id']:>{LEN_NUMBER}} "
+                f"-> {last_id:<{LEN_NUMBER}}"
+            )
             channel_info["last_id"] = last_id
             channel_info["count"] = 1 if count <= 0 else count
 
@@ -185,8 +204,6 @@ def update_info(channels: dict) -> None:
             channel_info["current_id"] = diff if diff > 0 else 1
         elif channel_info["current_id"] > channel_info["last_id"] != -1:
             channel_info["current_id"] = channel_info["last_id"]
-    else:
-        print(end="\n")
 
 
 def validate_file_path(path: str | Path, must_be_file: bool = True) -> str:
@@ -223,9 +240,9 @@ def main() -> None:
                 path_configs=parsed_args.configs_raw,
             )
     except KeyboardInterrupt:
-        print(f"[ERROR] Exit from the program!")
-    except Exception as exception:
-        print(f"[ERROR] {exception}")
+        logger.info("Exit from the program.")
+    except Exception:
+        logger.exception("Unexpected error occurred.")
     finally:
         save_channels(channels, path_channels=parsed_args.channels)
 
