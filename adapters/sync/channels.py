@@ -60,7 +60,7 @@ def load_channels_and_urls(
     with open(path_channels, "r", encoding="utf-8") as file:
         try:
             channels = load(file)
-        except json.JSONDecodeError:
+        except JSONDecodeError:
             channels = {}
     with open(path_urls, "r", encoding="utf-8") as file:
         urls = REGEX_CHANNELS_NAME.findall(file.read())
