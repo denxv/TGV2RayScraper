@@ -15,7 +15,7 @@ async def get_last_id(session: ClientSession, channel_name: str) -> int:
         return int(list_post[-1].split("/")[-1]) if list_post else -1
 
 
-async def load_channels(path_channels: str = "tg-channels-current.json") -> dict:
+async def load_channels(path_channels: str = "current.json") -> dict:
     async with aiopen(path_channels, "r", encoding="utf-8") as file:
         try:
             data = await file.read()
@@ -24,7 +24,7 @@ async def load_channels(path_channels: str = "tg-channels-current.json") -> dict
             return {}
 
 
-async def save_channels(channels: dict, path_channels: str = "tg-channels-current.json") -> None:
+async def save_channels(channels: dict, path_channels: str = "current.json") -> None:
     async with aiopen(path_channels, "w", encoding="utf-8") as file:
         await file.write(dumps(channels, indent=4, sort_keys=True, ensure_ascii=False))
         logger.info(f"Saved {len(channels)} channels in '{path_channels}'.")

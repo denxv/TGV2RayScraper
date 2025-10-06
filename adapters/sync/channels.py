@@ -3,7 +3,12 @@ from json import dump, JSONDecodeError, load
 from lxml import html
 from requests import Session
 
-from core.constants import DEFAULT_CHANNEL_VALUES, FURL_TG, REGEX_CHANNELS_NAME, XPATH_POST_ID
+from core.constants import (
+    DEFAULT_CHANNEL_VALUES,
+    FURL_TG,
+    REGEX_CHANNELS_NAME,
+    XPATH_POST_ID,
+)
 from core.decorators import status
 from core.logger import logger
 from core.utils import make_backup
@@ -28,7 +33,7 @@ def get_last_id(session: Session, channel_name: str) -> int:
     return int(list_post[-1].split("/")[-1]) if list_post else -1
 
 
-def load_channels(path_channels: str = "tg-channels-current.json") -> dict:
+def load_channels(path_channels: str = "current.json") -> dict:
     with open(path_channels, "r", encoding="utf-8") as file:
         try:
             return load(file)
@@ -41,7 +46,10 @@ def load_channels(path_channels: str = "tg-channels-current.json") -> dict:
     end="All channels loaded successfully.",
     tracking=False,
 )
-def load_channels_and_urls(path_channels: str = "tg-channels-current.json", path_urls: str = "tg-channels-urls.txt") -> tuple[dict, list]:
+def load_channels_and_urls(
+    path_channels: str = "current.json",
+    path_urls: str = "urls.txt",
+) -> tuple[dict, list]:
     with open(path_channels, "r", encoding="utf-8") as file:
         try:
             channels = load(file)
@@ -52,7 +60,7 @@ def load_channels_and_urls(path_channels: str = "tg-channels-current.json", path
     return channels, urls
 
 
-def save_channels(channels: list, path_channels: str = "tg-channels-current.json") -> None:
+def save_channels(channels: list, path_channels: str = "current.json") -> None:
     with open(path_channels, "w", encoding="utf-8") as file:
         dump(channels, file, indent=4, sort_keys=True)
         logger.info(f"Saved {len(channels)} channels in '{path_channels}'.")
@@ -63,11 +71,21 @@ def save_channels(channels: list, path_channels: str = "tg-channels-current.json
     end="",
     tracking=False,
 )
-def save_channels_and_urls(channels: dict, path_channels: str = "tg-channels-current.json", path_urls: str = "tg-channels-urls.txt") -> None:
+def save_channels_and_urls(
+    channels: dict,
+    path_channels: str = "current.json",
+    path_urls: str = "urls.txt",
+) -> None:
     make_backup([path_urls, path_channels])
-    with open(path_channels, "w", encoding="utf-8") as tg_json, open(path_urls, "w", encoding="utf-8") as urls:
+
+    with open(path_channels, "w", encoding="utf-8") as tg_json, \
+        open(path_urls, "w", encoding="utf-8") as urls:
         dump(channels, tg_json, indent=4, sort_keys=True)
-        urls.writelines([f"https://t.me/s/{name}\n" for name in sorted(channels)])
+        urls.writelines([
+            f"https://t.me/s/{name}\n"
+            for name in sorted(channels)
+        ])
+
     logger.info(f"Saved {len(channels)} channels in '{path_channels}'.")
 
 

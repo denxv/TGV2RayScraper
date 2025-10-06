@@ -15,7 +15,7 @@ def filter_by_condition(configs: list[dict[str, Any]], condition: str) -> list[d
     predicate = make_predicate(condition)
     filtered_configs = list(filter(predicate, configs))
 
-    removed = len(configs) - len(filtered_configs) 
+    removed = len(configs) - len(filtered_configs)
     logger.info(
         f"Filtered: {len(filtered_configs)} configs kept, {removed} removed by condition."
     )
@@ -53,11 +53,11 @@ def normalize_config(config: dict[str, Any]) -> None:
     params = config.get("params", None)
     if isinstance(params, str):
         config.update({
-            "params": {                      
-                key: value[0] 
+            "params": {
+                key: value[0]
                 for key, value in parse_qs(
-                    params.replace('+', '%2B'), 
-                    keep_blank_values=True, 
+                    params.replace('+', '%2B'),
+                    keep_blank_values=True,
                 ).items()
             }
         })
@@ -93,7 +93,7 @@ def normalize_ss_base64(config: dict[str, Any]) -> None:
 
     if not (ss := SS_URL_PATTERN.search(url)):
         raise Exception
-    
+
     config.update(ss.groupdict(default=''))
     config.pop("base64", None)
 
@@ -111,9 +111,12 @@ def normalize_ssr_base64(config: dict[str, Any]) -> None:
     ssr_config = ssr.groupdict(default='')
     params = ssr_config.get("params", "")
 
-    ssr_params = {                      
-        key: b64decode_safe(value[0]) 
-        for key, value in parse_qs(params.replace('+', '%2B'), keep_blank_values=True).items()
+    ssr_params = {
+        key: b64decode_safe(value[0])
+        for key, value in parse_qs(
+            params.replace('+', '%2B'),
+            keep_blank_values=True,
+        ).items()
     }
 
     ssr_params.update({
@@ -125,7 +128,9 @@ def normalize_ssr_base64(config: dict[str, Any]) -> None:
         for key, value in ssr_params.items()
     })
 
-    body = "{host}:{port}:{origin}:{method}:{obfs}:{password}/?{params}".format(**ssr_config)
+    body = "{host}:{port}:{origin}:{method}:{obfs}:{password}/?{params}".format(
+        **ssr_config,
+    )
     ssr_config.update({
         "url": f"{protocol}://{b64encode_safe(body)}",
         "password": b64decode_safe(ssr_config.get("password", "")),
@@ -152,7 +157,7 @@ def normalize_vmess_base64(config: dict[str, Any]) -> None:
                 port=vmess_config.get("port", "0"),
             ),
         })
-        base64 = b64encode_safe(dumps(vmess_config, separators=(',', ':')))
+        base64 = b64encode_safe(dumps(vmess_config, separators=(",", ":")))
 
         config.update({
             "url": f"{config.get("protocol", "vmess")}://{base64}",
@@ -179,15 +184,28 @@ def process_configs(configs: list[dict[str, Any]], args: Namespace) -> list[dict
     if args.normalize:
         configs = normalize(configs=configs)
     if args.filter:
-        configs = filter_by_condition(configs=configs, condition=args.filter)
+        configs = filter_by_condition(
+            configs=configs,
+            condition=args.filter,
+        )
     if args.duplicate:
-        configs = remove_duplicates_by_params(configs=configs, params=args.duplicate)
+        configs = remove_duplicates_by_params(
+            configs=configs,
+            params=args.duplicate,
+        )
     if args.sort:
-        configs = sort_by_params(configs=configs, params=args.sort, reverse=args.reverse)
+        configs = sort_by_params(
+            configs=configs,
+            params=args.sort,
+            reverse=args.reverse,
+        )
     return configs
 
 
-def remove_duplicates_by_params(configs: list[dict[str, Any]], params: list[str]) -> list[dict[str, Any]]:
+def remove_duplicates_by_params(
+    configs: list[dict[str, Any]],
+    params: list[str],
+) -> list[dict[str, Any]]:
     logger.info(f"Removing duplicates from {len(configs)} configs by keys: {params}...")
     if not params:
         logger.warning("No params to deduplicate.")
@@ -214,7 +232,11 @@ def remove_duplicates_by_params(configs: list[dict[str, Any]], params: list[str]
     return unique_configs
 
 
-def sort_by_params(configs: list[dict[str, Any]], params: list[str], reverse: bool = False) -> list[dict[str, Any]]:
+def sort_by_params(
+    configs: list[dict[str, Any]],
+    params: list[str],
+    reverse: bool = False,
+) -> list[dict[str, Any]]:
     logger.info(f"Sorting {len(configs)} configs by keys: {params} ({reverse=})...")
     if not params:
         return configs

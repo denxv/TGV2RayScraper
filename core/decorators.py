@@ -5,7 +5,11 @@ from core.constants import P, T
 from core.logger import logger
 
 
-def status(start: str, end: str = "", tracking: bool = False) -> Callable[[Callable[P, T]], Callable[P, T]]:
+def status(
+    start: str,
+    end: str = "",
+    tracking: bool = False,
+) -> Callable[[Callable[P, T]], Callable[P, T]]:
     def decorator(target_func: Callable[P, T]) -> Callable[P, T]:
         @wraps(target_func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:

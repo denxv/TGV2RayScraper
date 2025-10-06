@@ -4,7 +4,11 @@ from argparse import ArgumentParser, HelpFormatter, Namespace, SUPPRESS
 
 from adapters.sync.configs import load_configs, save_configs
 from core.logger import logger, log_debug_object
-from core.constants import DEFAULT_PATH_CONFIGS_CLEAN, DEFAULT_PATH_CONFIGS_RAW, URL_PATTERNS
+from core.constants import (
+    DEFAULT_PATH_CONFIGS_CLEAN,
+    DEFAULT_PATH_CONFIGS_RAW,
+    URL_PATTERNS,
+)
 from core.utils import abs_path, parse_valid_params, validate_file_path
 from domain.config import process_configs
 
@@ -14,8 +18,8 @@ def parse_args() -> Namespace:
         add_help=False,
         description="Utility to normalize, filter, deduplicate, and sort proxy configuration entries.",
         epilog=(
-            "Example: python %(prog)s -I configs-raw.txt -O configs-clean.txt --filter "
-            "\"re_search(r'speedtest|google', host)\" -D \"host, port\" -S \"protocol, host, port\""
+            "Example: PYTHONPATH=. python scripts/%(prog)s -I configs-raw.txt -O configs-clean.txt "
+            "--filter \"re_search(r'speedtest|google', host)\" -D \"host, port\" -S \"protocol, host, port\""
         ),
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
@@ -114,8 +118,14 @@ def main() -> None:
         log_debug_object("List of compiled URL regex patterns", URL_PATTERNS)
         parsed_args = parse_args()
         configs = load_configs(path_configs_raw=parsed_args.configs_raw)
-        configs = process_configs(configs=configs, args=parsed_args)
-        save_configs(configs=configs, path_configs_clean=parsed_args.configs_clean)
+        configs = process_configs(
+            configs=configs,
+            args=parsed_args,
+        )
+        save_configs(
+            configs=configs,
+            path_configs_clean=parsed_args.configs_clean,
+        )
     except KeyboardInterrupt:
         logger.info("Exit from the program.")
     except Exception:

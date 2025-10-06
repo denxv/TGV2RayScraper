@@ -9,9 +9,20 @@ from core.constants import FURL_TG_AFTER, REGEX_V2RAY, XPATH_V2RAY
 from core.logger import logger
 
 
-async def fetch_channel_configs(session: ClientSession, channel_name: str, channel_info: dict, batch_size: int = 20, path_configs: str = "v2ray-configs-raw.txt") -> None:
+async def fetch_channel_configs(
+    session: ClientSession,
+    channel_name: str,
+    channel_info: dict,
+    batch_size: int = 20,
+    path_configs: str = "v2ray-raw.txt",
+) -> None:
     v2ray_count = 0
-    list_channel_id = list(range(channel_info.get("current_id", 0), channel_info.get("last_id", 0), 20))
+    _const_batch_ID = 20
+    list_channel_id = list(range(
+        channel_info.get("current_id", 0),
+        channel_info.get("last_id", 0),
+        _const_batch_ID,
+    ))
     batch_range = range(0, len(list_channel_id), batch_size)
     bar_channel_format = " {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt} "
     logger.info(f"Extracting configs from channel '{channel_name}'...")
@@ -32,12 +43,16 @@ async def fetch_channel_configs(session: ClientSession, channel_name: str, chann
             if len(configs) > 0:
                 v2ray_count = v2ray_count + len(configs)
                 channel_info["count"] = channel_info.get("count", 0) + len(configs)
-                await write_configs(configs, path_configs=path_configs, mode="a")
+                await write_configs(
+                    configs,
+                    path_configs=path_configs,
+                    mode="a",
+                )
 
     channel_info["current_id"] = channel_info.get("last_id", 0)
     logger.info(f"Found: {v2ray_count} configs.")
 
 
-async def write_configs(configs: list, path_configs: str = "v2ray-configs-raw.txt", mode: str = "w") -> None:
+async def write_configs(configs: list, path_configs: str = "v2ray-raw.txt", mode: str = "w") -> None:
     async with aiopen(path_configs, mode, encoding="utf-8") as file:
         await file.writelines(f"{config}\n" for config in configs)

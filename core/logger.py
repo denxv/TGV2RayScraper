@@ -1,9 +1,19 @@
 from argparse import Namespace
 from datetime import datetime
 from json import dumps
+from logging import (
+    DEBUG,
+    INFO,
+    FileHandler,
+    Filter,
+    Formatter,
+    Logger,
+    LogRecord,
+    StreamHandler,
+    getLogger,
+)
 from pathlib import Path
 from typing import Any
-from logging import DEBUG, FileHandler, Filter, Formatter, getLogger, INFO, Logger, LogRecord, StreamHandler
 
 
 class ColorLevelFilter(Filter):

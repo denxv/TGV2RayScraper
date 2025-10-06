@@ -17,7 +17,10 @@ def parse_args() -> Namespace:
     parser = ArgumentParser(
         add_help=False,
         description="Synchronous Telegram channel scraper (simpler, slower).",
-        epilog="Example: python %(prog)s -C channels.json --configs-raw configs-raw.txt",
+        epilog=(
+            "Example: PYTHONPATH=. python scripts/%(prog)s -C channels.json "
+            "--configs-raw configs-raw.txt"
+        ),
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
             max_help_position=30,
@@ -65,8 +68,8 @@ def main() -> None:
             for name in get_sorted_keys(channels, filtering=True):
                 fetch_channel_configs(
                     session=session,
-                    channel_name=name, 
-                    channel_info=channels[name], 
+                    channel_name=name,
+                    channel_info=channels[name],
                     path_configs=parsed_args.configs_raw,
                 )
     except KeyboardInterrupt:

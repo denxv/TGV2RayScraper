@@ -40,7 +40,12 @@ def flag_to_name(flag: str) -> str:
     return flag.lstrip('-').replace('-', '_')
 
 
-def int_in_range(value: str, min_value: int = 1, max_value: int = 100, as_str: bool = False) -> int | str:
+def int_in_range(
+    value: str,
+    min_value: int = 1,
+    max_value: int = 100,
+    as_str: bool = False,
+) -> int | str:
     ivalue = int(value)
     if ivalue < min_value or ivalue > max_value:
         raise ArgumentTypeError(f"Expected {min_value} to {max_value}, got {ivalue}")
@@ -76,7 +81,7 @@ def parse_valid_params(params: str) -> list[str]:
         return param
 
     valid_params = [
-        check_param(param) 
+        check_param(param)
         for param in split(r"[ ,]+", params.strip())
     ]
 
@@ -109,7 +114,5 @@ def validate_file_path(path: str | Path, must_be_file: bool = True) -> str:
 
     if must_be_file and not filepath.is_file():
         raise ArgumentTypeError(f"The file does not exist: '{filepath}'.")
-    
+
     return str(filepath)
-
-

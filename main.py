@@ -6,7 +6,12 @@ from subprocess import run
 
 from core.constants import SCRIPTS_CONFIG
 from core.logger import logger, log_debug_object
-from core.utils import collect_args, int_in_range, normalize_valid_params, validate_file_path
+from core.utils import (
+    collect_args,
+    int_in_range,
+    normalize_valid_params,
+    validate_file_path,
+)
 
 
 def parse_args() -> Namespace:
@@ -27,13 +32,23 @@ def parse_args() -> Namespace:
     parser.add_argument(
         "--batch-extract",
         help=SUPPRESS,
-        type=lambda value: int_in_range(value, min_value=1, max_value=100, as_str=True),
+        type=lambda value: int_in_range(
+            value,
+            min_value=1,
+            max_value=100,
+            as_str=True,
+        ),
     )
 
     parser.add_argument(
         "--batch-update",
         help=SUPPRESS,
-        type=lambda value: int_in_range(value, min_value=1, max_value=1000, as_str=True),
+        type=lambda value: int_in_range(
+            value,
+            min_value=1,
+            max_value=1000,
+            as_str=True,
+        ),
     )
 
     parser.add_argument(
@@ -160,7 +175,7 @@ def main() -> None:
             if script_config.get("mode") == skipped_mode:
                 continue
             run_script(
-                script_name=script_name, 
+                script_name=script_name,
                 args=collect_args(parsed_args, script_config.get("flags")),
             )
     except KeyboardInterrupt:

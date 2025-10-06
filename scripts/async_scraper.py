@@ -17,8 +17,11 @@ from domain.channel import get_sorted_keys, print_channel_info
 def parse_args() -> Namespace:
     parser = ArgumentParser(
         add_help=False,
-        description = "Asynchronous Telegram channel scraper (faster, experimental).",
-        epilog="Example: python %(prog)s -E 20 -U 100 --channels channels.json -R configs-raw.txt",
+        description="Asynchronous Telegram channel scraper (faster, experimental).",
+        epilog=(
+            "Example: PYTHONPATH=. python scripts/%(prog)s -E 20 -U 100 "
+            "--channels channels.json -R configs-raw.txt"
+        ),
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
             max_help_position=30,
@@ -83,10 +86,10 @@ async def main() -> None:
             print_channel_info(channels)
             for name in get_sorted_keys(channels, filtering=True):
                 await fetch_channel_configs(
-                    session=session, 
-                    channel_name=name, 
-                    channel_info=channels[name], 
-                    batch_size=parsed_args.batch_extract, 
+                    session=session,
+                    channel_name=name,
+                    channel_info=channels[name],
+                    batch_size=parsed_args.batch_extract,
                     path_configs=parsed_args.configs_raw,
                 )
     except (CancelledError, KeyboardInterrupt):

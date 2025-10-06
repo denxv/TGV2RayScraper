@@ -15,8 +15,8 @@ def format_channel_id(channel_info: dict) -> str:
     diff = diff_channel_id(channel_info)
     TOTAL_CHANNELS_POST = TOTAL_CHANNELS_POST + diff
     return (
-        f"{channel_info.get('current_id', ''):>{LEN_NUMBER}} "
-        f"/ {channel_info.get('last_id', ''):<{LEN_NUMBER}} "
+        f"{channel_info.get('current_id', 0):>{LEN_NUMBER}} "
+        f"/ {channel_info.get('last_id', 0):<{LEN_NUMBER}} "
         f"(+{diff})"
     )
 
