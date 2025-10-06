@@ -10,7 +10,7 @@ from core.constants import (
     XPATH_POST_ID,
 )
 from core.decorators import status
-from core.logger import logger
+from core.logger import logger, log_debug_object
 from core.utils import make_backup
 from domain.channel import sort_channel_names
 from domain.predicates import condition_delete_channels
@@ -24,6 +24,13 @@ from domain.predicates import condition_delete_channels
 def delete_channels(channels: dict) -> None:
     for channel_name, channel_info in list(channels.items()):
         if condition_delete_channels(channel_info):
+            log_debug_object(
+                title=(
+                    f"Deleting channel '{channel_name}' "
+                    "with the following information"
+                ),
+                obj=channel_info,
+            )
             channels.pop(channel_name, None)
 
 
