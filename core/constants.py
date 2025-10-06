@@ -2,12 +2,16 @@ from re import compile
 from pathlib import Path
 from typing import ParamSpec, TypeVar
 
-from .common import abs_path
+DEFAULT_CHANNEL_VALUES = {
+    "count": 0,
+    "current_id": 1,
+    "last_id": -1,
+}
 
-DEFAULT_PATH_CHANNELS = abs_path("../channels/current.json")
-DEFAULT_PATH_URLS = abs_path("../channels/urls.txt")
-DEFAULT_PATH_CONFIGS_CLEAN = abs_path("../configs/v2ray-clean.txt")
-DEFAULT_PATH_CONFIGS_RAW = abs_path("../configs/v2ray-raw.txt")
+DEFAULT_PATH_CHANNELS = "../channels/current.json"
+DEFAULT_PATH_CONFIGS_CLEAN = "../configs/v2ray-clean.txt"
+DEFAULT_PATH_CONFIGS_RAW = "../configs/v2ray-raw.txt"
+DEFAULT_PATH_URLS = "../channels/urls.txt"
 
 FORMAT_CONFIG_NAME = "{protocol}-{host}-{port}"
 FURL_TG = "https://t.me/s/{name}"
@@ -17,6 +21,7 @@ FURL_TG_BEFORE = FURL_TG + "?before={id}"
 LEN_NAME = 32
 LEN_NUMBER = 7
 TOTAL_CHANNELS_POST = 0
+
 P = ParamSpec("P")
 T = TypeVar("T")
 

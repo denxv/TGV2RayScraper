@@ -1,19 +1,9 @@
-import json
 from argparse import Namespace
 from datetime import datetime
+from json import dumps
 from pathlib import Path
 from typing import Any
-from logging import (
-    DEBUG,
-    INFO,
-    FileHandler,
-    Filter,
-    Formatter,
-    Logger,
-    LogRecord,
-    StreamHandler,
-    getLogger,
-)
+from logging import DEBUG, FileHandler, Filter, Formatter, getLogger, INFO, Logger, LogRecord, StreamHandler
 
 
 class ColorLevelFilter(Filter):
@@ -50,10 +40,6 @@ class MicrosecondFormatter(Formatter):
         return ct.strftime(fmt)
 
 
-def abs_path(path: str | Path) -> str:
-    return str((Path(__file__).parent / path).resolve())
-
-
 def create_logger(
     name: str = "TGV2RayScraper",
     console_level: int = INFO,
@@ -73,7 +59,7 @@ def create_logger(
     console_handler.setLevel(console_level)
 
     file_handler = FileHandler(
-        abs_path(f"../logs/{datetime.now():%Y-%m-%d}.log"), 
+        Path(__file__).parent / f"../logs/{datetime.now():%Y-%m-%d}.log",
         encoding="utf-8",
     )
     file_handler.addFilter(ColorLevelFilter(
@@ -92,7 +78,7 @@ def create_logger(
 
 def log_debug_object(title: str, obj: Any, *, indent: int = 4) -> None:
     try:
-        formatted = json.dumps(
+        formatted = dumps(
             vars(obj) if isinstance(obj, Namespace) else obj,
             default=str,
             ensure_ascii=False,
@@ -104,15 +90,4 @@ def log_debug_object(title: str, obj: Any, *, indent: int = 4) -> None:
         logger.debug(f"Failed to serialize object '{title}': {exception}")
 
 
-def main() -> None:
-    logger.debug("Это отладочное сообщение (DEBUG)")
-    logger.info("Программа запущена (INFO)")
-    logger.warning("Это предупреждение (WARNING)")
-    logger.error("Ошибка при выполнении (ERROR)")
-    logger.critical("Критическая ошибка (CRITICAL)")
-
-
 logger = create_logger()
-
-if __name__ == "__main__":
-    main()

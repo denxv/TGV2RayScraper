@@ -1,26 +1,12 @@
 #!/usr/bin/env python
-# coding: utf-8
 
-import subprocess
-import sys
-from pathlib import Path
-from argparse import (
-    ArgumentParser,
-    HelpFormatter,
-    Namespace,
-    SUPPRESS,
-)
+from argparse import ArgumentParser, HelpFormatter, Namespace, SUPPRESS
+from sys import executable
+from subprocess import run
 
-from scripts.logger import logger, log_debug_object
-from scripts.const import (
-    SCRIPTS_CONFIG,
-)
-from scripts.utils import (
-    collect_args,
-    int_in_range,
-    normalize_valid_params,
-    validate_file_path,
-)
+from core.constants import SCRIPTS_CONFIG
+from core.logger import logger, log_debug_object
+from core.utils import collect_args, int_in_range, normalize_valid_params, validate_file_path
 
 
 def parse_args() -> Namespace:
@@ -143,14 +129,14 @@ def run_script(script_name: str = "async_scraper.py", args: list = []) -> None:
     logger.info('-' * repeat_count)
 
     arguments = [
-        sys.executable,
+        executable,
         "-m",
         f"scripts.{script_name}",
         *args,
     ]
 
     log_debug_object("Script launch arguments", arguments)
-    if subprocess.run(args=arguments).returncode:
+    if run(args=arguments).returncode:
         raise Exception(f"Script '{script_name}' exited with an error!")
 
     logger.info('-' * repeat_count)
