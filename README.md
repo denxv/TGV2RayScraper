@@ -1,6 +1,6 @@
 # TGV2RayScraper
 
-TGV2RayScraper is a Python project designed to collect Telegram channel data, extract V2Ray configurations, and process them by cleaning, normalizing, and deduplicating, while maintaining up-to-date channel information. It supports both synchronous and asynchronous scraping and includes tools for managing channel lists.
+TGV2RayScraper is a Python project designed for collecting data from Telegram channels, extracting and processing V2Ray configurations, including cleaning, normalizing, and deduplicating them. The project maintains up-to-date information about channels and includes tools for managing their lists. It provides both synchronous and asynchronous tools for data collection and V2Ray configuration processing.
 
 For Russian version, see [README.md](docs/ru/README.md)
 
@@ -75,34 +75,30 @@ Other dependencies are listed in [`requirements.txt`](requirements.txt).
 
 ## Project Structure
 
-* **channels/** – stores channel data
-  * `current.json` – JSON file with up-to-date channel data
-  * `urls.txt` – text file with Telegram channel URLs
+* **adapters/** — adapters for synchronous and asynchronous data operations
+  * **async_/** — asynchronous implementations of operations (channels, configs, scraping)
+    * `channels.py` — asynchronous operations for channels
+    * `configs.py` — asynchronous configuration handling
+    * `scraper.py` — asynchronous scraper for data collection
+  * **sync/** — synchronous implementations of operations
+    * `channels.py` — synchronous operations for channels
+    * `configs.py` — synchronous configuration handling
+    * `scraper.py` — synchronous scraper for data collection
 
-* **configs/** – directory containing proxy configuration files
-  * `v2ray-clean.txt` – cleaned, normalized, filtered, and deduplicated proxy configurations
-  * `v2ray-raw.txt` – raw proxy configurations collected from various sources
+* **core/** — core utilities and constants
+  * `constants.py` — constants, default paths, URL templates, regex patterns, and script flags
+  * `decorators.py` — decorators (e.g., for logging)
+  * `logger.py` — logging utility with colorized console output and microsecond timestamps
+  * `utils.py` — utility functions and helpers
 
-* **docs/** – documentation folder
-  * **ru/** – Russian-language documentation
-    * `LICENSE` – license file for the documentation
-    * `README.md` – main documentation file in Russian
+* **domain/** — business logic and domain functions
+  * `channel.py` — channel management, sorting, filtering
+  * `config.py` — processing and normalization of configurations
+  * `predicates.py` — filtering logic and predicates
 
-* **logs/** – directory for storing logs of operations and configuration processing
+* **main.py** — main script for running all project operations, including channel updates, data scraping, and configuration processing
 
-* **scripts/** – data processing scripts
-  * `async_scraper.py` – asynchronously collects data from Telegram channels
-  * `common.py` – utilities for consistent path resolution
-  * `const.py` – project constants, default paths, URL templates, regex patterns, and script flags
-  * `logger.py` – logging utility with colorized console output and microsecond timestamps, used across all scripts
-  * `scraper.py` – synchronously collects data from Telegram channels
-  * `update_channels.py` – updates the channel list
-  * `utils.py` – centralized shared functions for all scripts
-  * `v2ray_cleaner.py` – utility for processing V2Ray and proxy configs: cleaning, normalization, filtering, deduplication, and sorting
-
-* **requirements.txt** – lists all Python libraries required to run the project
-
-* **main.py** – main script to run all project operations, including channel updates, data scraping, and proxy config processing
+* **requirements.txt** — list of all required Python libraries for the project
 
 ---
 
@@ -247,13 +243,21 @@ wireguard://privatekey@host:port?params#name
 
 ---
 
-### **1. Updating Channels**
+### **1. Update Channels**
+
+You can run the channel update script as follows:
 
 ```bash
 python -m scripts.update_channels
 ```
 
-You can also run the script with `-h` to see all available options:
+An alternative method using `PYTHONPATH` is also available:
+
+```bash
+PYTHONPATH=. python scripts/update_channels.py
+```
+
+You can use the `-h` flag to see all available options:
 
 ```bash
 python -m scripts.update_channels -h
@@ -287,11 +291,19 @@ python -m scripts.update_channels -C channels/current.json -U channels/urls.txt
 
 #### **Asynchronous Scraper** (faster, experimental)
 
+You can run the asynchronous scraper as follows:
+
 ```bash
 python -m scripts.async_scraper
 ```
 
-You can run with `-h` to see all available options:
+An alternative method using `PYTHONPATH` is also available:
+
+```bash
+PYTHONPATH=. python scripts/async_scraper.py
+```
+
+You can use the `-h` flag to see all available options:
 
 ```bash
 python -m scripts.async_scraper -h
@@ -316,11 +328,19 @@ python -m scripts.async_scraper -E 20 -U 100 -C channels/current.json -R configs
 
 #### **Synchronous Scraper** (simpler, slower)
 
+You can run the synchronous scraper as follows:
+
 ```bash
 python -m scripts.scraper
 ```
 
-You can run with `-h` to see all available options:
+Alternatively, you can run it with `PYTHONPATH`:
+
+```bash
+PYTHONPATH=. python scripts/scraper.py
+```
+
+Use `-h` to see all available options:
 
 ```bash
 python -m scripts.scraper -h
@@ -343,11 +363,19 @@ python -m scripts.scraper -C channels/current.json -R configs/v2ray-raw.txt
 
 ### **3. Cleaning V2Ray Configurations**
 
+You can run the V2Ray configuration cleaner script as follows:
+
 ```bash
 python -m scripts.v2ray_cleaner
 ```
 
-You can also run the script with `-h` to see all available options:
+Alternatively, you can run it using `PYTHONPATH`:
+
+```bash
+PYTHONPATH=. python scripts/v2ray_cleaner.py
+```
+
+You can also run with `-h` to see all available options:
 
 ```bash
 python -m scripts.v2ray_cleaner -h
