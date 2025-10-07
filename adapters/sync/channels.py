@@ -104,4 +104,5 @@ def save_channels_and_urls(
 def update_with_new_channels(current_channels: dict, channel_names: list) -> None:
     for name in sort_channel_names(channel_names):
         if name not in current_channels:
+            logger.debug(f"Channel '{name}' missing, adding to list.")
             current_channels.setdefault(name, DEFAULT_CHANNEL_VALUES.copy())
