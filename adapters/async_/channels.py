@@ -4,15 +4,39 @@ from aiofiles import open as aiopen
 from aiohttp import ClientSession
 from lxml import html
 
-from core.constants import FURL_TG, XPATH_POST_ID
+from core.constants import FURL_TG, FURL_TG_AFTER, XPATH_POST_ID
 from core.logger import logger
 
 
-async def get_last_id(session: ClientSession, channel_name: str) -> int:
-    async with session.get(FURL_TG.format(name=channel_name)) as response:
-        content = await response.text()
-        list_post = html.fromstring(content).xpath(XPATH_POST_ID)
-        return int(list_post[-1].split("/")[-1]) if list_post else -1
+async def _extract_post_id(session: ClientSession, url: str, index: int = 0, default: int = 0) -> int:
+    try:
+        async with session.get(url) as response:
+            response.raise_for_status()
+
+            content = await response.text()
+            tree = html.fromstring(content)
+            post_ids = tree.xpath(XPATH_POST_ID)
+
+            if not post_ids:
+                raise ValueError("No posts found.")
+
+            post_url = post_ids[index]
+            post_id = post_url.split("/")[-1]
+            return int(post_id)
+
+    except Exception as e:
+        logger.debug(f"Failed to extract post ID from '{url}': {type(e).__name__}: {e}")
+        return default
+
+
+async def get_first_post_id(session: ClientSession, channel_name: str) -> int:
+    url = FURL_TG_AFTER.format(name=channel_name, id=1)
+    return await _extract_post_id(session, url, index=0, default=1)
+
+
+async def get_last_post_id(session: ClientSession, channel_name: str) -> int:
+    url = FURL_TG.format(name=channel_name)
+    return await _extract_post_id(session, url, index=-1, default=-1)
 
 
 async def load_channels(path_channels: str = "current.json") -> dict:

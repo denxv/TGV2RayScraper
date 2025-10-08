@@ -40,3 +40,18 @@ def print_channel_info(channels: dict) -> None:
 
 def sort_channel_names(channel_names: list) -> list:
     return sorted([name.lower() for name in channel_names])
+
+
+def update_count_and_last_id(channel_name: str, channel_info: dict, last_post_id: int) -> None:
+    count = channel_info.get("count", 0)
+    last_id = channel_info.get("last_id", -1)
+
+    if last_id != last_post_id:
+        logger.info(
+            f" <UU>  {channel_name:<{LEN_NAME}}"
+            f"{last_id:>{LEN_NUMBER}} -> {last_post_id:<{LEN_NUMBER}}"
+        )
+        channel_info["last_id"] = last_post_id
+        channel_info["count"] = 1 if count <= 0 else count
+    elif last_id == last_post_id and last_post_id == -1:
+        channel_info["count"] = 0 if count > 0 else count - 1

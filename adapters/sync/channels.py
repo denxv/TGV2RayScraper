@@ -6,6 +6,7 @@ from requests import Session
 from core.constants import (
     DEFAULT_CHANNEL_VALUES,
     FURL_TG,
+    FURL_TG_AFTER,
     REGEX_CHANNELS_NAME,
     XPATH_POST_ID,
 )
@@ -14,6 +15,26 @@ from core.logger import logger, log_debug_object
 from core.utils import make_backup
 from domain.channel import sort_channel_names
 from domain.predicates import should_delete_channel
+
+
+def _extract_post_id(session: Session, url: str, index: int = 0, default: int = 0) -> int:
+    try:
+        response = session.get(url)
+        response.raise_for_status()
+
+        tree = html.fromstring(response.content)
+        post_ids = tree.xpath(XPATH_POST_ID)
+
+        if not post_ids:
+            raise ValueError("No posts found.")
+
+        post_url = post_ids[index]
+        post_id = post_url.split("/")[-1]
+        return int(post_id)
+
+    except Exception as e:
+        logger.debug(f"Failed to extract post ID from '{url}': {type(e).__name__}: {e}")
+        return default
 
 
 @status(
@@ -34,10 +55,14 @@ def delete_channels(channels: dict) -> None:
             channels.pop(channel_name, None)
 
 
-def get_last_id(session: Session, channel_name: str) -> int:
-    response = session.get(FURL_TG.format(name=channel_name))
-    list_post = html.fromstring(response.content).xpath(XPATH_POST_ID)
-    return int(list_post[-1].split("/")[-1]) if list_post else -1
+def get_first_post_id(session: Session, channel_name: str) -> int:
+    url = FURL_TG_AFTER.format(name=channel_name, id=1)
+    return _extract_post_id(session, url, index=0, default=1)
+
+
+def get_last_post_id(session: Session, channel_name: str) -> int:
+    url = FURL_TG.format(name=channel_name)
+    return _extract_post_id(session, url, index=-1, default=-1)
 
 
 def load_channels(path_channels: str = "current.json") -> dict:
