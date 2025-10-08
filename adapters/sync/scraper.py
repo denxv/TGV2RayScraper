@@ -1,11 +1,10 @@
-from requests import Session
-
 from adapters.sync.channels import get_first_post_id, get_last_post_id
 from core.logger import logger
+from core.typing import ChannelsDict, SyncSession
 from domain.channel import update_count_and_last_id
 
 
-def update_info(session: Session, channels: dict) -> None:
+def update_info(session: SyncSession, channels: ChannelsDict) -> None:
     logger.info(f"Updating channel information for {len(channels)} channels...")
 
     for channel_name, channel_info in channels.items():

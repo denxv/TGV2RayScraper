@@ -1,11 +1,15 @@
-from typing import Any, Callable
-
 from asteval import Interpreter
 
+from core.typing import (
+    ChannelInfo,
+    ConditionStr,
+    ConfigPredicate,
+    V2RayConfig,
+)
 from core.utils import re_fullmatch, re_search
 
 
-def make_predicate(condition: str) -> Callable[[dict[str, Any]], bool]:
+def make_predicate(condition: ConditionStr) -> ConfigPredicate:
     aeval = Interpreter()
     symtable = {
         "int": int,
@@ -15,7 +19,7 @@ def make_predicate(condition: str) -> Callable[[dict[str, Any]], bool]:
         "str": str,
     }
 
-    def predicate(config: dict[str, Any]) -> bool:
+    def predicate(config: V2RayConfig) -> bool:
         aeval.symtable.clear()
         aeval.symtable.update(symtable)
         aeval.symtable.update(config)
@@ -27,7 +31,7 @@ def make_predicate(condition: str) -> Callable[[dict[str, Any]], bool]:
     return predicate
 
 
-def should_delete_channel(channel_info: dict) -> bool:
+def should_delete_channel(channel_info: ChannelInfo) -> bool:
     count = channel_info.get("count", 0)
     current_id = channel_info.get("current_id", 1)
     last_id = channel_info.get("last_id", -1)
@@ -42,7 +46,7 @@ def should_delete_channel(channel_info: dict) -> bool:
     return False
 
 
-def should_update_channel(channel_info: dict) -> bool:
+def should_update_channel(channel_info: ChannelInfo) -> bool:
     current_id = channel_info.get("current_id", 1)
     last_id = channel_info.get("last_id", -1)
 

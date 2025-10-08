@@ -1,19 +1,27 @@
-from typing import Any, Iterator
 from urllib.parse import unquote
 
 from lxml import html
-from requests import Session
 from tqdm import tqdm
 
 from core.constants import FURL_TG_AFTER, REGEX_V2RAY, XPATH_V2RAY, URL_PATTERNS
+from core.typing import (
+    ChannelName,
+    ChannelInfo,
+    FileMode,
+    FilePath,
+    V2RayConfigIterator,
+    V2RayConfigs,
+    V2RayConfigsRaw,
+    SyncSession,
+)
 from core.logger import logger
 
 
 def fetch_channel_configs(
-    session: Session,
-    channel_name: str,
-    channel_info: dict,
-    path_configs: str = "v2ray-raw.txt",
+    session: SyncSession,
+    channel_name: ChannelName,
+    channel_info: ChannelInfo,
+    path_configs: FilePath = "v2ray-raw.txt",
 ) -> None:
     v2ray_count = 0
     _const_batch_ID = 20
@@ -43,10 +51,10 @@ def fetch_channel_configs(
         logger.info(f"Found: {v2ray_count} configs.")
 
 
-def load_configs(path_configs_raw: str = "v2ray-raw.txt") -> list[dict[str, Any]]:
+def load_configs(path_configs_raw: FilePath = "v2ray-raw.txt") -> V2RayConfigs:
     logger.info(f"Loading configs from '{path_configs_raw}'...")
 
-    def line_to_configs(line: str) -> Iterator[dict[str, Any]]:
+    def line_to_configs(line: str) -> V2RayConfigIterator:
         line = unquote(line.strip())
         return (
             match.groupdict(default='')
@@ -63,9 +71,9 @@ def load_configs(path_configs_raw: str = "v2ray-raw.txt") -> list[dict[str, Any]
 
 
 def save_configs(
-    configs: list[dict[str, Any]],
-    path_configs_clean: str = "v2ray-clean.txt",
-    mode: str = "w",
+    configs: V2RayConfigs,
+    path_configs_clean: FilePath = "v2ray-clean.txt",
+    mode: FileMode = "w",
 ) -> None:
     logger.info(f"Saving {len(configs)} configs to '{path_configs_clean}'...")
     with open(path_configs_clean, mode, encoding="utf-8") as file:
@@ -76,6 +84,10 @@ def save_configs(
     logger.info(f"Saved {len(configs)} configs in '{path_configs_clean}'.")
 
 
-def write_configs(configs: list, path_configs: str = "v2ray-raw.txt", mode: str = "w") -> None:
+def write_configs(
+    configs: V2RayConfigsRaw,
+    path_configs: FilePath = "v2ray-raw.txt",
+    mode: FileMode = "w",
+) -> None:
     with open(path_configs, mode, encoding="utf-8") as file:
         file.writelines(f"{config}\n" for config in configs)

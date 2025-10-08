@@ -89,6 +89,7 @@ Other dependencies are listed in [`requirements.txt`](requirements.txt).
   * `constants.py` — constants, default paths, URL templates, regex patterns, and script flags
   * `decorators.py` — decorators (e.g., for logging)
   * `logger.py` — logging utility with colorized console output and microsecond timestamps
+  * `typing.py` — custom type aliases for the project (channels, V2Ray configs, CLI, sessions, etc.)
   * `utils.py` — utility functions and helpers
 
 * **domain/** — business logic and domain functions

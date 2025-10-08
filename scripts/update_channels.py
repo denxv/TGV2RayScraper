@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from argparse import ArgumentParser, HelpFormatter, Namespace, SUPPRESS
+from argparse import ArgumentParser, HelpFormatter, SUPPRESS
 
 from adapters.sync.channels import (
     delete_channels,
@@ -8,12 +8,13 @@ from adapters.sync.channels import (
     save_channels_and_urls,
     update_with_new_channels,
 )
-from core.logger import logger, log_debug_object
 from core.constants import DEFAULT_PATH_CHANNELS, DEFAULT_PATH_URLS
+from core.logger import logger, log_debug_object
+from core.typing import ArgsNamespace
 from core.utils import abs_path, validate_file_path
 
 
-def parse_args() -> Namespace:
+def parse_args() -> ArgsNamespace:
     parser = ArgumentParser(
         add_help=False,
         description="Backup, merge new channels from URLs, and update Telegram channel data.",

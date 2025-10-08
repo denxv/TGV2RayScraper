@@ -1,19 +1,20 @@
 #!/usr/bin/env python
 
-from argparse import ArgumentParser, HelpFormatter, Namespace, SUPPRESS
+from argparse import ArgumentParser, HelpFormatter, SUPPRESS
 
 from adapters.sync.configs import load_configs, save_configs
-from core.logger import logger, log_debug_object
 from core.constants import (
     DEFAULT_PATH_CONFIGS_CLEAN,
     DEFAULT_PATH_CONFIGS_RAW,
     URL_PATTERNS,
 )
-from core.utils import abs_path, parse_valid_params, validate_file_path
+from core.logger import logger, log_debug_object
+from core.typing import ArgsNamespace
+from core.utils import abs_path, parse_valid_fields, validate_file_path
 from domain.config import process_configs
 
 
-def parse_args() -> Namespace:
+def parse_args() -> ArgsNamespace:
     parser = ArgumentParser(
         add_help=False,
         description="Utility to normalize, filter, deduplicate, and sort proxy configuration entries.",
@@ -39,7 +40,7 @@ def parse_args() -> Namespace:
         ),
         metavar="FIELDS",
         nargs="?",
-        type=parse_valid_params,
+        type=parse_valid_fields,
     )
 
     parser.add_argument(
@@ -104,7 +105,7 @@ def parse_args() -> Namespace:
         ),
         metavar="FIELDS",
         nargs="?",
-        type=parse_valid_params,
+        type=parse_valid_fields,
     )
 
     args = parser.parse_args()

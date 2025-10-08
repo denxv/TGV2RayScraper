@@ -1,6 +1,4 @@
 from re import compile
-from pathlib import Path
-from typing import ParamSpec, TypeVar
 
 DEFAULT_CHANNEL_VALUES = {
     "count": 0,
@@ -21,9 +19,6 @@ FURL_TG_BEFORE = FURL_TG + "?before={id}"
 LEN_NAME = 32
 LEN_NUMBER = 7
 TOTAL_CHANNELS_POST = 0
-
-P = ParamSpec("P")
-T = TypeVar("T")
 
 SCRIPTS_CONFIG = {
     "update_channels": {

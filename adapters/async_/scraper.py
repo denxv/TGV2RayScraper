@@ -4,17 +4,24 @@ from aiohttp import ClientSession
 
 from adapters.async_.channels import get_first_post_id, get_last_post_id
 from core.logger import logger
+from core.typing import (
+    AsyncSession,
+    BatchSize,
+    ChannelInfo,
+    ChannelName,
+    ChannelsDict,
+)
 from domain.channel import update_count_and_last_id
 
 
 async def update_info(
-    session: ClientSession,
-    channels: dict,
-    batch_size: int = 100,
+    session: AsyncSession,
+    channels: ChannelsDict,
+    batch_size: BatchSize = 100,
 ) -> None:
     logger.info(f"Updating channel information for {len(channels)} channels...")
 
-    async def update_channel(channel_name: str, channel_info: dict) -> None:
+    async def update_channel(channel_name: ChannelName, channel_info: ChannelInfo) -> None:
         current_id = channel_info.get("current_id", 1)
         last_post_id = await get_last_post_id(session, channel_name)
         update_count_and_last_id(channel_name, channel_info, last_post_id)

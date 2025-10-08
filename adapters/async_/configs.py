@@ -1,20 +1,30 @@
 from asyncio import gather
 
 from aiofiles import open as aiopen
-from aiohttp import ClientSession
 from lxml import html
 from tqdm.asyncio import tqdm
 
 from core.constants import FURL_TG_AFTER, REGEX_V2RAY, XPATH_V2RAY
+from core.typing import (
+    AsyncSession,
+    BatchSize,
+    ChannelName,
+    ChannelInfo,
+    FileMode,
+    FilePath,
+    PostID,
+    PostIDAndConfigsRaw,
+    V2RayConfigsRaw,
+)
 from core.logger import logger
 
 
 async def fetch_channel_configs(
-    session: ClientSession,
-    channel_name: str,
-    channel_info: dict,
-    batch_size: int = 20,
-    path_configs: str = "v2ray-raw.txt",
+    session: AsyncSession,
+    channel_name: ChannelName,
+    channel_info: ChannelInfo,
+    batch_size: BatchSize = 20,
+    path_configs: FilePath = "v2ray-raw.txt",
 ) -> None:
     v2ray_count = 0
     _const_batch_ID = 20
@@ -27,7 +37,7 @@ async def fetch_channel_configs(
     bar_channel_format = " {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt} "
     logger.info(f"Extracting configs from channel '{channel_name}'...")
 
-    async def fetch_and_parse(current_id: int) -> int | list:
+    async def fetch_and_parse(current_id: PostID) -> PostIDAndConfigsRaw:
         async with session.get(FURL_TG_AFTER.format(name=channel_name, id=current_id)) as response:
             content = await response.text()
             html_text = html.fromstring(content)
@@ -53,6 +63,10 @@ async def fetch_channel_configs(
     logger.info(f"Found: {v2ray_count} configs.")
 
 
-async def write_configs(configs: list, path_configs: str = "v2ray-raw.txt", mode: str = "w") -> None:
+async def write_configs(
+    configs: V2RayConfigsRaw,
+    path_configs: FilePath = "v2ray-raw.txt",
+    mode: FileMode = "w",
+) -> None:
     async with aiopen(path_configs, mode, encoding="utf-8") as file:
         await file.writelines(f"{config}\n" for config in configs)

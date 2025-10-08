@@ -13,7 +13,8 @@ from logging import (
     getLogger,
 )
 from pathlib import Path
-from typing import Any
+
+from core.typing import Any
 
 
 class ColorLevelFilter(Filter):

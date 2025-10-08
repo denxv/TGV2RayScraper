@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from argparse import ArgumentParser, HelpFormatter, Namespace, SUPPRESS
+from argparse import ArgumentParser, HelpFormatter, SUPPRESS
 
 from requests import Session
 
@@ -9,11 +9,12 @@ from adapters.sync.configs import fetch_channel_configs
 from adapters.sync.scraper import update_info
 from core.logger import logger, log_debug_object
 from core.constants import DEFAULT_PATH_CHANNELS, DEFAULT_PATH_CONFIGS_RAW
+from core.typing import ArgsNamespace
 from core.utils import abs_path, validate_file_path
 from domain.channel import get_sorted_keys, print_channel_info
 
 
-def parse_args() -> Namespace:
+def parse_args() -> ArgsNamespace:
     parser = ArgumentParser(
         add_help=False,
         description="Synchronous Telegram channel scraper (simpler, slower).",

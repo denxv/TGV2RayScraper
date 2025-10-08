@@ -1,20 +1,21 @@
 #!/usr/bin/env python
 
-from argparse import ArgumentParser, HelpFormatter, Namespace, SUPPRESS
+from argparse import ArgumentParser, HelpFormatter, SUPPRESS
 from sys import executable
 from subprocess import run
 
 from core.constants import SCRIPTS_CONFIG
 from core.logger import logger, log_debug_object
+from core.typing import ArgsNamespace, CLIParams, FilePath
 from core.utils import (
     collect_args,
     int_in_range,
-    normalize_valid_params,
+    normalize_valid_fields,
     validate_file_path,
 )
 
 
-def parse_args() -> Namespace:
+def parse_args() -> ArgsNamespace:
     parser = ArgumentParser(
         add_help=False,
         description="Run the complete proxy configuration collection and processing pipeline.",
@@ -74,7 +75,7 @@ def parse_args() -> Namespace:
         const="",
         help=SUPPRESS,
         nargs="?",
-        type=normalize_valid_params,
+        type=normalize_valid_fields,
     )
 
     parser.add_argument(
@@ -123,7 +124,7 @@ def parse_args() -> Namespace:
         const="",
         help=SUPPRESS,
         nargs="?",
-        type=normalize_valid_params,
+        type=normalize_valid_fields,
     )
 
     parser.add_argument(
@@ -138,7 +139,7 @@ def parse_args() -> Namespace:
     return args
 
 
-def run_script(script_name: str = "async_scraper.py", args: list = []) -> None:
+def run_script(script_name: FilePath = "async_scraper.py", args: CLIParams = []) -> None:
     repeat_count = 100
     logger.info(f"Starting script '{script_name}'...")
     logger.info('-' * repeat_count)
@@ -174,6 +175,7 @@ def main() -> None:
         for script_name, script_config in SCRIPTS_CONFIG.items():
             if script_config.get("mode") == skipped_mode:
                 continue
+
             run_script(
                 script_name=script_name,
                 args=collect_args(parsed_args, script_config.get("flags")),

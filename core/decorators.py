@@ -1,16 +1,11 @@
 from functools import wraps
-from typing import Callable
 
-from core.constants import P, T
+from core.typing import AnyFunc, FuncDecorator, P, T
 from core.logger import logger
 
 
-def status(
-    start: str,
-    end: str = "",
-    tracking: bool = False,
-) -> Callable[[Callable[P, T]], Callable[P, T]]:
-    def decorator(target_func: Callable[P, T]) -> Callable[P, T]:
+def status(start: str, end: str = "", tracking: bool = False) -> FuncDecorator[P, T]:
+    def decorator(target_func: AnyFunc[P, T]) -> AnyFunc[P, T]:
         @wraps(target_func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             logger.info(start)

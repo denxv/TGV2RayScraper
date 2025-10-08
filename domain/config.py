@@ -1,16 +1,22 @@
-from argparse import Namespace
 from json import dumps, loads
 from re import DOTALL, search
-from typing import Any
 from urllib.parse import parse_qs, urlencode
 
 from core.constants import FORMAT_CONFIG_NAME, SS_URL_PATTERN, SSR_PLAIN_PATTERN
 from core.logger import logger
+from core.typing import (
+    ArgsNamespace,
+    ConditionStr,
+    ConfigFields,
+    SortKeys,
+    V2RayConfig,
+    V2RayConfigs,
+)
 from core.utils import b64decode_safe, b64encode_safe
 from domain.predicates import make_predicate
 
 
-def filter_by_condition(configs: list[dict[str, Any]], condition: str) -> list[dict[str, Any]]:
+def filter_by_condition(configs: V2RayConfigs, condition: ConditionStr) -> V2RayConfigs:
     logger.info(f"Filtering {len(configs)} configs by condition: `{condition}`...")
     predicate = make_predicate(condition)
     filtered_configs = list(filter(predicate, configs))
@@ -22,7 +28,7 @@ def filter_by_condition(configs: list[dict[str, Any]], condition: str) -> list[d
     return filtered_configs
 
 
-def normalize(configs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def normalize(configs: V2RayConfigs) -> V2RayConfigs:
     total_before = len(configs)
     logger.info(f"Normalizing {total_before} configs...")
     for config in configs:
@@ -38,7 +44,7 @@ def normalize(configs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return normalized_configs
 
 
-def normalize_config(config: dict[str, Any]) -> None:
+def normalize_config(config: V2RayConfig) -> None:
     if config.get("base64"):
         normalize_config_base64(config)
     else:
@@ -67,7 +73,7 @@ def normalize_config(config: dict[str, Any]) -> None:
         config["url"] = "{url}#{name}".format(**config)
 
 
-def normalize_config_base64(config: dict[str, Any]) -> None:
+def normalize_config_base64(config: V2RayConfig) -> None:
     protocol = config.get("protocol", "")
     normalizers = {
         "ss": normalize_ss_base64,
@@ -79,7 +85,7 @@ def normalize_config_base64(config: dict[str, Any]) -> None:
         normalizer(config)
 
 
-def normalize_ss_base64(config: dict[str, Any]) -> None:
+def normalize_ss_base64(config: V2RayConfig) -> None:
     if not (base64 := config.pop("base64", None)):
         return
 
@@ -98,7 +104,7 @@ def normalize_ss_base64(config: dict[str, Any]) -> None:
     config.pop("base64", None)
 
 
-def normalize_ssr_base64(config: dict[str, Any]) -> None:
+def normalize_ssr_base64(config: V2RayConfig) -> None:
     if not (base64 := config.pop("base64", None)):
         raise Exception
 
@@ -141,7 +147,7 @@ def normalize_ssr_base64(config: dict[str, Any]) -> None:
     config.update(ssr_config)
 
 
-def normalize_vmess_base64(config: dict[str, Any]) -> None:
+def normalize_vmess_base64(config: V2RayConfig) -> None:
     if not (base64 := config.pop("base64", None)):
         return
 
@@ -180,7 +186,7 @@ def normalize_vmess_base64(config: dict[str, Any]) -> None:
         raise Exception
 
 
-def process_configs(configs: list[dict[str, Any]], args: Namespace) -> list[dict[str, Any]]:
+def process_configs(configs: V2RayConfigs, args: ArgsNamespace) -> V2RayConfigs:
     if args.normalize:
         configs = normalize(configs=configs)
     if args.filter:
@@ -189,35 +195,32 @@ def process_configs(configs: list[dict[str, Any]], args: Namespace) -> list[dict
             condition=args.filter,
         )
     if args.duplicate:
-        configs = remove_duplicates_by_params(
+        configs = remove_duplicates_by_fields(
             configs=configs,
-            params=args.duplicate,
+            fields=args.duplicate,
         )
     if args.sort:
-        configs = sort_by_params(
+        configs = sort_by_fields(
             configs=configs,
-            params=args.sort,
+            fields=args.sort,
             reverse=args.reverse,
         )
     return configs
 
 
-def remove_duplicates_by_params(
-    configs: list[dict[str, Any]],
-    params: list[str],
-) -> list[dict[str, Any]]:
-    logger.info(f"Removing duplicates from {len(configs)} configs by keys: {params}...")
-    if not params:
-        logger.warning("No params to deduplicate.")
+def remove_duplicates_by_fields(configs: V2RayConfigs, fields: ConfigFields) -> V2RayConfigs:
+    logger.info(f"Removing duplicates from {len(configs)} configs using keys: {fields}...")
+    if not fields:
+        logger.warning("Deduplication skipped: no fields specified.")
         return configs
 
     seen = set()
 
-    def is_unique(config: dict) -> bool:
-        if not all(param in config for param in params):
+    def is_unique(config: V2RayConfig) -> bool:
+        if not all(field in config for field in fields):
             return False
 
-        signature = tuple(config.get(param, None) for param in params)
+        signature = tuple(config.get(field, None) for field in fields)
         if signature in seen:
             return False
 
@@ -227,28 +230,22 @@ def remove_duplicates_by_params(
     unique_configs = list(filter(is_unique, configs))
     removed = len(configs) - len(unique_configs)
     logger.info(
-        f"Duplicate removal complete: {len(unique_configs)} remain (removed: {removed}).",
+        f"Duplicate removal completed: {len(unique_configs)} configs remain, {removed} removed."
     )
     return unique_configs
 
 
-def sort_by_params(
-    configs: list[dict[str, Any]],
-    params: list[str],
-    reverse: bool = False,
-) -> list[dict[str, Any]]:
-    logger.info(f"Sorting {len(configs)} configs by keys: {params} ({reverse=})...")
-    if not params:
+def sort_by_fields(configs: V2RayConfigs, fields: ConfigFields, reverse: bool = False) -> V2RayConfigs:
+    logger.info(f"Sorting {len(configs)} configs by fields: {fields} ({reverse=})...")
+    if not fields:
         return configs
 
-    def sort_param(config: dict[str, Any]) -> tuple[tuple[int, Any | None], ...]:
+    def sort_key(config: V2RayConfig) -> SortKeys:
         return tuple(
-            (0, value) if (value := config.get(param, None)) is not None else (1, None)
-            for param in params
+            (0, value) if (value := config.get(field, None)) is not None else (1, None)
+            for field in fields
         )
 
-    sorted_configs = sorted(configs, key=sort_param, reverse=reverse)
-    logger.info(
-        f"Sorting completed. {len(sorted_configs)} configs sorted successfully.",
-    )
+    sorted_configs = sorted(configs, key=sort_key, reverse=reverse)
+    logger.info(f"Sorting completed: {len(sorted_configs)} configs sorted.")
     return sorted_configs
