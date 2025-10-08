@@ -84,7 +84,7 @@ async def main() -> None:
         async with ClientSession() as session:
             await update_info(session, channels, batch_size=parsed_args.batch_update)
             print_channel_info(channels)
-            for name in get_sorted_keys(channels, filtering=True):
+            for name in get_sorted_keys(channels, apply_filter=True):
                 await fetch_channel_configs(
                     session=session,
                     channel_name=name,

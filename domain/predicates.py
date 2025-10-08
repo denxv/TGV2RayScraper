@@ -5,11 +5,6 @@ from asteval import Interpreter
 from core.utils import re_fullmatch, re_search
 
 
-def condition_delete_channels(channel_info: dict) -> bool:
-    return channel_info.get("count", 0) <= -3 or channel_info.get("count", 0) <= 0 and \
-        channel_info.get("current_id", 1) >= channel_info.get("last_id", -1) != -1
-
-
 def make_predicate(condition: str) -> Callable[[dict[str, Any]], bool]:
     aeval = Interpreter()
     symtable = {
@@ -30,3 +25,28 @@ def make_predicate(condition: str) -> Callable[[dict[str, Any]], bool]:
             return False
 
     return predicate
+
+
+def should_delete_channel(channel_info: dict) -> bool:
+    count = channel_info.get("count", 0)
+    current_id = channel_info.get("current_id", 1)
+    last_id = channel_info.get("last_id", -1)
+
+    if count <= -3:
+        return True
+
+    if count != 1 and count <= 0 and \
+        last_id != -1 and current_id >= last_id:
+        return True
+
+    return False
+
+
+def should_update_channel(channel_info: dict) -> bool:
+    current_id = channel_info.get("current_id", 1)
+    last_id = channel_info.get("last_id", -1)
+
+    if last_id != -1 and current_id < last_id:
+        return True
+    
+    return False

@@ -65,7 +65,7 @@ def main() -> None:
         with Session() as session:
             update_info(session, channels)
             print_channel_info(channels)
-            for name in get_sorted_keys(channels, filtering=True):
+            for name in get_sorted_keys(channels, apply_filter=True):
                 fetch_channel_configs(
                     session=session,
                     channel_name=name,
