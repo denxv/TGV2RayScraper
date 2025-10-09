@@ -1,5 +1,13 @@
 from asteval import Interpreter
 
+from core.constants import (
+    CHANNEL_ACTIVE_THRESHOLD,
+    CHANNEL_FAILED_ATTEMPTS_THRESHOLD,
+    CHANNEL_REMOVE_THRESHOLD,
+    DEFAULT_COUNT,
+    DEFAULT_CURRENT_ID,
+    DEFAULT_LAST_ID,
+)
 from core.typing import (
     ChannelInfo,
     ConditionStr,
@@ -32,25 +40,26 @@ def make_predicate(condition: ConditionStr) -> ConfigPredicate:
 
 
 def should_delete_channel(channel_info: ChannelInfo) -> bool:
-    count = channel_info.get("count", 0)
-    current_id = channel_info.get("current_id", 1)
-    last_id = channel_info.get("last_id", -1)
+    count = channel_info.get("count", DEFAULT_COUNT)
+    current_id = channel_info.get("current_id", DEFAULT_CURRENT_ID)
+    last_id = channel_info.get("last_id", DEFAULT_LAST_ID)
 
-    if count <= -3:
+    if count <= CHANNEL_FAILED_ATTEMPTS_THRESHOLD:
         return True
 
-    if count != 1 and count <= 0 and \
-        last_id != -1 and current_id >= last_id:
+    if count != CHANNEL_ACTIVE_THRESHOLD and \
+        count <= CHANNEL_REMOVE_THRESHOLD and \
+        last_id != DEFAULT_LAST_ID and current_id >= last_id:
         return True
 
     return False
 
 
 def should_update_channel(channel_info: ChannelInfo) -> bool:
-    current_id = channel_info.get("current_id", 1)
-    last_id = channel_info.get("last_id", -1)
+    current_id = channel_info.get("current_id", DEFAULT_CURRENT_ID)
+    last_id = channel_info.get("last_id", DEFAULT_LAST_ID)
 
-    if last_id != -1 and current_id < last_id:
+    if last_id != DEFAULT_LAST_ID and current_id < last_id:
         return True
     
     return False

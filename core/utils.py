@@ -4,6 +4,15 @@ from datetime import datetime
 from pathlib import Path
 from re import fullmatch, search, split
 
+from core.constants import (
+    BACKUP_FILENAME_TEMPLATE,
+    BASE64_BLOCK_SIZE,
+    DEFAULT_BACKUP_DATE_FORMAT,
+    DEFAULT_MAX_VALUE,
+    DEFAULT_MIN_VALUE,
+    PATTERN_CONFIG_FIELD,
+    PATTERN_PARAM_SEPARATOR,
+)
 from core.logger import logger
 from core.typing import (
     AbsPath,
@@ -35,7 +44,7 @@ def abs_path(path: FilePath) -> AbsPath:
 def b64decode_safe(string: B64String) -> B64String:
     if not isinstance(string, str) or not (string := string.strip()):
         return ""
-    string = f"{string}{'=' * (-len(string) % 4)}"
+    string = f"{string}{'=' * (-len(string) % BASE64_BLOCK_SIZE)}"
     for b64_decode in (urlsafe_b64decode, b64decode):
         try:
             return b64_decode(string).decode('utf-8', errors='replace')
@@ -63,8 +72,8 @@ def flag_to_name(flag: CLIFlag) -> AttrName:
 
 def int_in_range(
     value: IntStr,
-    min_value: MinValue = 1,
-    max_value: MaxValue = 100,
+    min_value: MinValue = DEFAULT_MIN_VALUE,
+    max_value: MaxValue = DEFAULT_MAX_VALUE,
     as_str: bool = False,
 ) -> IntRangeValue:
     ivalue = int(value)
@@ -74,11 +83,17 @@ def int_in_range(
 
 
 def make_backup(files: FilePaths) -> None:
+    now = datetime.now().strftime(DEFAULT_BACKUP_DATE_FORMAT)
     for file in files:
         src = Path(file).resolve()
         if not src.exists():
             continue
-        backup_name = f"{src.stem}-backup-{datetime.now():%Y%m%d-%H%M%s}{src.suffix}"
+
+        backup_name = BACKUP_FILENAME_TEMPLATE.format(
+            stem=src.stem,
+            date=now,
+            suffix=src.suffix
+        )
         src.rename(src.parent / backup_name)
         logger.info(f"File '{src.name}' backed up as '{backup_name}'.")
 
@@ -94,7 +109,7 @@ def parse_valid_fields(params_str: ParamsStr) -> ConfigFields:
     seen_fields = set()
 
     def check_field(field: ConfigField) -> ConfigField:
-        if not fullmatch(r"\w+(?:\.\w+)*", field):
+        if not PATTERN_CONFIG_FIELD.fullmatch(field):
             raise ArgumentTypeError(f"Invalid field format: {field!r}")
         if field in seen_fields:
             raise ArgumentTypeError(f"Duplicate field detected: {field!r}")
@@ -103,7 +118,7 @@ def parse_valid_fields(params_str: ParamsStr) -> ConfigFields:
 
     valid_fields = [
         check_field(field)
-        for field in split(r"[ ,]+", params_str.strip())
+        for field in PATTERN_PARAM_SEPARATOR.split(params_str.strip())
     ]
 
     if not valid_fields:

@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 
-from argparse import ArgumentParser, HelpFormatter, SUPPRESS
+from argparse import ArgumentParser, HelpFormatter
 
 from adapters.sync.configs import load_configs, save_configs
 from core.constants import (
+    DEFAULT_HELP_INDENT,
+    DEFAULT_HELP_WIDTH,
     DEFAULT_PATH_CONFIGS_CLEAN,
     DEFAULT_PATH_CONFIGS_RAW,
-    URL_PATTERNS,
+    PATTERNS_URL_ALL,
+    SUPPRESS,
 )
 from core.logger import logger, log_debug_object
 from core.typing import ArgsNamespace
@@ -24,8 +27,8 @@ def parse_args() -> ArgsNamespace:
         ),
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
-            max_help_position=30,
-            width=120,
+            max_help_position=DEFAULT_HELP_INDENT,
+            width=DEFAULT_HELP_WIDTH,
         ),
     )
 
@@ -116,7 +119,7 @@ def parse_args() -> ArgsNamespace:
 
 def main() -> None:
     try:
-        log_debug_object("List of compiled URL regex patterns", URL_PATTERNS)
+        log_debug_object("List of compiled URL regex patterns", PATTERNS_URL_ALL)
         parsed_args = parse_args()
         configs = load_configs(path_configs_raw=parsed_args.configs_raw)
         configs = process_configs(

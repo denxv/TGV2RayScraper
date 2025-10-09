@@ -3,7 +3,20 @@ from json import dumps, JSONDecodeError, loads
 from aiofiles import open as aiopen
 from lxml import html
 
-from core.constants import FURL_TG, FURL_TG_AFTER, XPATH_POST_ID
+from core.constants import (
+    DEFAULT_CURRENT_ID,
+    DEFAULT_FILE_CHANNELS,
+    DEFAULT_INDENT,
+    DEFAULT_LAST_ID,
+    DEFAULT_POST_ID,
+    FURL_TG,
+    FURL_TG_AFTER,
+    POST_DEFAULT_INDEX,
+    POST_FIRST_ID,
+    POST_FIRST_INDEX,
+    POST_LAST_INDEX,
+    XPATH_POST_IDS,
+)
 from core.typing import (
     AsyncSession,
     ChannelName,
@@ -20,8 +33,8 @@ from core.logger import logger
 async def _extract_post_id(
     session: AsyncSession,
     url: URL,
-    index: PostIndex = 0,
-    default: DefaultPostID = 0,
+    index: PostIndex = POST_DEFAULT_INDEX,
+    default: DefaultPostID = DEFAULT_POST_ID,
 ) -> PostID:
     try:
         async with session.get(url) as response:
@@ -29,7 +42,7 @@ async def _extract_post_id(
 
             content = await response.text()
             tree = html.fromstring(content)
-            post_ids = tree.xpath(XPATH_POST_ID)
+            post_ids = tree.xpath(XPATH_POST_IDS)
 
             if not post_ids:
                 raise ValueError("No posts found.")
@@ -44,16 +57,24 @@ async def _extract_post_id(
 
 
 async def get_first_post_id(session: AsyncSession, channel_name: ChannelName) -> PostID:
-    url = FURL_TG_AFTER.format(name=channel_name, id=1)
-    return await _extract_post_id(session, url, index=0, default=1)
+    return await _extract_post_id(
+        session=session,
+        url=FURL_TG_AFTER.format(name=channel_name, id=POST_FIRST_ID),
+        index=POST_FIRST_INDEX,
+        default=DEFAULT_CURRENT_ID,
+    )
 
 
 async def get_last_post_id(session: AsyncSession, channel_name: ChannelName) -> PostID:
-    url = FURL_TG.format(name=channel_name)
-    return await _extract_post_id(session, url, index=-1, default=-1)
+    return await _extract_post_id(
+        session=session,
+        url=FURL_TG.format(name=channel_name),
+        index=POST_LAST_INDEX,
+        default=DEFAULT_LAST_ID,
+    )
 
 
-async def load_channels(path_channels: FilePath = "current.json") -> ChannelsDict:
+async def load_channels(path_channels: FilePath = DEFAULT_FILE_CHANNELS) -> ChannelsDict:
     async with aiopen(path_channels, "r", encoding="utf-8") as file:
         try:
             data = await file.read()
@@ -62,7 +83,15 @@ async def load_channels(path_channels: FilePath = "current.json") -> ChannelsDic
             return {}
 
 
-async def save_channels(channels: ChannelsDict, path_channels: FilePath = "current.json") -> None:
+async def save_channels(
+    channels: ChannelsDict,
+    path_channels: FilePath = DEFAULT_FILE_CHANNELS,
+) -> None:
     async with aiopen(path_channels, "w", encoding="utf-8") as file:
-        await file.write(dumps(channels, indent=4, sort_keys=True, ensure_ascii=False))
+        await file.write(dumps(
+            channels,
+            indent=DEFAULT_INDENT,
+            sort_keys=True,
+            ensure_ascii=False,
+        ))
         logger.info(f"Saved {len(channels)} channels in '{path_channels}'.")

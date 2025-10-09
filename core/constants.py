@@ -1,26 +1,87 @@
-from re import compile
+from argparse import SUPPRESS
+from logging import DEBUG, INFO
+from pathlib import Path
+from re import compile, DOTALL
+
+GET_ABS_PATH = lambda path: str((Path(__file__).parent / path).resolve())
+
+DEFAULT_COUNT = 0
+DEFAULT_CURRENT_ID = 1
+DEFAULT_LAST_ID = -1
+DEFAULT_POST_ID = 0
 
 DEFAULT_CHANNEL_VALUES = {
-    "count": 0,
-    "current_id": 1,
-    "last_id": -1,
+    "count": DEFAULT_COUNT,
+    "current_id": DEFAULT_CURRENT_ID,
+    "last_id": DEFAULT_LAST_ID,
 }
 
-DEFAULT_PATH_CHANNELS = "../channels/current.json"
-DEFAULT_PATH_CONFIGS_CLEAN = "../configs/v2ray-clean.txt"
-DEFAULT_PATH_CONFIGS_RAW = "../configs/v2ray-raw.txt"
-DEFAULT_PATH_URLS = "../channels/urls.txt"
+DEFAULT_INDENT = 4
+DEFAULT_MIN_VALUE = 1
+DEFAULT_MAX_VALUE = 100
 
-FORMAT_CONFIG_NAME = "{protocol}-{host}-{port}"
-FURL_TG = "https://t.me/s/{name}"
-FURL_TG_AFTER = FURL_TG + "?after={id}"
-FURL_TG_BEFORE = FURL_TG + "?before={id}"
+BASE64_BLOCK_SIZE = 4
+DEFAULT_LOG_LINE_LENGTH = 100
+
+COLORS = {
+    "DEBUG": "\033[37m",
+    "INFO": "\033[32m",
+    "WARNING": "\033[33m",
+    "ERROR": "\033[31m",
+    "CRITICAL": "\033[31m",
+    "RESET": "\033[0m",
+}
+
+DEFAULT_LOGGER_NAME = "TGV2RayScraper"
+DEFAULT_CONSOLE_LOG_FORMAT = "<%(asctime)s> [%(colored_levelname)s] %(message)s"
+DEFAULT_FILE_LOG_FORMAT    = "<%(asctime)s> [%(levelname)s] %(message)s"
+DEFAULT_LOG_DIR = GET_ABS_PATH("../logs")
+
+DEFAULT_BACKUP_DATE_FORMAT = "%Y%m%d_%H%M%S_%f"
+BACKUP_FILENAME_TEMPLATE = "{stem}-backup-{date}{suffix}"
+
+CHANNEL_ACTIVE_THRESHOLD = 1
+CHANNEL_MIN_ID_DIFF = 0
+CHANNEL_FAILED_ATTEMPTS_THRESHOLD = -3
+CHANNEL_REMOVE_THRESHOLD = 0
+
+DEFAULT_CHANNEL_BATCH_EXTRACT = 20
+DEFAULT_CHANNEL_BATCH_UPDATE = 100
+DEFAULT_CHANNEL_PROGRESS_BAR_FORMAT = " {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt} "
 
 LEN_NAME = 32
 LEN_NUMBER = 7
 TOTAL_CHANNELS_POST = 0
 
-SCRIPTS_CONFIG = {
+POST_DEFAULT_INDEX = 0
+POST_FIRST_ID = 1
+POST_FIRST_INDEX = 0
+POST_LAST_INDEX = -1
+
+DEFAULT_HELP_INDENT = 30
+DEFAULT_HELP_WIDTH = 120
+
+FORMAT_CONFIG_NAME = "{protocol}-{host}-{port}"
+SSR_BODY_TEMPLATE = "{host}:{port}:{origin}:{method}:{obfs}:{password}/?{params}"
+
+FURL_TG = "https://t.me/s/{name}"
+FURL_TG_AFTER = FURL_TG + "?after={id}"
+FURL_TG_BEFORE = FURL_TG + "?before={id}"
+
+DEFAULT_FILE_CHANNELS = "current.json"
+DEFAULT_FILE_CONFIGS_CLEAN = "v2ray-clean.txt"
+DEFAULT_FILE_CONFIGS_RAW = "v2ray-raw.txt"
+DEFAULT_FILE_URLS = "urls.txt"
+
+DEFAULT_PATH_CHANNELS = GET_ABS_PATH(f"../channels/{DEFAULT_FILE_CHANNELS}")
+DEFAULT_PATH_CONFIGS_CLEAN = GET_ABS_PATH(f"../configs/{DEFAULT_FILE_CONFIGS_CLEAN}")
+DEFAULT_PATH_CONFIGS_RAW = GET_ABS_PATH(f"../configs/{DEFAULT_FILE_CONFIGS_RAW}")
+DEFAULT_PATH_URLS = GET_ABS_PATH(f"../channels/{DEFAULT_FILE_URLS}")
+
+XPATH_POST_IDS = "//div[@class='tgme_widget_message text_not_supported_wrap js-widget_message']/@data-post"
+XPATH_TG_MESSAGES_TEXT = "//div[@class='tgme_widget_message_text js-message_text']//text()"
+
+CLI_SCRIPTS_CONFIG = {
     "update_channels": {
         "flags": [
             "--channels",
@@ -58,11 +119,12 @@ SCRIPTS_CONFIG = {
     },
 }
 
-XPATH_V2RAY = "//div[@class='tgme_widget_message_text js-message_text']//text()"
-XPATH_POST_ID = "//div[@class='tgme_widget_message text_not_supported_wrap js-widget_message']/@data-post"
+PATTERN_CONFIG_FIELD = compile(r"\w+(?:\.\w+)*")
+PATTERN_PARAM_SEPARATOR = compile(r"[ ,]+")
+PATTERN_TG_CHANNEL_NAME = compile(r"http[s]?://t.me/[s/]{0,2}([\w]+)")
 
-REGEX_CHANNELS_NAME = compile(r"http[s]?://t.me/[s/]{0,2}([\w]+)")
-REGEX_V2RAY = compile(
+PATTERN_VMESS_JSON = compile(r'(?P<json>{.*})', DOTALL)
+PATTERN_URL_V2RAY_ALL = compile(
     r'(?:'
         r'anytls'
     r'|'
@@ -88,7 +150,7 @@ REGEX_V2RAY = compile(
 
 # anytls://password@host:port/path?params#name
 # anytls://password@host:port?params#name
-ANYTLS_URL_PATTERN = compile(
+PATTERN_URL_ANYTLS = compile(
     r'(?P<url>'
         r'(?P<protocol>anytls)://'
         r'(?P<password>(?:(?!://).)+)'
@@ -104,7 +166,7 @@ ANYTLS_URL_PATTERN = compile(
 # hy2://password@host:port?params#name
 # hysteria2://password@host:port/path?params#name
 # hysteria2://password@host:port?params#name
-HYSTERIA2_URL_PATTERN = compile(
+PATTERN_URL_HYSTERIA2 = compile(
     r'(?P<url>'
         r'(?P<protocol>hy2|hysteria2)://'
         r'(?P<password>(?:(?!://).)+)'
@@ -119,7 +181,7 @@ HYSTERIA2_URL_PATTERN = compile(
 # ss://method:password@host:port#name
 # ss://base64(method:password)@host:port#name
 # ss://base64(method:password@host:port)#name
-SS_URL_PATTERN = compile(
+PATTERN_URL_SS = compile(
     r'(?P<url>(?P<protocol>\bss)://'
         r'(?:'
             r'(?P<method>[^\s:@#]+)'
@@ -137,7 +199,7 @@ SS_URL_PATTERN = compile(
 )
 
 # ssr://base64(host:port:protocol:method:obfs:base64(password)/?param=base64(value))
-SSR_URL_PATTERN = compile(
+PATTERN_URL_SSR = compile(
     r'(?P<url>'
         r'(?P<protocol>ssr)://'
         r'(?P<base64>[\w+/-]+={0,2})'
@@ -146,7 +208,7 @@ SSR_URL_PATTERN = compile(
 )
 
 # ssr://host:port:protocol:method:obfs:base64(password)/?param=base64(value)
-SSR_PLAIN_PATTERN = compile(
+PATTERN_URL_SSR_PLAIN = compile(
     r'(?P<url>'
         r'(?P<protocol>ssr)://'
         r'(?P<host>[\w\-\[:%\].]+)'
@@ -162,7 +224,7 @@ SSR_PLAIN_PATTERN = compile(
 
 # trojan://password@host:port/path?params#name
 # trojan://password@host:port?params#name
-TROJAN_URL_PATTERN = compile(
+PATTERN_URL_TROJAN = compile(
     r'(?P<url>'
         r'(?P<protocol>trojan)://'
         r'(?P<password>(?:(?!://).)+)'
@@ -176,7 +238,7 @@ TROJAN_URL_PATTERN = compile(
 
 # tuic://uuid:password@host:port/path?params#name
 # tuic://uuid:password@host:port?params#name
-TUIC_URL_PATTERN = compile(
+PATTERN_URL_TUIC = compile(
     r'(?P<url>'
         r'(?P<protocol>tuic)://'
         r'(?P<uuid>(?:(?!://).)+)'
@@ -191,7 +253,7 @@ TUIC_URL_PATTERN = compile(
 
 # vless://uuid@host:port/path?params#name
 # vless://uuid@host:port?params#name
-VLESS_URL_PATTERN = compile(
+PATTERN_URL_VLESS = compile(
     r'(?P<url>'
         r'(?P<protocol>vless)://'
         r'(?P<uuid>(?:(?!://).)+)'
@@ -206,7 +268,7 @@ VLESS_URL_PATTERN = compile(
 # vmess://base64(json)
 # vmess://uuid@host:port/path?params#name
 # vmess://uuid@host:port?params#name
-VMESS_URL_PATTERN = compile(
+PATTERN_URL_VMESS = compile(
     r'(?P<url>'
         r'(?P<protocol>vmess)://'
         r'(?:'
@@ -224,7 +286,7 @@ VMESS_URL_PATTERN = compile(
 
 # wireguard://privatekey@host:port/path?params#name
 # wireguard://privatekey@host:port?params#name
-WIREGUARD_URL_PATTERN = compile(
+PATTERN_URL_WIREGUARD = compile(
     r'(?P<url>'
         r'(?P<protocol>wireguard)://'
         r'(?P<privatekey>(?:(?!://).)+)'
@@ -236,14 +298,14 @@ WIREGUARD_URL_PATTERN = compile(
     r')'
 )
 
-URL_PATTERNS = [
-    ANYTLS_URL_PATTERN,
-    HYSTERIA2_URL_PATTERN,
-    SS_URL_PATTERN,
-    SSR_URL_PATTERN,
-    TROJAN_URL_PATTERN,
-    TUIC_URL_PATTERN,
-    VLESS_URL_PATTERN,
-    VMESS_URL_PATTERN,
-    WIREGUARD_URL_PATTERN,
+PATTERNS_URL_ALL = [
+    PATTERN_URL_ANYTLS,
+    PATTERN_URL_HYSTERIA2,
+    PATTERN_URL_SS,
+    PATTERN_URL_SSR,
+    PATTERN_URL_TROJAN,
+    PATTERN_URL_TUIC,
+    PATTERN_URL_VLESS,
+    PATTERN_URL_VMESS,
+    PATTERN_URL_WIREGUARD,
 ]

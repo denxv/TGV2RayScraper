@@ -6,6 +6,7 @@ from typing import (
     Dict,
     Iterator,
     List,
+    Optional,
     ParamSpec,
     TypeVar,
     TypedDict,

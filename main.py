@@ -1,12 +1,18 @@
 #!/usr/bin/env python
 
-from argparse import ArgumentParser, HelpFormatter, SUPPRESS
+from argparse import ArgumentParser, HelpFormatter
 from sys import executable
 from subprocess import run
 
-from core.constants import SCRIPTS_CONFIG
+from core.constants import (
+    CLI_SCRIPTS_CONFIG,
+    DEFAULT_HELP_INDENT,
+    DEFAULT_HELP_WIDTH,
+    DEFAULT_LOG_LINE_LENGTH,
+    SUPPRESS,
+)
 from core.logger import logger, log_debug_object
-from core.typing import ArgsNamespace, CLIParams, FilePath
+from core.typing import ArgsNamespace, CLIParams, FilePath, Optional
 from core.utils import (
     collect_args,
     int_in_range,
@@ -25,8 +31,8 @@ def parse_args() -> ArgsNamespace:
         ),
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
-            max_help_position=30,
-            width=100,
+            max_help_position=DEFAULT_HELP_INDENT,
+            width=DEFAULT_HELP_WIDTH,
         ),
     )
 
@@ -139,29 +145,31 @@ def parse_args() -> ArgsNamespace:
     return args
 
 
-def run_script(script_name: FilePath = "async_scraper.py", args: CLIParams = []) -> None:
-    repeat_count = 100
+def run_script(script_name: str, script_args: Optional[CLIParams] = None) -> None:
+    if script_args is None:
+        script_args = list()
+
     logger.info(f"Starting script '{script_name}'...")
-    logger.info('-' * repeat_count)
+    logger.info('-' * DEFAULT_LOG_LINE_LENGTH)
 
     arguments = [
         executable,
         "-m",
         f"scripts.{script_name}",
-        *args,
+        *script_args,
     ]
 
     log_debug_object("Script launch arguments", arguments)
     if run(args=arguments).returncode:
         raise Exception(f"Script '{script_name}' exited with an error!")
 
-    logger.info('-' * repeat_count)
+    logger.info('-' * DEFAULT_LOG_LINE_LENGTH)
     logger.info(f"Script '{script_name}' completed successfully!")
-    logger.info('=' * repeat_count)
+    logger.info('=' * DEFAULT_LOG_LINE_LENGTH)
 
 
 def show_scripts_help() -> None:
-    for script_name in SCRIPTS_CONFIG:
+    for script_name in CLI_SCRIPTS_CONFIG:
         run_script(script_name, args=["--help"])
 
 
@@ -172,13 +180,13 @@ def main() -> None:
             return show_scripts_help()
 
         skipped_mode = "async" if parsed_args.no_async else "sync"
-        for script_name, script_config in SCRIPTS_CONFIG.items():
+        for script_name, script_config in CLI_SCRIPTS_CONFIG.items():
             if script_config.get("mode") == skipped_mode:
                 continue
 
             run_script(
                 script_name=script_name,
-                args=collect_args(parsed_args, script_config.get("flags")),
+                script_args=collect_args(parsed_args, script_config.get("flags")),
             )
     except KeyboardInterrupt:
         logger.info("Exit from the program.")

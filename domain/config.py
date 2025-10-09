@@ -1,8 +1,14 @@
 from json import dumps, loads
-from re import DOTALL, search
+from re import search
 from urllib.parse import parse_qs, urlencode
 
-from core.constants import FORMAT_CONFIG_NAME, SS_URL_PATTERN, SSR_PLAIN_PATTERN
+from core.constants import (
+    FORMAT_CONFIG_NAME,
+    PATTERN_VMESS_JSON,
+    PATTERN_URL_SS,
+    PATTERN_URL_SSR_PLAIN,
+    SSR_BODY_TEMPLATE,
+)
 from core.logger import logger
 from core.typing import (
     ArgsNamespace,
@@ -97,7 +103,7 @@ def normalize_ss_base64(config: V2RayConfig) -> None:
     if host and port:
         url += f"@{host}:{port}"
 
-    if not (ss := SS_URL_PATTERN.search(url)):
+    if not (ss := PATTERN_URL_SS.search(url)):
         raise Exception
 
     config.update(ss.groupdict(default=''))
@@ -111,7 +117,7 @@ def normalize_ssr_base64(config: V2RayConfig) -> None:
     protocol = config.get("protocol", "ssr")
     url = f"{protocol}://{b64decode_safe(base64)}"
 
-    if not (ssr := SSR_PLAIN_PATTERN.search(url)):
+    if not (ssr := PATTERN_URL_SSR_PLAIN.search(url)):
         raise Exception
 
     ssr_config = ssr.groupdict(default='')
@@ -134,11 +140,8 @@ def normalize_ssr_base64(config: V2RayConfig) -> None:
         for key, value in ssr_params.items()
     })
 
-    body = "{host}:{port}:{origin}:{method}:{obfs}:{password}/?{params}".format(
-        **ssr_config,
-    )
     ssr_config.update({
-        "url": f"{protocol}://{b64encode_safe(body)}",
+        "url": f"{protocol}://{b64encode_safe(SSR_BODY_TEMPLATE.format(**ssr_config))}",
         "password": b64decode_safe(ssr_config.get("password", "")),
         "params": ssr_params,
         "name": ssr_params.get("remarks", ""),
@@ -151,7 +154,7 @@ def normalize_vmess_base64(config: V2RayConfig) -> None:
     if not (base64 := config.pop("base64", None)):
         return
 
-    if not (vmess := search(r'(?P<json>{.*})', b64decode_safe(base64), DOTALL)):
+    if not (vmess := PATTERN_VMESS_JSON.search(b64decode_safe(base64))):
         raise Exception
 
     try:

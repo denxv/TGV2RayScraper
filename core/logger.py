@@ -2,8 +2,6 @@ from argparse import Namespace
 from datetime import datetime
 from json import dumps
 from logging import (
-    DEBUG,
-    INFO,
     FileHandler,
     Filter,
     Formatter,
@@ -14,26 +12,27 @@ from logging import (
 )
 from pathlib import Path
 
+from core.constants import (
+    COLORS,
+    DEBUG,
+    DEFAULT_CONSOLE_LOG_FORMAT,
+    DEFAULT_FILE_LOG_FORMAT,
+    DEFAULT_INDENT,
+    DEFAULT_LOGGER_NAME,
+    DEFAULT_LOG_DIR,
+    INFO,
+)
 from core.typing import Any
 
 
 class ColorLevelFilter(Filter):
-    COLORS: dict[str, str] = {
-        "DEBUG": "\033[37m",
-        "INFO": "\033[32m",
-        "WARNING": "\033[33m",
-        "ERROR": "\033[31m",
-        "CRITICAL": "\033[31m",
-        "RESET": "\033[0m",
-    }
-
     def __init__(self, color: bool = True) -> None:
         super().__init__()
         self.color = color
 
     def _color_level(self, levelname: str) -> str:
-        level_color = self.COLORS.get(levelname.strip(), "")
-        reset_color = self.COLORS.get("RESET", "")
+        level_color = COLORS.get(levelname.strip(), "")
+        reset_color = COLORS.get("RESET", "")
         return f"{level_color}{levelname}{reset_color}"
 
     def filter(self, record: LogRecord) -> bool:
@@ -52,33 +51,25 @@ class MicrosecondFormatter(Formatter):
 
 
 def create_logger(
-    name: str = "TGV2RayScraper",
+    name: str = DEFAULT_LOGGER_NAME,
     console_level: int = INFO,
     file_level: int = DEBUG,
     color_console: bool = True,
 ) -> Logger:
-    logger = getLogger("TGV2RayScraper")
+    logger = getLogger(name)
     logger.setLevel(DEBUG)
 
     console_handler = StreamHandler()
-    console_handler.addFilter(ColorLevelFilter(
-        color=color_console,
-    ))
-    console_handler.setFormatter(MicrosecondFormatter(
-        "<%(asctime)s> [%(colored_levelname)s] %(message)s",
-    ))
+    console_handler.addFilter(ColorLevelFilter(color=color_console))
+    console_handler.setFormatter(MicrosecondFormatter(DEFAULT_CONSOLE_LOG_FORMAT))
     console_handler.setLevel(console_level)
 
     file_handler = FileHandler(
-        Path(__file__).parent / f"../logs/{datetime.now():%Y-%m-%d}.log",
+        f"{DEFAULT_LOG_DIR}/{datetime.now():%Y-%m-%d}.log",
         encoding="utf-8",
     )
-    file_handler.addFilter(ColorLevelFilter(
-        color=False,
-    ))
-    file_handler.setFormatter(MicrosecondFormatter(
-        "<%(asctime)s> [%(levelname)s] %(message)s",
-    ))
+    file_handler.addFilter(ColorLevelFilter(color=False))
+    file_handler.setFormatter(MicrosecondFormatter(DEFAULT_FILE_LOG_FORMAT))
     file_handler.setLevel(file_level)
 
     logger.addHandler(console_handler)
@@ -87,7 +78,7 @@ def create_logger(
     return logger
 
 
-def log_debug_object(title: str, obj: Any, *, indent: int = 4) -> None:
+def log_debug_object(title: str, obj: Any, *, indent: int = DEFAULT_INDENT) -> None:
     try:
         formatted = dumps(
             vars(obj) if isinstance(obj, Namespace) else obj,
@@ -97,8 +88,8 @@ def log_debug_object(title: str, obj: Any, *, indent: int = 4) -> None:
             sort_keys=True,
         )
         logger.debug(f"{title}:\n{formatted}")
-    except (TypeError, ValueError) as exception:
-        logger.debug(f"Failed to serialize object '{title}': {exception}")
+    except (TypeError, ValueError) as e:
+        logger.debug(f"Failed to serialize object '{title}': {e}")
 
 
 logger = create_logger()

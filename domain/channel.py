@@ -1,4 +1,13 @@
-from core.constants import LEN_NAME, LEN_NUMBER, TOTAL_CHANNELS_POST
+from core.constants import (
+    CHANNEL_ACTIVE_THRESHOLD,
+    CHANNEL_MIN_ID_DIFF,
+    DEFAULT_COUNT,
+    DEFAULT_CURRENT_ID,
+    DEFAULT_LAST_ID,
+    LEN_NAME,
+    LEN_NUMBER,
+    TOTAL_CHANNELS_POST,
+)
 from core.logger import logger
 from core.typing import (
     ChannelInfo,
@@ -11,18 +20,20 @@ from domain.predicates import should_update_channel
 
 
 def diff_channel_id(channel_info: ChannelInfo) -> int:
-    return channel_info.get("last_id", 0) - channel_info.get("current_id", 0)
+    last_id = channel_info.get("last_id", DEFAULT_LAST_ID)
+    current_id = channel_info.get("current_id", DEFAULT_CURRENT_ID)
+    return max(CHANNEL_MIN_ID_DIFF, last_id - current_id)
 
 
 def format_channel_id(channel_info: ChannelInfo) -> str:
     global TOTAL_CHANNELS_POST
     diff = diff_channel_id(channel_info)
     TOTAL_CHANNELS_POST = TOTAL_CHANNELS_POST + diff
-    return (
-        f"{channel_info.get('current_id', 0):>{LEN_NUMBER}} "
-        f"/ {channel_info.get('last_id', 0):<{LEN_NUMBER}} "
-        f"(+{diff})"
-    )
+
+    current_id = channel_info.get("current_id", DEFAULT_CURRENT_ID)
+    last_id = channel_info.get("last_id", DEFAULT_LAST_ID)
+
+    return f"{current_id:>{LEN_NUMBER}} / {last_id:<{LEN_NUMBER}} (+{diff})"
 
 
 def get_filtered_keys(channels: ChannelsDict) -> ChannelNames:
@@ -58,8 +69,8 @@ def update_count_and_last_id(
     channel_info: ChannelInfo,
     last_post_id: PostID,
 ) -> None:
-    count = channel_info.get("count", 0)
-    last_id = channel_info.get("last_id", -1)
+    count = channel_info.get("count", DEFAULT_COUNT)
+    last_id = channel_info.get("last_id", DEFAULT_LAST_ID)
 
     if last_id != last_post_id:
         logger.info(
@@ -67,6 +78,6 @@ def update_count_and_last_id(
             f"{last_id:>{LEN_NUMBER}} -> {last_post_id:<{LEN_NUMBER}}"
         )
         channel_info["last_id"] = last_post_id
-        channel_info["count"] = 1 if count <= 0 else count
-    elif last_id == last_post_id and last_post_id == -1:
-        channel_info["count"] = 0 if count > 0 else count - 1
+        channel_info["count"] = max(count, CHANNEL_ACTIVE_THRESHOLD)
+    elif last_id == last_post_id and last_post_id == DEFAULT_LAST_ID:
+        channel_info["count"] = min(count - 1, DEFAULT_COUNT)

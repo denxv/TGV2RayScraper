@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from argparse import ArgumentParser, HelpFormatter, SUPPRESS
+from argparse import ArgumentParser, HelpFormatter
 from asyncio import CancelledError, run
 
 from aiohttp import ClientSession
@@ -9,7 +9,15 @@ from adapters.async_.channels import load_channels, save_channels
 from adapters.async_.configs import fetch_channel_configs
 from adapters.async_.scraper import update_info
 from core.logger import logger, log_debug_object
-from core.constants import DEFAULT_PATH_CHANNELS, DEFAULT_PATH_CONFIGS_RAW
+from core.constants import (
+    DEFAULT_HELP_INDENT,
+    DEFAULT_HELP_WIDTH,
+    DEFAULT_CHANNEL_BATCH_EXTRACT,
+    DEFAULT_CHANNEL_BATCH_UPDATE,
+    DEFAULT_PATH_CHANNELS,
+    DEFAULT_PATH_CONFIGS_RAW,
+    SUPPRESS,
+)
 from core.typing import ArgsNamespace
 from core.utils import abs_path, int_in_range, validate_file_path
 from domain.channel import get_sorted_keys, print_channel_info
@@ -25,8 +33,8 @@ def parse_args() -> ArgsNamespace:
         ),
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
-            max_help_position=30,
-            width=120,
+            max_help_position=DEFAULT_HELP_INDENT,
+            width=DEFAULT_HELP_WIDTH,
         ),
     )
 
@@ -47,7 +55,7 @@ def parse_args() -> ArgsNamespace:
 
     parser.add_argument(
         "-E", "--batch-extract",
-        default=20,
+        default=DEFAULT_CHANNEL_BATCH_EXTRACT,
         dest="batch_extract",
         help="Number of messages processed in parallel to extract V2Ray configs (default: %(default)s).",
         metavar="N",
@@ -65,7 +73,7 @@ def parse_args() -> ArgsNamespace:
 
     parser.add_argument(
         "-U", "--batch-update",
-        default=100,
+        default=DEFAULT_CHANNEL_BATCH_UPDATE,
         dest="batch_update",
         help="Maximum number of channels updated in parallel (default: %(default)s).",
         metavar="N",
