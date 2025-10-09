@@ -6,13 +6,13 @@ from tqdm.asyncio import tqdm
 
 from core.constants import (
     DEFAULT_CHANNEL_BATCH_EXTRACT,
-    DEFAULT_CHANNEL_PROGRESS_BAR_FORMAT,
     DEFAULT_COUNT,
     DEFAULT_CURRENT_ID,
     DEFAULT_FILE_CONFIGS_RAW,
     DEFAULT_LAST_ID,
-    FURL_TG_AFTER,
+    FORMAT_CHANNEL_PROGRESS_BAR,
     PATTERN_URL_V2RAY_ALL,
+    TEMPLATE_TG_URL_AFTER,
     XPATH_TG_MESSAGES_TEXT,
 )
 from core.typing import (
@@ -47,7 +47,7 @@ async def fetch_channel_configs(
     logger.info(f"Extracting configs from channel '{channel_name}'...")
 
     async def fetch_and_parse(current_id: PostID) -> PostIDAndConfigsRaw:
-        async with session.get(FURL_TG_AFTER.format(name=channel_name, id=current_id)) as response:
+        async with session.get(TEMPLATE_TG_URL_AFTER.format(name=channel_name, id=current_id)) as response:
             content = await response.text()
             messages = html.fromstring(content).xpath(XPATH_TG_MESSAGES_TEXT)
             if v2ray_configs := list(filter(PATTERN_URL_V2RAY_ALL.match, messages)):
@@ -58,7 +58,7 @@ async def fetch_channel_configs(
         batch_range,
         ascii=True,
         leave=False,
-        bar_format=DEFAULT_CHANNEL_PROGRESS_BAR_FORMAT,
+        bar_format=FORMAT_CHANNEL_PROGRESS_BAR,
     ):
         batch = list_channel_id[channel_id:channel_id + batch_size]
         results = await gather(*(fetch_and_parse(_id) for _id in batch))

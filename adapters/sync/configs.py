@@ -4,15 +4,15 @@ from lxml import html
 from tqdm import tqdm
 
 from core.constants import (
-    DEFAULT_CHANNEL_PROGRESS_BAR_FORMAT,
     DEFAULT_COUNT,
     DEFAULT_CURRENT_ID,
     DEFAULT_FILE_CONFIGS_CLEAN,
     DEFAULT_FILE_CONFIGS_RAW,
     DEFAULT_LAST_ID,
-    FURL_TG_AFTER,
+    FORMAT_CHANNEL_PROGRESS_BAR,
     PATTERN_URL_V2RAY_ALL,
     PATTERNS_URL_ALL,
+    TEMPLATE_TG_URL_AFTER,
     XPATH_TG_MESSAGES_TEXT,
 )
 from core.typing import (
@@ -47,10 +47,10 @@ def fetch_channel_configs(
         range_channel_id,
         ascii=True,
         leave=False,
-        bar_format=DEFAULT_CHANNEL_PROGRESS_BAR_FORMAT,
+        bar_format=FORMAT_CHANNEL_PROGRESS_BAR,
     ):
         channel_info["current_id"] = current_id
-        response = session.get(FURL_TG_AFTER.format(name=channel_name, id=current_id))
+        response = session.get(TEMPLATE_TG_URL_AFTER.format(name=channel_name, id=current_id))
         messages = html.fromstring(response.content).xpath(XPATH_TG_MESSAGES_TEXT)
 
         if v2ray_configs := list(filter(PATTERN_URL_V2RAY_ALL.match, messages)):

@@ -5,13 +5,13 @@ from pathlib import Path
 from re import fullmatch, search, split
 
 from core.constants import (
-    BACKUP_FILENAME_TEMPLATE,
     BASE64_BLOCK_SIZE,
-    DEFAULT_BACKUP_DATE_FORMAT,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
+    FORMAT_BACKUP_DATE,
     PATTERN_CONFIG_FIELD,
     PATTERN_PARAM_SEPARATOR,
+    TEMPLATE_BACKUP_FILENAME,
 )
 from core.logger import logger
 from core.typing import (
@@ -83,13 +83,13 @@ def int_in_range(
 
 
 def make_backup(files: FilePaths) -> None:
-    now = datetime.now().strftime(DEFAULT_BACKUP_DATE_FORMAT)
+    now = datetime.now().strftime(FORMAT_BACKUP_DATE)
     for file in files:
         src = Path(file).resolve()
         if not src.exists():
             continue
 
-        backup_name = BACKUP_FILENAME_TEMPLATE.format(
+        backup_name = TEMPLATE_BACKUP_FILENAME.format(
             stem=src.stem,
             date=now,
             suffix=src.suffix

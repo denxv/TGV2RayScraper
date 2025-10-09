@@ -3,11 +3,11 @@ from re import search
 from urllib.parse import parse_qs, urlencode
 
 from core.constants import (
-    FORMAT_CONFIG_NAME,
     PATTERN_VMESS_JSON,
     PATTERN_URL_SS,
     PATTERN_URL_SSR_PLAIN,
-    SSR_BODY_TEMPLATE,
+    TEMPLATE_CONFIG_NAME,
+    TEMPLATE_SSR_BODY,
 )
 from core.logger import logger
 from core.typing import (
@@ -75,7 +75,7 @@ def normalize_config(config: V2RayConfig) -> None:
         })
 
     if not (config.get("protocol") in ["ssr", "vmess"] and config.get("name")):
-        config["name"] = FORMAT_CONFIG_NAME.format(**config)
+        config["name"] = TEMPLATE_CONFIG_NAME.format(**config)
         config["url"] = "{url}#{name}".format(**config)
 
 
@@ -132,7 +132,7 @@ def normalize_ssr_base64(config: V2RayConfig) -> None:
     }
 
     ssr_params.update({
-        "remarks": FORMAT_CONFIG_NAME.format(**ssr_config),
+        "remarks": TEMPLATE_CONFIG_NAME.format(**ssr_config),
     })
 
     ssr_config["params"] = urlencode({
@@ -141,7 +141,7 @@ def normalize_ssr_base64(config: V2RayConfig) -> None:
     })
 
     ssr_config.update({
-        "url": f"{protocol}://{b64encode_safe(SSR_BODY_TEMPLATE.format(**ssr_config))}",
+        "url": f"{protocol}://{b64encode_safe(TEMPLATE_SSR_BODY.format(**ssr_config))}",
         "password": b64decode_safe(ssr_config.get("password", "")),
         "params": ssr_params,
         "name": ssr_params.get("remarks", ""),
@@ -160,7 +160,7 @@ def normalize_vmess_base64(config: V2RayConfig) -> None:
     try:
         vmess_config = loads(vmess.group("json"))
         vmess_config.update({
-            "ps": FORMAT_CONFIG_NAME.format(
+            "ps": TEMPLATE_CONFIG_NAME.format(
                 protocol=config.get("protocol", "vmess"),
                 host=vmess_config.get("add", "0.0.0.0"),
                 port=vmess_config.get("port", "0"),

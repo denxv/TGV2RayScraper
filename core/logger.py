@@ -15,11 +15,11 @@ from pathlib import Path
 from core.constants import (
     COLORS,
     DEBUG,
-    DEFAULT_CONSOLE_LOG_FORMAT,
-    DEFAULT_FILE_LOG_FORMAT,
     DEFAULT_INDENT,
     DEFAULT_LOGGER_NAME,
     DEFAULT_LOG_DIR,
+    FORMAT_CONSOLE_LOG,
+    FORMAT_FILE_LOG,
     INFO,
 )
 from core.typing import Any
@@ -61,7 +61,7 @@ def create_logger(
 
     console_handler = StreamHandler()
     console_handler.addFilter(ColorLevelFilter(color=color_console))
-    console_handler.setFormatter(MicrosecondFormatter(DEFAULT_CONSOLE_LOG_FORMAT))
+    console_handler.setFormatter(MicrosecondFormatter(FORMAT_CONSOLE_LOG))
     console_handler.setLevel(console_level)
 
     file_handler = FileHandler(
@@ -69,7 +69,7 @@ def create_logger(
         encoding="utf-8",
     )
     file_handler.addFilter(ColorLevelFilter(color=False))
-    file_handler.setFormatter(MicrosecondFormatter(DEFAULT_FILE_LOG_FORMAT))
+    file_handler.setFormatter(MicrosecondFormatter(FORMAT_FILE_LOG))
     file_handler.setLevel(file_level)
 
     logger.addHandler(console_handler)

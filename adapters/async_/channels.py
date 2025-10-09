@@ -9,12 +9,12 @@ from core.constants import (
     DEFAULT_INDENT,
     DEFAULT_LAST_ID,
     DEFAULT_POST_ID,
-    FURL_TG,
-    FURL_TG_AFTER,
     POST_DEFAULT_INDEX,
     POST_FIRST_ID,
     POST_FIRST_INDEX,
     POST_LAST_INDEX,
+    TEMPLATE_TG_URL,
+    TEMPLATE_TG_URL_AFTER,
     XPATH_POST_IDS,
 )
 from core.typing import (
@@ -59,7 +59,7 @@ async def _extract_post_id(
 async def get_first_post_id(session: AsyncSession, channel_name: ChannelName) -> PostID:
     return await _extract_post_id(
         session=session,
-        url=FURL_TG_AFTER.format(name=channel_name, id=POST_FIRST_ID),
+        url=TEMPLATE_TG_URL_AFTER.format(name=channel_name, id=POST_FIRST_ID),
         index=POST_FIRST_INDEX,
         default=DEFAULT_CURRENT_ID,
     )
@@ -68,7 +68,7 @@ async def get_first_post_id(session: AsyncSession, channel_name: ChannelName) ->
 async def get_last_post_id(session: AsyncSession, channel_name: ChannelName) -> PostID:
     return await _extract_post_id(
         session=session,
-        url=FURL_TG.format(name=channel_name),
+        url=TEMPLATE_TG_URL.format(name=channel_name),
         index=POST_LAST_INDEX,
         default=DEFAULT_LAST_ID,
     )

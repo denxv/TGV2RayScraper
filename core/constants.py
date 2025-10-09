@@ -33,12 +33,12 @@ COLORS = {
 }
 
 DEFAULT_LOGGER_NAME = "TGV2RayScraper"
-DEFAULT_CONSOLE_LOG_FORMAT = "<%(asctime)s> [%(colored_levelname)s] %(message)s"
-DEFAULT_FILE_LOG_FORMAT    = "<%(asctime)s> [%(levelname)s] %(message)s"
 DEFAULT_LOG_DIR = GET_ABS_PATH("../logs")
+FORMAT_CONSOLE_LOG = "<%(asctime)s> [%(colored_levelname)s] %(message)s"
+FORMAT_FILE_LOG = "<%(asctime)s> [%(levelname)s] %(message)s"
 
-DEFAULT_BACKUP_DATE_FORMAT = "%Y%m%d_%H%M%S_%f"
-BACKUP_FILENAME_TEMPLATE = "{stem}-backup-{date}{suffix}"
+FORMAT_BACKUP_DATE = "%Y%m%d_%H%M%S_%f"
+TEMPLATE_BACKUP_FILENAME = "{stem}-backup-{date}{suffix}"
 
 CHANNEL_ACTIVE_THRESHOLD = 1
 CHANNEL_MIN_ID_DIFF = 0
@@ -47,7 +47,7 @@ CHANNEL_REMOVE_THRESHOLD = 0
 
 DEFAULT_CHANNEL_BATCH_EXTRACT = 20
 DEFAULT_CHANNEL_BATCH_UPDATE = 100
-DEFAULT_CHANNEL_PROGRESS_BAR_FORMAT = " {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt} "
+FORMAT_CHANNEL_PROGRESS_BAR = " {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt} "
 
 LEN_NAME = 32
 LEN_NUMBER = 7
@@ -61,12 +61,11 @@ POST_LAST_INDEX = -1
 DEFAULT_HELP_INDENT = 30
 DEFAULT_HELP_WIDTH = 120
 
-FORMAT_CONFIG_NAME = "{protocol}-{host}-{port}"
-SSR_BODY_TEMPLATE = "{host}:{port}:{origin}:{method}:{obfs}:{password}/?{params}"
+TEMPLATE_CONFIG_NAME = "{protocol}-{host}-{port}"
+TEMPLATE_SSR_BODY = "{host}:{port}:{origin}:{method}:{obfs}:{password}/?{params}"
 
-FURL_TG = "https://t.me/s/{name}"
-FURL_TG_AFTER = FURL_TG + "?after={id}"
-FURL_TG_BEFORE = FURL_TG + "?before={id}"
+TEMPLATE_TG_URL = "https://t.me/s/{name}"
+TEMPLATE_TG_URL_AFTER = TEMPLATE_TG_URL + "?after={id}"
 
 DEFAULT_FILE_CHANNELS = "current.json"
 DEFAULT_FILE_CONFIGS_CLEAN = "v2ray-clean.txt"
