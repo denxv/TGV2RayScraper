@@ -2,7 +2,7 @@
 
 from argparse import ArgumentParser, HelpFormatter
 
-from requests import Session
+from httpx import Client
 
 from adapters.sync.channels import load_channels, save_channels
 from adapters.sync.configs import fetch_channel_configs
@@ -69,12 +69,12 @@ def main() -> None:
     parsed_args = parse_args()
     try:
         channels = load_channels(path_channels=parsed_args.channels)
-        with Session() as session:
-            update_info(session, channels)
+        with Client() as client:
+            update_info(client, channels)
             print_channel_info(channels)
             for name in get_sorted_keys(channels, apply_filter=True):
                 fetch_channel_configs(
-                    session=session,
+                    client=client,
                     channel_name=name,
                     channel_info=channels[name],
                     path_configs=parsed_args.configs_raw,

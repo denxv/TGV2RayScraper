@@ -23,13 +23,13 @@ from core.typing import (
     V2RayConfigIterator,
     V2RayConfigs,
     V2RayConfigsRaw,
-    SyncSession,
+    SyncHTTPClient,
 )
 from core.logger import logger
 
 
 def fetch_channel_configs(
-    session: SyncSession,
+    client: SyncHTTPClient,
     channel_name: ChannelName,
     channel_info: ChannelInfo,
     path_configs: FilePath = DEFAULT_FILE_CONFIGS_RAW,
@@ -50,7 +50,7 @@ def fetch_channel_configs(
         bar_format=FORMAT_CHANNEL_PROGRESS_BAR,
     ):
         channel_info["current_id"] = current_id
-        response = session.get(TEMPLATE_TG_URL_AFTER.format(name=channel_name, id=current_id))
+        response = client.get(TEMPLATE_TG_URL_AFTER.format(name=channel_name, id=current_id))
         messages = html.fromstring(response.content).xpath(XPATH_TG_MESSAGES_TEXT)
 
         if v2ray_configs := list(filter(PATTERN_URL_V2RAY_ALL.match, messages)):

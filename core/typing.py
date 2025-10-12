@@ -14,8 +14,7 @@ from typing import (
     Union,
 )
 
-from aiohttp import ClientSession
-from requests import Session
+from httpx import AsyncClient, Client
 
 
 class ChannelInfo(TypedDict):
@@ -25,8 +24,8 @@ class ChannelInfo(TypedDict):
 
 
 ArgsNamespace = Namespace
-AsyncSession = ClientSession
-SyncSession = Session
+AsyncHTTPClient = AsyncClient
+SyncHTTPClient = Client
 
 P = ParamSpec("P")
 T = TypeVar("T")

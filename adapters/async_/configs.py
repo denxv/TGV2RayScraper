@@ -16,7 +16,7 @@ from core.constants import (
     XPATH_TG_MESSAGES_TEXT,
 )
 from core.typing import (
-    AsyncSession,
+    AsyncHTTPClient,
     BatchSize,
     ChannelName,
     ChannelInfo,
@@ -30,7 +30,7 @@ from core.logger import logger
 
 
 async def fetch_channel_configs(
-    session: AsyncSession,
+    client: AsyncHTTPClient,
     channel_name: ChannelName,
     channel_info: ChannelInfo,
     batch_size: BatchSize = DEFAULT_CHANNEL_BATCH_EXTRACT,
@@ -47,12 +47,11 @@ async def fetch_channel_configs(
     logger.info(f"Extracting configs from channel '{channel_name}'...")
 
     async def fetch_and_parse(current_id: PostID) -> PostIDAndConfigsRaw:
-        async with session.get(TEMPLATE_TG_URL_AFTER.format(name=channel_name, id=current_id)) as response:
-            content = await response.text()
-            messages = html.fromstring(content).xpath(XPATH_TG_MESSAGES_TEXT)
-            if v2ray_configs := list(filter(PATTERN_URL_V2RAY_ALL.match, messages)):
-                return current_id, v2ray_configs
-            return current_id, []
+        response = await client.get(TEMPLATE_TG_URL_AFTER.format(name=channel_name, id=current_id))
+        messages = html.fromstring(response.text).xpath(XPATH_TG_MESSAGES_TEXT)
+        if v2ray_configs := list(filter(PATTERN_URL_V2RAY_ALL.match, messages)):
+            return current_id, v2ray_configs
+        return current_id, []
 
     for channel_id in tqdm(
         batch_range,

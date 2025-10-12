@@ -30,7 +30,7 @@ from core.typing import (
     FilePath,
     PostID,
     PostIndex,
-    SyncSession,
+    SyncHTTPClient,
     URL,
 )
 from core.utils import make_backup
@@ -39,13 +39,13 @@ from domain.predicates import should_delete_channel
 
 
 def _extract_post_id(
-    session: SyncSession,
+    client: SyncHTTPClient,
     url: URL,
     index: PostIndex = POST_DEFAULT_INDEX,
     default: DefaultPostID = DEFAULT_POST_ID,
 ) -> PostID:
     try:
-        response = session.get(url)
+        response = client.get(url)
         response.raise_for_status()
 
         tree = html.fromstring(response.content)
@@ -83,18 +83,18 @@ def delete_channels(channels: ChannelsDict) -> None:
             channels.pop(channel_name, None)
 
 
-def get_first_post_id(session: SyncSession, channel_name: ChannelName) -> PostID:
+def get_first_post_id(client: SyncHTTPClient, channel_name: ChannelName) -> PostID:
     return _extract_post_id(
-        session=session,
+        client=client,
         url=TEMPLATE_TG_URL_AFTER.format(name=channel_name, id=POST_FIRST_ID),
         index=POST_FIRST_INDEX,
         default=DEFAULT_CURRENT_ID,
     )
 
 
-def get_last_post_id(session: SyncSession, channel_name: ChannelName) -> PostID:
+def get_last_post_id(client: SyncHTTPClient, channel_name: ChannelName) -> PostID:
     return _extract_post_id(
-        session=session,
+        client=client,
         url=TEMPLATE_TG_URL.format(name=channel_name),
         index=POST_LAST_INDEX,
         default=DEFAULT_LAST_ID,

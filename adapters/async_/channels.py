@@ -18,7 +18,7 @@ from core.constants import (
     XPATH_POST_IDS,
 )
 from core.typing import (
-    AsyncSession,
+    AsyncHTTPClient,
     ChannelName,
     ChannelsDict,
     DefaultPostID,
@@ -31,43 +31,42 @@ from core.logger import logger
 
 
 async def _extract_post_id(
-    session: AsyncSession,
+    client: AsyncHTTPClient,
     url: URL,
     index: PostIndex = POST_DEFAULT_INDEX,
     default: DefaultPostID = DEFAULT_POST_ID,
 ) -> PostID:
     try:
-        async with session.get(url) as response:
-            response.raise_for_status()
+        response = await client.get(url)
+        response.raise_for_status()
 
-            content = await response.text()
-            tree = html.fromstring(content)
-            post_ids = tree.xpath(XPATH_POST_IDS)
+        tree = html.fromstring(response.text)
+        post_ids = tree.xpath(XPATH_POST_IDS)
 
-            if not post_ids:
-                raise ValueError("No posts found.")
+        if not post_ids:
+            raise ValueError("No posts found.")
 
-            post_url = post_ids[index]
-            post_id = post_url.split("/")[-1]
-            return int(post_id)
+        post_url = post_ids[index]
+        post_id = post_url.split("/")[-1]
+        return int(post_id)
 
     except Exception as e:
         logger.debug(f"Failed to extract post ID from '{url}': {type(e).__name__}: {e}")
         return default
 
 
-async def get_first_post_id(session: AsyncSession, channel_name: ChannelName) -> PostID:
+async def get_first_post_id(client: AsyncHTTPClient, channel_name: ChannelName) -> PostID:
     return await _extract_post_id(
-        session=session,
+        client=client,
         url=TEMPLATE_TG_URL_AFTER.format(name=channel_name, id=POST_FIRST_ID),
         index=POST_FIRST_INDEX,
         default=DEFAULT_CURRENT_ID,
     )
 
 
-async def get_last_post_id(session: AsyncSession, channel_name: ChannelName) -> PostID:
+async def get_last_post_id(client: AsyncHTTPClient, channel_name: ChannelName) -> PostID:
     return await _extract_post_id(
-        session=session,
+        client=client,
         url=TEMPLATE_TG_URL.format(name=channel_name),
         index=POST_LAST_INDEX,
         default=DEFAULT_LAST_ID,

@@ -62,11 +62,10 @@ This will update channels, scrape data, and clean V2Ray configurations in one st
 
 The project requires the following Python libraries:
 
-* **aiohttp** – asynchronous HTTP client
 * **aiofiles** – asynchronous file operations
 * **asteval** – safe evaluation of Python expressions (used for filtering configs)
+* **httpx** – modern HTTP client supporting both synchronous and asynchronous requests
 * **lxml** – parsing and processing HTML/XML
-* **requests** – synchronous HTTP client
 * **tqdm** – progress bar for long-running tasks
 
 Other dependencies are listed in [`requirements.txt`](requirements.txt).

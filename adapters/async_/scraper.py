@@ -1,7 +1,5 @@
 from asyncio import create_task, gather
 
-from aiohttp import ClientSession
-
 from adapters.async_.channels import get_first_post_id, get_last_post_id
 from core.constants import (
     DEFAULT_CHANNEL_BATCH_UPDATE,
@@ -10,7 +8,7 @@ from core.constants import (
 )
 from core.logger import logger
 from core.typing import (
-    AsyncSession,
+    AsyncHTTPClient,
     BatchSize,
     ChannelInfo,
     ChannelName,
@@ -20,7 +18,7 @@ from domain.channel import update_count_and_last_id
 
 
 async def update_info(
-    session: AsyncSession,
+    client: AsyncHTTPClient,
     channels: ChannelsDict,
     batch_size: BatchSize = DEFAULT_CHANNEL_BATCH_UPDATE,
 ) -> None:
@@ -28,21 +26,22 @@ async def update_info(
 
     async def update_channel(channel_name: ChannelName, channel_info: ChannelInfo) -> None:
         current_id = channel_info.get("current_id", DEFAULT_CURRENT_ID)
-        last_post_id = await get_last_post_id(session, channel_name)
+        last_post_id = await get_last_post_id(client, channel_name)
         update_count_and_last_id(channel_name, channel_info, last_post_id)
-
-        if last_post_id != DEFAULT_LAST_ID and current_id == DEFAULT_CURRENT_ID:
-            channel_info["current_id"] = await get_first_post_id(session, channel_name)
-            current_id = channel_info["current_id"]
 
         if last_post_id == DEFAULT_LAST_ID:
             return
 
-        channel_info["current_id"] = (
-            max(last_post_id + current_id, DEFAULT_CURRENT_ID)
-            if current_id <= 0 else
-            min(current_id, last_post_id)
-        )
+        if current_id <= 0:
+            channel_info["current_id"] = max(last_post_id + current_id, DEFAULT_CURRENT_ID)
+            current_id = channel_info["current_id"]
+
+        if current_id == DEFAULT_CURRENT_ID:
+            channel_info["current_id"] = await get_first_post_id(client, channel_name)
+            current_id = channel_info["current_id"]
+
+        if current_id > last_post_id:
+            channel_info["current_id"] = last_post_id
 
     channel_names = list(channels.keys())
     for i in range(0, len(channel_names), batch_size):

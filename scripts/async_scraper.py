@@ -3,7 +3,7 @@
 from argparse import ArgumentParser, HelpFormatter
 from asyncio import CancelledError, run
 
-from aiohttp import ClientSession
+from httpx import AsyncClient
 
 from adapters.async_.channels import load_channels, save_channels
 from adapters.async_.configs import fetch_channel_configs
@@ -90,12 +90,12 @@ async def main() -> None:
     parsed_args = parse_args()
     try:
         channels = await load_channels(path_channels=parsed_args.channels)
-        async with ClientSession() as session:
-            await update_info(session, channels, batch_size=parsed_args.batch_update)
+        async with AsyncClient() as client:
+            await update_info(client, channels, batch_size=parsed_args.batch_update)
             print_channel_info(channels)
             for name in get_sorted_keys(channels, apply_filter=True):
                 await fetch_channel_configs(
-                    session=session,
+                    client=client,
                     channel_name=name,
                     channel_info=channels[name],
                     batch_size=parsed_args.batch_extract,
