@@ -2,7 +2,7 @@
 
 from argparse import ArgumentParser, HelpFormatter
 
-from httpx import Client
+from httpx import Client, Timeout
 
 from adapters.sync.channels import load_channels, save_channels
 from adapters.sync.configs import fetch_channel_configs
@@ -13,6 +13,7 @@ from core.constants import (
     DEFAULT_HELP_WIDTH,
     DEFAULT_PATH_CHANNELS,
     DEFAULT_PATH_CONFIGS_RAW,
+    DEFAULT_CLIENT_TIMEOUT,
     SUPPRESS,
 )
 from core.typing import ArgsNamespace
@@ -69,7 +70,7 @@ def main() -> None:
     parsed_args = parse_args()
     try:
         channels = load_channels(path_channels=parsed_args.channels)
-        with Client() as client:
+        with Client(timeout=Timeout(DEFAULT_CLIENT_TIMEOUT)) as client:
             update_info(client, channels)
             print_channel_info(channels)
             for name in get_sorted_keys(channels, apply_filter=True):

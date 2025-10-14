@@ -192,22 +192,26 @@ def normalize_vmess_base64(config: V2RayConfig) -> None:
 def process_configs(configs: V2RayConfigs, args: ArgsNamespace) -> V2RayConfigs:
     if args.normalize:
         configs = normalize(configs=configs)
+
     if args.filter:
         configs = filter_by_condition(
             configs=configs,
             condition=args.filter,
         )
+
     if args.duplicate:
         configs = remove_duplicates_by_fields(
             configs=configs,
             fields=args.duplicate,
         )
+
     if args.sort:
         configs = sort_by_fields(
             configs=configs,
             fields=args.sort,
             reverse=args.reverse,
         )
+
     return configs
 
 

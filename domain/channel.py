@@ -1,6 +1,7 @@
 from core.constants import (
     CHANNEL_ACTIVE_THRESHOLD,
     CHANNEL_MIN_ID_DIFF,
+    DEFAULT_CHANNEL_MESSAGE_OFFSET,
     DEFAULT_COUNT,
     DEFAULT_CURRENT_ID,
     DEFAULT_LAST_ID,
@@ -8,20 +9,73 @@ from core.constants import (
     LEN_NUMBER,
     TOTAL_CHANNELS_POST,
 )
-from core.logger import logger
+from core.logger import logger, log_debug_object
 from core.typing import (
+    ArgsNamespace,
     ChannelInfo,
     ChannelName,
     ChannelNames,
     ChannelsDict,
     PostID,
 )
-from domain.predicates import should_update_channel
+from domain.predicates import (
+    should_set_current_id,
+    should_update_channel,
+)
+
+
+def assign_current_id_to_channels(
+    channels: ChannelsDict,
+    message_offset: int = DEFAULT_CHANNEL_MESSAGE_OFFSET,
+    apply_to_new: bool = False,
+    check_only: bool = False,
+) -> ChannelsDict:
+    if not isinstance(message_offset, int) or message_offset <= 0:
+        logger.warning(
+            f"Invalid offset {message_offset}, expected positive integer — assignment skipped."
+        )
+        return channels
+
+    channels_to_update = {
+        name: info
+        for name, info in channels.items()
+        if should_set_current_id(info, apply_to_new=apply_to_new)
+    }
+
+    for name, info in channels_to_update.items():
+        diff = diff_channel_id(info)
+        if diff <= message_offset:
+            continue
+
+        _msg = (
+            f"Channel {f"'{name}'".ljust(LEN_NAME + 2)} | "
+            f"ID diff = {diff:<4} | offset = {message_offset:<4} | "
+            f"skipped messages due to diff > offset."
+        )
+
+        if check_only:
+            log_debug_object(
+                title=f"Debug info for channel '{name}' ({check_only=})", 
+                obj=info,
+            )
+            logger.warning(_msg)
+        else:
+            logger.debug(f"{_msg} — assignment applied.")
+
+    if check_only:
+        logger.debug(f"Skipping assignment because {check_only=}.")
+        return channels
+
+    for name in channels_to_update.keys():
+        channels[name]["current_id"] = -message_offset
+        logger.debug(f"Channel '{name}': current_id = {-message_offset}")
+
+    return channels
 
 
 def diff_channel_id(channel_info: ChannelInfo) -> int:
+    current_id = get_normalized_current_id(channel_info)
     last_id = channel_info.get("last_id", DEFAULT_LAST_ID)
-    current_id = channel_info.get("current_id", DEFAULT_CURRENT_ID)
     return max(CHANNEL_MIN_ID_DIFF, last_id - current_id)
 
 
@@ -33,11 +87,27 @@ def format_channel_id(channel_info: ChannelInfo) -> str:
     current_id = channel_info.get("current_id", DEFAULT_CURRENT_ID)
     last_id = channel_info.get("last_id", DEFAULT_LAST_ID)
 
-    return f"{current_id:>{LEN_NUMBER}} / {last_id:<{LEN_NUMBER}} (+{diff})"
+    return f"{current_id:>{LEN_NUMBER}} / {last_id:<{LEN_NUMBER}} (+{diff:,})"
 
 
 def get_filtered_keys(channels: ChannelsDict) -> ChannelNames:
     return [name for name, info in channels.items() if should_update_channel(info)]
+
+
+def get_normalized_current_id(channel_info: ChannelInfo) -> PostID:
+    current_id = channel_info.get("current_id", DEFAULT_CURRENT_ID)
+    last_id = channel_info.get("last_id", DEFAULT_LAST_ID)
+
+    if last_id == DEFAULT_LAST_ID:
+        return DEFAULT_CURRENT_ID
+
+    if current_id <= 0:
+        return max(last_id + current_id, DEFAULT_CURRENT_ID)
+
+    if current_id > last_id:
+        return last_id
+
+    return current_id
 
 
 def get_sorted_keys(
@@ -60,8 +130,35 @@ def print_channel_info(channels: ChannelsDict) -> None:
         logger.info(f"Total messages on channels: {TOTAL_CHANNELS_POST:,}")
 
 
-def sort_channel_names(channel_names: ChannelNames) -> ChannelNames:
-    return sorted([name.lower() for name in channel_names])
+def process_channels(channels: ChannelsDict, args: ArgsNamespace) -> ChannelsDict:
+    from adapters.sync.channels import delete_channels
+
+    if args.delete_channels:
+        channels = delete_channels(channels=channels)
+    else:
+        logger.info("Channel deletion skipped (default: disabled).")
+
+    if args.message_offset:
+        channels = assign_current_id_to_channels(
+            channels=channels,
+            message_offset=args.message_offset,
+            apply_to_new=args.include_new_channels,
+            check_only=args.check_only,
+        )
+
+    return channels
+
+
+def sort_channel_names(
+    channel_names: ChannelNames, 
+    ignore_case: bool = True, 
+    reverse: bool = False,
+) -> ChannelNames:
+    return sorted(
+        channel_names,
+        key=(str.lower if ignore_case else None),
+        reverse=reverse,
+    )
 
 
 def update_count_and_last_id(

@@ -5,6 +5,8 @@ from re import compile, DOTALL
 
 GET_ABS_PATH = lambda path: str((Path(__file__).parent / path).resolve())
 
+DEFAULT_CLIENT_TIMEOUT = 30.0
+
 DEFAULT_COUNT = 0
 DEFAULT_CURRENT_ID = 1
 DEFAULT_LAST_ID = -1
@@ -45,8 +47,18 @@ CHANNEL_MIN_ID_DIFF = 0
 CHANNEL_FAILED_ATTEMPTS_THRESHOLD = -3
 CHANNEL_REMOVE_THRESHOLD = 0
 
+CHANNEL_MIN_BATCH_EXTRACT = 1
+CHANNEL_MAX_BATCH_EXTRACT = 100
 DEFAULT_CHANNEL_BATCH_EXTRACT = 20
+
+CHANNEL_MIN_BATCH_UPDATE = 1
+CHANNEL_MAX_BATCH_UPDATE = 1000
 DEFAULT_CHANNEL_BATCH_UPDATE = 100
+
+CHANNEL_MIN_MESSAGE_OFFSET = 1
+CHANNEL_MAX_MESSAGE_OFFSET = 1000
+DEFAULT_CHANNEL_MESSAGE_OFFSET = 50
+
 FORMAT_CHANNEL_PROGRESS_BAR = " {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt} "
 
 LEN_NAME = 32
@@ -84,6 +96,10 @@ CLI_SCRIPTS_CONFIG = {
     "update_channels": {
         "flags": [
             "--channels",
+            "--delete-channels",
+            "--include-new",
+            "--message-offset",
+            "--no-dry-run",
             "--urls",
         ],
         "mode": "any",

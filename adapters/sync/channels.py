@@ -70,17 +70,19 @@ def _extract_post_id(
     end="Inactive channels deleted successfully.",
     tracking=True,
 )
-def delete_channels(channels: ChannelsDict) -> None:
-    for channel_name, channel_info in list(channels.items()):
-        if should_delete_channel(channel_info):
+def delete_channels(channels: ChannelsDict) -> ChannelsDict:
+    updated_channels = {}
+
+    for name, info in channels.items():
+        if not should_delete_channel(info):
+            updated_channels[name] = info
+        else:
             log_debug_object(
-                title=(
-                    f"Deleting channel '{channel_name}' "
-                    "with the following information"
-                ),
-                obj=channel_info,
+                title=f"Deleting channel '{name}' with the following information",
+                obj=info,
             )
-            channels.pop(channel_name, None)
+
+    return updated_channels
 
 
 def get_first_post_id(client: SyncHTTPClient, channel_name: ChannelName) -> PostID:
@@ -168,8 +170,12 @@ def save_channels_and_urls(
 def update_with_new_channels(
     current_channels: ChannelsDict,
     channel_names: ChannelNames,
-) -> None:
+) -> ChannelsDict:
+    updated_channels = current_channels.copy()
+    
     for name in sort_channel_names(channel_names):
+        updated_channels.setdefault(name, DEFAULT_CHANNEL_VALUES.copy())
         if name not in current_channels:
             logger.debug(f"Channel '{name}' missing, adding to list.")
-            current_channels.setdefault(name, DEFAULT_CHANNEL_VALUES.copy())
+
+    return updated_channels

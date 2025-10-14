@@ -265,24 +265,33 @@ python -m scripts.update_channels -h
 
 **Options include:**
 
+* `--no-dry-run` — Disable dry run and actually assign `current_id` (default: disabled).
 * `-C, --channels FILE` — Path to the input JSON file containing the list of channels (default: `channels/current.json`).
+* `-D, --delete-channels` — Delete channels that are unavailable or meet specific conditions (default: disabled).
+* `-M, --message-offset N` — Number of recent messages to include when assigning `current_id`.
+* `-N, --include-new` — Include new channels in processing.
 * `-U, --urls FILE` — Path to a text file containing new channel URLs (default: `channels/urls.txt`).
 
 ---
 
 The script:
 
-* Reads the current channel list (`channels/current.json`).
+* Loads the current list of channels from `channels/current.json`.
 * Merges with new URLs from `channels/urls.txt`.
+* By default, performs a dry run without making changes (`--no-dry-run` disables it).
+* Allows assigning `current_id` to channels taking message offset into account (`--message-offset`).
+* Can include new channels in processing (`--include-new`).
+* Supports deletion of unavailable or flagged channels (`--delete-channels`).
 * Creates timestamped backups of both files.
 * Saves the updated list back to `current.json` and `urls.txt`.
+* Logs detailed warnings and debug information for each channel.
 
 ---
 
 **Example usage:**
 
 ```bash
-python -m scripts.update_channels -C channels/current.json -U channels/urls.txt
+python -m scripts.update_channels -C channels/current.json -U channels/urls.txt -D -M 50 -N --no-dry-run
 ```
 
 ---

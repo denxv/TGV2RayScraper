@@ -5,6 +5,12 @@ from sys import executable
 from subprocess import run
 
 from core.constants import (
+    CHANNEL_MIN_BATCH_EXTRACT,
+    CHANNEL_MAX_BATCH_EXTRACT,
+    CHANNEL_MIN_BATCH_UPDATE,
+    CHANNEL_MAX_BATCH_UPDATE,
+    CHANNEL_MIN_MESSAGE_OFFSET,
+    CHANNEL_MAX_MESSAGE_OFFSET,
     CLI_SCRIPTS_CONFIG,
     DEFAULT_HELP_INDENT,
     DEFAULT_HELP_WIDTH,
@@ -41,8 +47,8 @@ def parse_args() -> ArgsNamespace:
         help=SUPPRESS,
         type=lambda value: int_in_range(
             value,
-            min_value=1,
-            max_value=100,
+            min_value=CHANNEL_MIN_BATCH_EXTRACT,
+            max_value=CHANNEL_MAX_BATCH_EXTRACT,
             as_str=True,
         ),
     )
@@ -52,8 +58,8 @@ def parse_args() -> ArgsNamespace:
         help=SUPPRESS,
         type=lambda value: int_in_range(
             value,
-            min_value=1,
-            max_value=1000,
+            min_value=CHANNEL_MIN_BATCH_UPDATE,
+            max_value=CHANNEL_MAX_BATCH_UPDATE,
             as_str=True,
         ),
     )
@@ -74,6 +80,13 @@ def parse_args() -> ArgsNamespace:
         "--configs-raw",
         help=SUPPRESS,
         type=lambda path: validate_file_path(path, must_be_file=False),
+    )
+
+    parser.add_argument(
+        "--delete-channels",
+        action="store_const",
+        const="",
+        help=SUPPRESS,
     )
 
     parser.add_argument(
@@ -103,12 +116,37 @@ def parse_args() -> ArgsNamespace:
     )
 
     parser.add_argument(
+        "--include-new",
+        action="store_const",
+        const="",
+        help=SUPPRESS,
+    )
+
+    parser.add_argument(
+        "--message-offset",
+        help=SUPPRESS,
+        type=lambda value: int_in_range(
+            value,
+            min_value=CHANNEL_MIN_MESSAGE_OFFSET,
+            max_value=CHANNEL_MAX_MESSAGE_OFFSET,
+            as_str=True,
+        ),
+    )
+
+    parser.add_argument(
         "-N", "--no-async",
         action="store_true",
         help=(
             "Use slower but simpler synchronous scraping mode "
             "instead of the default asynchronous mode."
         ),
+    )
+
+    parser.add_argument(
+        "--no-dry-run",
+        action="store_const",
+        const="",
+        help=SUPPRESS,
     )
 
     parser.add_argument(
@@ -170,7 +208,7 @@ def run_script(script_name: str, script_args: Optional[CLIParams] = None) -> Non
 
 def show_scripts_help() -> None:
     for script_name in CLI_SCRIPTS_CONFIG:
-        run_script(script_name, args=["--help"])
+        run_script(script_name, script_args=["--help"])
 
 
 def main() -> None:

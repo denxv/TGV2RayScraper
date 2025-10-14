@@ -3,19 +3,24 @@
 from argparse import ArgumentParser, HelpFormatter
 from asyncio import CancelledError, run
 
-from httpx import AsyncClient
+from httpx import AsyncClient, Timeout
 
 from adapters.async_.channels import load_channels, save_channels
 from adapters.async_.configs import fetch_channel_configs
 from adapters.async_.scraper import update_info
 from core.logger import logger, log_debug_object
 from core.constants import (
+    CHANNEL_MIN_BATCH_EXTRACT,
+    CHANNEL_MAX_BATCH_EXTRACT,
+    CHANNEL_MIN_BATCH_UPDATE,
+    CHANNEL_MAX_BATCH_UPDATE,
     DEFAULT_HELP_INDENT,
     DEFAULT_HELP_WIDTH,
     DEFAULT_CHANNEL_BATCH_EXTRACT,
     DEFAULT_CHANNEL_BATCH_UPDATE,
     DEFAULT_PATH_CHANNELS,
     DEFAULT_PATH_CONFIGS_RAW,
+    DEFAULT_CLIENT_TIMEOUT,
     SUPPRESS,
 )
 from core.typing import ArgsNamespace
@@ -59,7 +64,11 @@ def parse_args() -> ArgsNamespace:
         dest="batch_extract",
         help="Number of messages processed in parallel to extract V2Ray configs (default: %(default)s).",
         metavar="N",
-        type=lambda value: int_in_range(value, min_value=1, max_value=100),
+        type=lambda value: int_in_range(
+            value,
+            min_value=CHANNEL_MIN_BATCH_EXTRACT,
+            max_value=CHANNEL_MAX_BATCH_EXTRACT,
+        ),
     )
 
     parser.add_argument(
@@ -77,7 +86,11 @@ def parse_args() -> ArgsNamespace:
         dest="batch_update",
         help="Maximum number of channels updated in parallel (default: %(default)s).",
         metavar="N",
-        type=lambda value: int_in_range(value, min_value=1, max_value=1000),
+        type=lambda value: int_in_range(
+            value,
+            min_value=CHANNEL_MIN_BATCH_UPDATE,
+            max_value=CHANNEL_MAX_BATCH_UPDATE,
+        ),
     )
 
     args = parser.parse_args()
@@ -90,7 +103,7 @@ async def main() -> None:
     parsed_args = parse_args()
     try:
         channels = await load_channels(path_channels=parsed_args.channels)
-        async with AsyncClient() as client:
+        async with AsyncClient(timeout=Timeout(DEFAULT_CLIENT_TIMEOUT)) as client:
             await update_info(client, channels, batch_size=parsed_args.batch_update)
             print_channel_info(channels)
             for name in get_sorted_keys(channels, apply_filter=True):
