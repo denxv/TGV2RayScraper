@@ -5,8 +5,6 @@ from re import compile, DOTALL
 
 GET_ABS_PATH = lambda path: str((Path(__file__).parent / path).resolve())
 
-DEFAULT_CLIENT_TIMEOUT = 30.0
-
 DEFAULT_COUNT = 0
 DEFAULT_CURRENT_ID = 1
 DEFAULT_LAST_ID = -1
@@ -59,6 +57,10 @@ CHANNEL_MIN_MESSAGE_OFFSET = 1
 CHANNEL_MAX_MESSAGE_OFFSET = 1000
 DEFAULT_CHANNEL_MESSAGE_OFFSET = 50
 
+HTTP_MIN_TIMEOUT = 0.1
+HTTP_MAX_TIMEOUT = 100.0
+DEFAULT_HTTP_TIMEOUT = 30.0
+
 FORMAT_CHANNEL_PROGRESS_BAR = " {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt} "
 
 LEN_NAME = 32
@@ -99,6 +101,7 @@ CLI_SCRIPTS_CONFIG = {
             "--delete-channels",
             "--include-new",
             "--message-offset",
+            "--no-backup",
             "--no-dry-run",
             "--urls",
         ],
@@ -110,6 +113,7 @@ CLI_SCRIPTS_CONFIG = {
             "--batch-update",
             "--channels",
             "--configs-raw",
+            "--time-out",
         ],
         "mode": "async",
     },
@@ -117,6 +121,7 @@ CLI_SCRIPTS_CONFIG = {
         "flags": [
             "--channels",
             "--configs-raw",
+            "--time-out",
         ],
         "mode": "sync",
     },

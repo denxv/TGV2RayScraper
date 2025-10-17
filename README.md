@@ -75,30 +75,57 @@ Other dependencies are listed in [`requirements.txt`](requirements.txt).
 ## Project Structure
 
 * **adapters/** — adapters for synchronous and asynchronous data operations
-  * **async_/** — asynchronous implementations of operations (channels, configs, scraping)
-    * `channels.py` — asynchronous operations for channels
-    * `configs.py` — asynchronous configuration handling
-    * `scraper.py` — asynchronous scraper for data collection
-  * **sync/** — synchronous implementations of operations
-    * `channels.py` — synchronous operations for channels
-    * `configs.py` — synchronous configuration handling
-    * `scraper.py` — synchronous scraper for data collection
+  * **async_/** — asynchronous implementations (channels, configurations, scraping)
+    * `channels.py` — asynchronous operations with channels
+    * `configs.py` — asynchronous processing of configurations
+    * `scraper.py` — asynchronous channel data scraper
+  * **sync/** — synchronous implementations
+    * `channels.py` — synchronous operations with channels
+    * `configs.py` — synchronous processing of configurations
+    * `scraper.py` — synchronous channel data scraper
+
+* **channels/** — folder for storing channel and URL list files
+  * `current.json` — main file with Telegram channel information
+  * `urls.txt` — main file with Telegram channel links
+  * backups of these files are also stored (e.g., `current-backup-<timestamp>.json`, `urls-backup-<timestamp>.txt`)
+
+* **configs/** — folder for storing V2Ray configurations
+  * `v2ray-clean.txt` — cleaned configurations
+  * `v2ray-raw.txt` — raw configurations
 
 * **core/** — core utilities and constants
-  * `constants.py` — constants, default paths, URL templates, regex patterns, and script flags
+  * `constants.py` — constants, default paths, URL templates, regex patterns, script flags
   * `decorators.py` — decorators (e.g., for logging)
-  * `logger.py` — logging utility with colorized console output and microsecond timestamps
+  * `logger.py` — logging utility with colored console output and microsecond timestamps
   * `typing.py` — custom type aliases for the project (channels, V2Ray configs, CLI, sessions, etc.)
-  * `utils.py` — utility functions and helpers
+  * `utils.py` — utility and helper functions
 
-* **domain/** — business logic and domain functions
-  * `channel.py` — channel management, sorting, filtering
+* **docs/** — project documentation
+  * `ru/` — Russian documentation
+    * `README.md` — user guide in Russian
+    * `LICENSE` — project license in Russian
+
+* **domain/** — business logic and domain-specific functions
+  * `channel.py` — operations with channels, sorting, filtering
   * `config.py` — processing and normalization of configurations
   * `predicates.py` — filtering logic and predicates
 
-* **main.py** — main script for running all project operations, including channel updates, data scraping, and configuration processing
+* **logs/** — folder for script logs
+  * log files with timestamps (e.g., `2020-10-10.log`)
 
-* **requirements.txt** — list of all required Python libraries for the project
+* **scripts/** — helper scripts for performing project tasks
+  * `async_scraper.py` — script collects data from Telegram channels asynchronously
+  * `scraper.py` — script collects data from Telegram channels synchronously
+  * `update_channels.py` — script to update channels (removing inactive channels and adding new ones)
+  * `v2ray_cleaner.py` — script cleans, normalizes, and processes obtained V2Ray configurations
+
+* **LICENSE** — project license (default in English)
+
+* **main.py** — main script to run all project operations, including updating channels, collecting data, and processing configurations
+
+* **README.md** — main project documentation (default in English)
+
+* **requirements.txt** — list of all required libraries for running the project
 
 ---
 
@@ -265,7 +292,8 @@ python -m scripts.update_channels -h
 
 **Options include:**
 
-* `--no-dry-run` — Disable dry run and actually assign `current_id` (default: disabled).
+* `--no-dry-run` — Disable dry run and actually assign `current_id` (check-only mode is enabled by default).
+* `-B, --no-backup` — Skip creating backup files for channel and Telegram URL lists before saving (backups are created by default).
 * `-C, --channels FILE` — Path to the input JSON file containing the list of channels (default: `channels/current.json`).
 * `-D, --delete-channels` — Delete channels that are unavailable or meet specific conditions (default: disabled).
 * `-M, --message-offset N` — Number of recent messages to include when assigning `current_id`.
@@ -282,7 +310,7 @@ The script:
 * Allows assigning `current_id` to channels taking message offset into account (`--message-offset`).
 * Can include new channels in processing (`--include-new`).
 * Supports deletion of unavailable or flagged channels (`--delete-channels`).
-* Creates timestamped backups of both files.
+* Creates backup copies of both files with a timestamp (can be disabled using the `--no-backup` option).
 * Saves the updated list back to `current.json` and `urls.txt`.
 * Logs detailed warnings and debug information for each channel.
 
@@ -291,7 +319,7 @@ The script:
 **Example usage:**
 
 ```bash
-python -m scripts.update_channels -C channels/current.json -U channels/urls.txt -D -M 50 -N --no-dry-run
+python -m scripts.update_channels -C channels/current.json --urls channels/urls.txt --delete-channels -M 50 --include-new --no-dry-run --no-backup
 ```
 
 ---
@@ -323,6 +351,7 @@ python -m scripts.async_scraper -h
 * `-C, --channels FILE` — Path to the input JSON file containing the list of channels (default: `channels/current.json`).
 * `-E, --batch-extract N` — Number of messages processed in parallel to extract V2Ray configs (default: 20).
 * `-R, --configs-raw FILE` — Path to the output file for saving scraped V2Ray configs (default: `configs/v2ray-raw.txt`).
+* `-T, --time-out SECONDS` — HTTP client timeout in seconds for requests used while updating channel info and extracting V2Ray configurations (default: 30.0).
 * `-U, --batch-update N` — Maximum number of channels updated in parallel (default: 100).
 
 ---
@@ -330,7 +359,7 @@ python -m scripts.async_scraper -h
 **Example usage:**
 
 ```bash
-python -m scripts.async_scraper -E 20 -U 100 -C channels/current.json -R configs/v2ray-raw.txt
+python -m scripts.async_scraper -E 20 -U 100 --time-out 30.0 -C channels/current.json -R configs/v2ray-raw.txt
 ```
 
 ---
@@ -359,13 +388,14 @@ python -m scripts.scraper -h
 
 * `-C, --channels FILE` — Path to the input JSON file containing the list of channels (default: `channels/current.json`).
 * `-R, --configs-raw FILE` — Path to the output file for saving scraped V2Ray configs (default: `configs/v2ray-raw.txt`).
+* `-T, --time-out SECONDS` — HTTP client timeout in seconds for requests used while updating channel info and extracting V2Ray configurations (default: 30.0).
 
 ---
 
 **Example usage:**
 
 ```bash
-python -m scripts.scraper -C channels/current.json -R configs/v2ray-raw.txt
+python -m scripts.scraper --time-out 30.0 -C channels/current.json -R configs/v2ray-raw.txt
 ```
 
 ---

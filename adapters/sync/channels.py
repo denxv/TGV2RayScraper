@@ -148,8 +148,10 @@ def save_channels_and_urls(
     channels: ChannelsDict,
     path_channels: FilePath = DEFAULT_FILE_CHANNELS,
     path_urls: FilePath = DEFAULT_FILE_URLS,
+    make_backups: bool = True,
 ) -> None:
-    make_backup([path_urls, path_channels])
+    if make_backups:
+        make_backup([path_urls, path_channels])
 
     with open(path_channels, "w", encoding="utf-8") as tg_json, \
         open(path_urls, "w", encoding="utf-8") as urls:

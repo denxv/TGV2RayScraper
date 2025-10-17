@@ -18,13 +18,19 @@ from core.constants import (
     DEFAULT_HELP_WIDTH,
     DEFAULT_CHANNEL_BATCH_EXTRACT,
     DEFAULT_CHANNEL_BATCH_UPDATE,
+    DEFAULT_HTTP_TIMEOUT,
     DEFAULT_PATH_CHANNELS,
     DEFAULT_PATH_CONFIGS_RAW,
-    DEFAULT_CLIENT_TIMEOUT,
+    HTTP_MAX_TIMEOUT,
+    HTTP_MIN_TIMEOUT,
     SUPPRESS,
 )
 from core.typing import ArgsNamespace
-from core.utils import abs_path, int_in_range, validate_file_path
+from core.utils import (
+    abs_path,
+    convert_number_in_range,
+    validate_file_path,
+)
 from domain.channel import get_sorted_keys, print_channel_info
 
 
@@ -33,7 +39,7 @@ def parse_args() -> ArgsNamespace:
         add_help=False,
         description="Asynchronous Telegram channel scraper (faster, experimental).",
         epilog=(
-            "Example: PYTHONPATH=. python scripts/%(prog)s -E 20 -U 100 "
+            "Example: PYTHONPATH=. python scripts/%(prog)s -E 20 -U 100 -T 30.0 "
             "--channels channels.json -R configs-raw.txt"
         ),
         formatter_class=lambda prog: HelpFormatter(
@@ -64,10 +70,12 @@ def parse_args() -> ArgsNamespace:
         dest="batch_extract",
         help="Number of messages processed in parallel to extract V2Ray configs (default: %(default)s).",
         metavar="N",
-        type=lambda value: int_in_range(
+        type=lambda value: convert_number_in_range(
             value,
             min_value=CHANNEL_MIN_BATCH_EXTRACT,
             max_value=CHANNEL_MAX_BATCH_EXTRACT,
+            as_int=True,
+            as_str=False,
         ),
     )
 
@@ -81,15 +89,35 @@ def parse_args() -> ArgsNamespace:
     )
 
     parser.add_argument(
+        "-T", "--time-out",
+        default=DEFAULT_HTTP_TIMEOUT,
+        dest="time_out",
+        help=(
+            "HTTP client timeout in seconds for requests used while updating "
+            "channel info and extracting V2Ray configurations (default: %(default)s)."
+        ),
+        metavar="SECONDS",
+        type=lambda value: convert_number_in_range(
+            value,
+            min_value=HTTP_MIN_TIMEOUT,
+            max_value=HTTP_MAX_TIMEOUT,
+            as_int=False,
+            as_str=False,
+        ),
+    )
+
+    parser.add_argument(
         "-U", "--batch-update",
         default=DEFAULT_CHANNEL_BATCH_UPDATE,
         dest="batch_update",
         help="Maximum number of channels updated in parallel (default: %(default)s).",
         metavar="N",
-        type=lambda value: int_in_range(
+        type=lambda value: convert_number_in_range(
             value,
             min_value=CHANNEL_MIN_BATCH_UPDATE,
             max_value=CHANNEL_MAX_BATCH_UPDATE,
+            as_int=True,
+            as_str=False,
         ),
     )
 
@@ -103,7 +131,7 @@ async def main() -> None:
     parsed_args = parse_args()
     try:
         channels = await load_channels(path_channels=parsed_args.channels)
-        async with AsyncClient(timeout=Timeout(DEFAULT_CLIENT_TIMEOUT)) as client:
+        async with AsyncClient(timeout=Timeout(parsed_args.time_out)) as client:
             await update_info(client, channels, batch_size=parsed_args.batch_update)
             print_channel_info(channels)
             for name in get_sorted_keys(channels, apply_filter=True):

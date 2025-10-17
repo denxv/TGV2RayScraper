@@ -10,7 +10,6 @@ from adapters.sync.channels import (
 from core.constants import (
     CHANNEL_MIN_MESSAGE_OFFSET,
     CHANNEL_MAX_MESSAGE_OFFSET,
-    DEFAULT_CHANNEL_MESSAGE_OFFSET,
     DEFAULT_HELP_INDENT,
     DEFAULT_HELP_WIDTH,
     DEFAULT_PATH_CHANNELS,
@@ -19,7 +18,11 @@ from core.constants import (
 )
 from core.logger import logger, log_debug_object
 from core.typing import ArgsNamespace
-from core.utils import abs_path, int_in_range, validate_file_path
+from core.utils import (
+    abs_path,
+    convert_number_in_range,
+    validate_file_path,
+)
 from domain.channel import process_channels
 
 
@@ -29,7 +32,7 @@ def parse_args() -> ArgsNamespace:
         description="Backup, merge new channels from URLs, and update Telegram channel data.",
         epilog=(
             "Example: PYTHONPATH=. python scripts/%(prog)s -C channels.json --urls urls.txt "
-            "-D -M 50 -N --no-dry-run"
+            "--delete-channels -M 50 --include-new --no-dry-run --no-backup"
         ),
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
@@ -43,6 +46,16 @@ def parse_args() -> ArgsNamespace:
         action="store_false",
         dest="check_only",
         help="Disable check-only mode and actually assign 'current_id' (default: enabled)."
+    )
+
+    parser.add_argument(
+        "-B", "--no-backup",
+        action="store_false",
+        dest="make_backups",
+        help=(
+            "Skip creating backup files for channel and Telegram URL lists before saving "
+            "(default: enabled)."
+        ),
     )
 
     parser.add_argument(
@@ -72,10 +85,12 @@ def parse_args() -> ArgsNamespace:
         dest="message_offset",
         help="Number of recent messages to include when assigning 'current_id'.",
         metavar="N",
-        type=lambda value: int_in_range(
+        type=lambda value: convert_number_in_range(
             value,
             min_value=CHANNEL_MIN_MESSAGE_OFFSET,
             max_value=CHANNEL_MAX_MESSAGE_OFFSET,
+            as_int=True,
+            as_str=False,
         ),
     )
 
@@ -120,6 +135,7 @@ def main() -> None:
             channels=current_channels,
             path_channels=parsed_args.channels_file,
             path_urls=parsed_args.urls_file,
+            make_backups=parsed_args.make_backups,
         )
     except KeyboardInterrupt:
         logger.info("Exit from the program.")

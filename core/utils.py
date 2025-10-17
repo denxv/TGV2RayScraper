@@ -26,10 +26,10 @@ from core.typing import (
     ConfigFields,
     FilePath,
     FilePaths,
-    IntRangeValue,
-    IntStr,
+    FloatStr,
     MaxValue,
     MinValue,
+    NumberValue,
     NormalizedParamsStr,
     ParamsStr,
     RegexPattern,
@@ -66,20 +66,26 @@ def collect_args(args: ArgsNamespace, flags: CLIFlags) -> CLIParams:
     return params
 
 
-def flag_to_name(flag: CLIFlag) -> AttrName:
-    return flag.lstrip('-').replace('-', '_')
-
-
-def int_in_range(
-    value: IntStr,
+def convert_number_in_range(
+    value: FloatStr,
     min_value: MinValue = DEFAULT_MIN_VALUE,
     max_value: MaxValue = DEFAULT_MAX_VALUE,
+    as_int: bool = True,
     as_str: bool = False,
-) -> IntRangeValue:
-    ivalue = int(value)
-    if ivalue < min_value or ivalue > max_value:
-        raise ArgumentTypeError(f"Expected {min_value} to {max_value}, got {ivalue}")
-    return str(ivalue) if as_str else ivalue
+) -> NumberValue:
+    try:
+        _value = int(value) if as_int else float(value)
+    except ValueError:
+        raise ArgumentTypeError(f"Invalid number: {value}")
+
+    if not min_value <= _value <= max_value:
+        raise ArgumentTypeError(f"Expected {min_value} to {max_value}, got {_value}")
+
+    return str(_value) if as_str else _value
+
+
+def flag_to_name(flag: CLIFlag) -> AttrName:
+    return flag.lstrip('-').replace('-', '_')
 
 
 def make_backup(files: FilePaths) -> None:

@@ -15,13 +15,15 @@ from core.constants import (
     DEFAULT_HELP_INDENT,
     DEFAULT_HELP_WIDTH,
     DEFAULT_LOG_LINE_LENGTH,
+    HTTP_MAX_TIMEOUT,
+    HTTP_MIN_TIMEOUT,
     SUPPRESS,
 )
 from core.logger import logger, log_debug_object
 from core.typing import ArgsNamespace, CLIParams, FilePath, Optional
 from core.utils import (
     collect_args,
-    int_in_range,
+    convert_number_in_range,
     normalize_valid_fields,
     validate_file_path,
 )
@@ -45,10 +47,11 @@ def parse_args() -> ArgsNamespace:
     parser.add_argument(
         "--batch-extract",
         help=SUPPRESS,
-        type=lambda value: int_in_range(
+        type=lambda value: convert_number_in_range(
             value,
             min_value=CHANNEL_MIN_BATCH_EXTRACT,
             max_value=CHANNEL_MAX_BATCH_EXTRACT,
+            as_int=True,
             as_str=True,
         ),
     )
@@ -56,10 +59,11 @@ def parse_args() -> ArgsNamespace:
     parser.add_argument(
         "--batch-update",
         help=SUPPRESS,
-        type=lambda value: int_in_range(
+        type=lambda value: convert_number_in_range(
             value,
             min_value=CHANNEL_MIN_BATCH_UPDATE,
             max_value=CHANNEL_MAX_BATCH_UPDATE,
+            as_int=True,
             as_str=True,
         ),
     )
@@ -125,10 +129,11 @@ def parse_args() -> ArgsNamespace:
     parser.add_argument(
         "--message-offset",
         help=SUPPRESS,
-        type=lambda value: int_in_range(
+        type=lambda value: convert_number_in_range(
             value,
             min_value=CHANNEL_MIN_MESSAGE_OFFSET,
             max_value=CHANNEL_MAX_MESSAGE_OFFSET,
+            as_int=True,
             as_str=True,
         ),
     )
@@ -140,6 +145,13 @@ def parse_args() -> ArgsNamespace:
             "Use slower but simpler synchronous scraping mode "
             "instead of the default asynchronous mode."
         ),
+    )
+
+    parser.add_argument(
+        "--no-backup",
+        action="store_const",
+        const="",
+        help=SUPPRESS,
     )
 
     parser.add_argument(
@@ -169,6 +181,18 @@ def parse_args() -> ArgsNamespace:
         help=SUPPRESS,
         nargs="?",
         type=normalize_valid_fields,
+    )
+
+    parser.add_argument(
+        "--time-out",
+        help=SUPPRESS,
+        type=lambda value: convert_number_in_range(
+            value,
+            min_value=HTTP_MIN_TIMEOUT,
+            max_value=HTTP_MAX_TIMEOUT,
+            as_int=False,
+            as_str=True,
+        ),
     )
 
     parser.add_argument(

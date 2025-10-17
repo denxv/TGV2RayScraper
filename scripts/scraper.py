@@ -11,13 +11,19 @@ from core.logger import logger, log_debug_object
 from core.constants import (
     DEFAULT_HELP_INDENT,
     DEFAULT_HELP_WIDTH,
+    DEFAULT_HTTP_TIMEOUT,
     DEFAULT_PATH_CHANNELS,
     DEFAULT_PATH_CONFIGS_RAW,
-    DEFAULT_CLIENT_TIMEOUT,
+    HTTP_MAX_TIMEOUT,
+    HTTP_MIN_TIMEOUT,
     SUPPRESS,
 )
 from core.typing import ArgsNamespace
-from core.utils import abs_path, validate_file_path
+from core.utils import (
+    abs_path,
+    convert_number_in_range,
+    validate_file_path,
+)
 from domain.channel import get_sorted_keys, print_channel_info
 
 
@@ -26,7 +32,7 @@ def parse_args() -> ArgsNamespace:
         add_help=False,
         description="Synchronous Telegram channel scraper (simpler, slower).",
         epilog=(
-            "Example: PYTHONPATH=. python scripts/%(prog)s -C channels.json "
+            "Example: PYTHONPATH=. python scripts/%(prog)s --time-out 30.0 -C channels.json "
             "--configs-raw configs-raw.txt"
         ),
         formatter_class=lambda prog: HelpFormatter(
@@ -60,6 +66,24 @@ def parse_args() -> ArgsNamespace:
         type=lambda path: validate_file_path(path, must_be_file=False),
     )
 
+    parser.add_argument(
+        "-T", "--time-out",
+        default=DEFAULT_HTTP_TIMEOUT,
+        dest="time_out",
+        help=(
+            "HTTP client timeout in seconds for requests used while updating "
+            "channel info and extracting V2Ray configurations (default: %(default)s)."
+        ),
+        metavar="SECONDS",
+        type=lambda value: convert_number_in_range(
+            value,
+            min_value=HTTP_MIN_TIMEOUT,
+            max_value=HTTP_MAX_TIMEOUT,
+            as_int=False,
+            as_str=False,
+        ),
+    )
+
     args = parser.parse_args()
     log_debug_object("Parsed command-line arguments", args)
 
@@ -70,7 +94,7 @@ def main() -> None:
     parsed_args = parse_args()
     try:
         channels = load_channels(path_channels=parsed_args.channels)
-        with Client(timeout=Timeout(DEFAULT_CLIENT_TIMEOUT)) as client:
+        with Client(timeout=Timeout(parsed_args.time_out)) as client:
             update_info(client, channels)
             print_channel_info(channels)
             for name in get_sorted_keys(channels, apply_filter=True):

@@ -39,7 +39,7 @@ B64String = str
 CLIFlag = str
 CLIParam = str
 ConditionStr = str
-IntStr = str
+FloatStr = str
 NormalizedParamsStr = str
 ParamsStr = str
 RegexPattern = str
@@ -50,9 +50,9 @@ AbsPath = str
 
 BatchSize = int
 DefaultPostID = int
-IntRangeValue = Union[int, str]
-MaxValue = int
-MinValue = int
+MaxValue = Union[float, int]
+MinValue = Union[float, int]
+NumberValue = Union[float, int, str]
 PostID = int
 PostIndex = int
 
