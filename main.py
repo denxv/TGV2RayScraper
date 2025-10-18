@@ -248,7 +248,10 @@ def main() -> None:
 
             run_script(
                 script_name=script_name,
-                script_args=collect_args(parsed_args, script_config.get("flags")),
+                script_args=collect_args(
+                    args=parsed_args,
+                    flags=script_config.get("flags", []),
+                ),
             )
     except KeyboardInterrupt:
         logger.info("Exit from the program.")

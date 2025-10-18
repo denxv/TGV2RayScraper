@@ -20,9 +20,10 @@ from core.typing import (
     ChannelInfo,
     FileMode,
     FilePath,
-    V2RayConfigIterator,
+    V2RayConfigRawIterator,
     V2RayConfigs,
     V2RayConfigsRaw,
+    V2RayRawLines,
     SyncHTTPClient,
 )
 from core.logger import logger
@@ -69,19 +70,22 @@ def fetch_channel_configs(
     logger.info(f"Found: {v2ray_count} configs.")
 
 
-def load_configs(path_configs_raw: FilePath = DEFAULT_FILE_CONFIGS_RAW) -> V2RayConfigs:
+def load_configs(path_configs_raw: FilePath = DEFAULT_FILE_CONFIGS_RAW) -> V2RayConfigsRaw:
     logger.info(f"Loading configs from '{path_configs_raw}'...")
 
-    def line_to_configs(line: str) -> V2RayConfigIterator:
+    def line_to_configs(line: str) -> V2RayConfigRawIterator:
         line = unquote(line.strip())
         return (
             match.groupdict(default="")
-            for pattern in PATTERNS_URL_ALL for match in pattern.finditer(line)
+            for pattern in PATTERNS_URL_ALL
+            for match in pattern.finditer(line)
         )
 
     with open(path_configs_raw, "r", encoding="utf-8") as file:
         configs = [
-            config for line in file for config in line_to_configs(line)
+            config
+            for line in file
+            for config in line_to_configs(line)
         ]
 
     logger.info(f"Loaded {len(configs)} configs from '{path_configs_raw}'.")
@@ -96,15 +100,19 @@ def save_configs(
     logger.info(f"Saving {len(configs)} configs to '{path_configs_clean}'...")
     with open(path_configs_clean, mode, encoding="utf-8") as file:
         file.writelines(
-            f"{config.get("url", "")}\n" for config in configs
+            f"{config.get("url", "")}\n"
+            for config in configs
         )
     logger.info(f"Saved {len(configs)} configs in '{path_configs_clean}'.")
 
 
 def write_configs(
-    configs: V2RayConfigsRaw,
+    configs: V2RayRawLines,
     path_configs: FilePath = DEFAULT_FILE_CONFIGS_RAW,
     mode: FileMode = "w",
 ) -> None:
     with open(path_configs, mode, encoding="utf-8") as file:
-        file.writelines(f"{config}\n" for config in configs)
+        file.writelines(
+            f"{config}\n"
+            for config in configs
+        )

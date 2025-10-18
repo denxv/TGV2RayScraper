@@ -2,6 +2,7 @@ from core.constants import (
     CHANNEL_ACTIVE_THRESHOLD,
     CHANNEL_MIN_ID_DIFF,
     DEFAULT_CHANNEL_MESSAGE_OFFSET,
+    DEFAULT_CHANNEL_VALUES,
     DEFAULT_COUNT,
     DEFAULT_CURRENT_ID,
     DEFAULT_LAST_ID,
@@ -9,6 +10,7 @@ from core.constants import (
     LEN_NUMBER,
     TOTAL_CHANNELS_POST,
 )
+from core.decorators import status
 from core.logger import logger, log_debug_object
 from core.typing import (
     ArgsNamespace,
@@ -19,6 +21,7 @@ from core.typing import (
     PostID,
 )
 from domain.predicates import (
+    should_delete_channel,
     should_set_current_id,
     should_update_channel,
 )
@@ -71,6 +74,26 @@ def assign_current_id_to_channels(
         logger.debug(f"Channel '{name}': current_id = {-message_offset}")
 
     return channels
+
+
+@status(
+    start="Deleting inactive channels...",
+    end="Inactive channels deleted successfully.",
+    tracking=True,
+)
+def delete_channels(channels: ChannelsDict) -> ChannelsDict:
+    updated_channels = {}
+
+    for name, info in channels.items():
+        if not should_delete_channel(info):
+            updated_channels[name] = info
+        else:
+            log_debug_object(
+                title=f"Deleting channel '{name}' with the following information",
+                obj=info,
+            )
+
+    return updated_channels
 
 
 def diff_channel_id(channel_info: ChannelInfo) -> int:
@@ -131,8 +154,6 @@ def print_channel_info(channels: ChannelsDict) -> None:
 
 
 def process_channels(channels: ChannelsDict, args: ArgsNamespace) -> ChannelsDict:
-    from adapters.sync.channels import delete_channels
-
     if args.delete_channels:
         channels = delete_channels(channels=channels)
     else:
@@ -178,3 +199,22 @@ def update_count_and_last_id(
         channel_info["count"] = max(count, CHANNEL_ACTIVE_THRESHOLD)
     elif last_id == last_post_id and last_post_id == DEFAULT_LAST_ID:
         channel_info["count"] = min(count - 1, DEFAULT_COUNT)
+
+
+@status(
+    start="Adding missing channels...",
+    end="Missing channels added successfully.",
+    tracking=True,
+)
+def update_with_new_channels(
+    current_channels: ChannelsDict,
+    channel_names: ChannelNames,
+) -> ChannelsDict:
+    updated_channels = current_channels.copy()
+    
+    for name in sort_channel_names(channel_names):
+        updated_channels.setdefault(name, DEFAULT_CHANNEL_VALUES.copy())
+        if name not in current_channels:
+            logger.debug(f"Channel '{name}' missing, adding to list.")
+
+    return updated_channels

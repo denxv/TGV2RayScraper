@@ -48,6 +48,12 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+To install development dependencies (testing, linters, type checkers, etc.):
+
+```bash
+pip install -r requirements-dev.txt
+```
+
 4. **Run the main project script**
 
 ```bash
@@ -58,17 +64,17 @@ This will update channels, scrape data, and clean V2Ray configurations in one st
 
 ---
 
-## Requirements
+## Dependencies
 
-The project requires the following Python libraries:
+The project requires the following Python libraries (compatible with Python ≥ 3.13):
 
 * **aiofiles** – asynchronous file operations
-* **asteval** – safe evaluation of Python expressions (used for filtering configs)
-* **httpx** – modern HTTP client supporting both synchronous and asynchronous requests
-* **lxml** – parsing and processing HTML/XML
-* **tqdm** – progress bar for long-running tasks
+* **asteval** — safe evaluation of Python expressions (used for filtering configurations)
+* **httpx** — modern HTTP client supporting both synchronous and asynchronous requests
+* **lxml** – HTML/XML parsing and processing
+* **tqdm** – progress bar for long-running operations
 
-Other dependencies are listed in [`requirements.txt`](requirements.txt).
+The full list of dependencies is available in [`requirements.txt`](requirements.txt) for the main libraries and in [`requirements-dev.txt`](requirements-dev.txt) for development tools, including linters, type checkers, and testing frameworks (`pytest`, `mypy`, `ruff`, etc.).
 
 ---
 
@@ -119,13 +125,19 @@ Other dependencies are listed in [`requirements.txt`](requirements.txt).
   * `update_channels.py` — script to update channels (removing inactive channels and adding new ones)
   * `v2ray_cleaner.py` — script cleans, normalizes, and processes obtained V2Ray configurations
 
+* **tests/** — contains all test files for verifying the functionality, stability, and correctness of the project’s core modules.
+
 * **LICENSE** — project license (default in English)
 
 * **main.py** — main script to run all project operations, including updating channels, collecting data, and processing configurations
 
+* **pyproject.toml** — configuration file for project metadata, dependencies, and development tools (e.g., `mypy`, `ruff`, `pytest`), centralizing build and tooling settings.
+
 * **README.md** — main project documentation (default in English)
 
 * **requirements.txt** — list of all required libraries for running the project
+
+* **requirements-dev.txt** — list of development dependencies (testing, type checking, linters — `pytest`, `mypy`, `ruff`, etc.)
 
 ---
 

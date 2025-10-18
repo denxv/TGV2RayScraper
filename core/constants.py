@@ -3,14 +3,16 @@ from logging import DEBUG, INFO
 from pathlib import Path
 from re import compile, DOTALL
 
-GET_ABS_PATH = lambda path: str((Path(__file__).parent / path).resolve())
+from core.typing import Callable, ChannelInfo
+
+GET_ABS_PATH: Callable[[str], str] = lambda path: str((Path(__file__).parent / path).resolve())
 
 DEFAULT_COUNT = 0
 DEFAULT_CURRENT_ID = 1
 DEFAULT_LAST_ID = -1
 DEFAULT_POST_ID = 0
 
-DEFAULT_CHANNEL_VALUES = {
+DEFAULT_CHANNEL_VALUES: ChannelInfo = {
     "count": DEFAULT_COUNT,
     "current_id": DEFAULT_CURRENT_ID,
     "last_id": DEFAULT_LAST_ID,

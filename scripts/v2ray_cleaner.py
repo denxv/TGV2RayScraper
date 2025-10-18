@@ -121,13 +121,13 @@ def main() -> None:
     try:
         log_debug_object("List of compiled URL regex patterns", PATTERNS_URL_ALL)
         parsed_args = parse_args()
-        configs = load_configs(path_configs_raw=parsed_args.configs_raw)
-        configs = process_configs(
-            configs=configs,
+        configs_raw = load_configs(path_configs_raw=parsed_args.configs_raw)
+        configs_clean = process_configs(
+            configs=configs_raw,
             args=parsed_args,
         )
         save_configs(
-            configs=configs,
+            configs=configs_clean,
             path_configs_clean=parsed_args.configs_clean,
         )
     except KeyboardInterrupt:

@@ -5,7 +5,6 @@ from argparse import ArgumentParser, HelpFormatter
 from adapters.sync.channels import (
     load_channels_and_urls,
     save_channels_and_urls,
-    update_with_new_channels,
 )
 from core.constants import (
     CHANNEL_MIN_MESSAGE_OFFSET,
@@ -23,7 +22,10 @@ from core.utils import (
     convert_number_in_range,
     validate_file_path,
 )
-from domain.channel import process_channels
+from domain.channel import (
+    process_channels,
+    update_with_new_channels,
+)
 
 
 def parse_args() -> ArgsNamespace:

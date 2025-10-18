@@ -77,7 +77,8 @@ async def load_channels(path_channels: FilePath = DEFAULT_FILE_CHANNELS) -> Chan
     async with aiopen(path_channels, "r", encoding="utf-8") as file:
         try:
             data = await file.read()
-            return loads(data)
+            channels: ChannelsDict = loads(data)
+            return channels
         except JSONDecodeError:
             return {}
 

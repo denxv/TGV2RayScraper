@@ -22,7 +22,7 @@ from core.constants import (
     FORMAT_FILE_LOG,
     INFO,
 )
-from core.typing import Any
+from core.typing import Optional
 
 
 class ColorLevelFilter(Filter):
@@ -42,7 +42,7 @@ class ColorLevelFilter(Filter):
 
 
 class MicrosecondFormatter(Formatter):
-    def formatTime(self, record: LogRecord, datefmt: str = "") -> str:
+    def formatTime(self, record: LogRecord, datefmt: Optional[str] = None) -> str:
         fmt = "%H:%M:%S.%f"
         if isinstance(datefmt, str) and datefmt.strip():
             fmt = datefmt.strip()
@@ -78,7 +78,7 @@ def create_logger(
     return logger
 
 
-def log_debug_object(title: str, obj: Any, *, indent: int = DEFAULT_INDENT) -> None:
+def log_debug_object(title: str, obj: object, *, indent: int = DEFAULT_INDENT) -> None:
     try:
         formatted = dumps(
             vars(obj) if isinstance(obj, Namespace) else obj,

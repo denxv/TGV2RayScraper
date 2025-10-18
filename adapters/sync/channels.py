@@ -3,7 +3,6 @@ from json import dump, JSONDecodeError, load
 from lxml import html
 
 from core.constants import (
-    DEFAULT_CHANNEL_VALUES,
     DEFAULT_CURRENT_ID,
     DEFAULT_FILE_CHANNELS,
     DEFAULT_FILE_URLS,
@@ -20,10 +19,9 @@ from core.constants import (
     XPATH_POST_IDS,
 )
 from core.decorators import status
-from core.logger import logger, log_debug_object
+from core.logger import logger
 from core.typing import (
     ChannelName,
-    ChannelNames,
     ChannelsAndNames,
     ChannelsDict,
     DefaultPostID,
@@ -34,8 +32,6 @@ from core.typing import (
     URL,
 )
 from core.utils import make_backup
-from domain.channel import sort_channel_names
-from domain.predicates import should_delete_channel
 
 
 def _extract_post_id(
@@ -65,26 +61,6 @@ def _extract_post_id(
         return default
 
 
-@status(
-    start="Deleting inactive channels...",
-    end="Inactive channels deleted successfully.",
-    tracking=True,
-)
-def delete_channels(channels: ChannelsDict) -> ChannelsDict:
-    updated_channels = {}
-
-    for name, info in channels.items():
-        if not should_delete_channel(info):
-            updated_channels[name] = info
-        else:
-            log_debug_object(
-                title=f"Deleting channel '{name}' with the following information",
-                obj=info,
-            )
-
-    return updated_channels
-
-
 def get_first_post_id(client: SyncHTTPClient, channel_name: ChannelName) -> PostID:
     return _extract_post_id(
         client=client,
@@ -106,7 +82,8 @@ def get_last_post_id(client: SyncHTTPClient, channel_name: ChannelName) -> PostI
 def load_channels(path_channels: FilePath = DEFAULT_FILE_CHANNELS) -> ChannelsDict:
     with open(path_channels, "r", encoding="utf-8") as file:
         try:
-            return load(file)
+            channels: ChannelsDict = load(file)
+            return channels
         except JSONDecodeError:
             return {}
 
@@ -162,22 +139,3 @@ def save_channels_and_urls(
         ])
 
     logger.info(f"Saved {len(channels)} channels in '{path_channels}'.")
-
-
-@status(
-    start="Adding missing channels...",
-    end="Missing channels added successfully.",
-    tracking=True,
-)
-def update_with_new_channels(
-    current_channels: ChannelsDict,
-    channel_names: ChannelNames,
-) -> ChannelsDict:
-    updated_channels = current_channels.copy()
-    
-    for name in sort_channel_names(channel_names):
-        updated_channels.setdefault(name, DEFAULT_CHANNEL_VALUES.copy())
-        if name not in current_channels:
-            logger.debug(f"Channel '{name}' missing, adding to list.")
-
-    return updated_channels

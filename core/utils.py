@@ -1,6 +1,7 @@
 from argparse import ArgumentTypeError
 from base64 import b64decode, b64encode, urlsafe_b64decode
 from datetime import datetime
+from json import dumps
 from pathlib import Path
 from re import fullmatch, search, split
 
@@ -22,6 +23,7 @@ from core.typing import (
     CLIFlag,
     CLIFlags,
     CLIParams,
+    ComplexValue,
     ConfigField,
     ConfigFields,
     FilePath,
@@ -34,6 +36,7 @@ from core.typing import (
     ParamsStr,
     RegexPattern,
     RegexTarget,
+    ScalarValue,
 )
 
 
@@ -102,6 +105,16 @@ def make_backup(files: FilePaths) -> None:
         )
         src.rename(src.parent / backup_name)
         logger.info(f"File '{src.name}' backed up as '{backup_name}'.")
+
+
+def normalize_scalar(value: ComplexValue, as_str: bool = False) -> ScalarValue:
+    if value is None:
+        return None
+
+    if isinstance(value, (dict, list, tuple)):
+        return dumps(value, sort_keys=True, separators=(',', ':'))
+
+    return str(value) if as_str else value
 
 
 def normalize_valid_fields(params_str: ParamsStr) -> NormalizedParamsStr:

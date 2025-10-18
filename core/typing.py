@@ -1,13 +1,15 @@
 from argparse import Namespace
 from pathlib import Path
 from typing import (
-    Any,
     Callable,
+    cast,
     Dict,
     Iterator,
     List,
+    Literal,
     Optional,
     ParamSpec,
+    Sequence,
     TypeVar,
     TypedDict,
     Tuple,
@@ -30,10 +32,6 @@ SyncHTTPClient = Client
 P = ParamSpec("P")
 T = TypeVar("T")
 
-AnyFunc = Callable[P, T]
-FuncDecorator = Callable[[AnyFunc[P, T]], AnyFunc[P, T]]
-ConfigPredicate = Callable[[Dict[str, Any]], bool]
-
 AttrName = str
 B64String = str
 CLIFlag = str
@@ -43,10 +41,11 @@ FloatStr = str
 NormalizedParamsStr = str
 ParamsStr = str
 RegexPattern = str
-RegexTarget = str
+RegexTarget = Union[str, bytes]
 URL = str
-FileMode = str
+
 AbsPath = str
+FileMode = Literal["a", "w"]
 
 BatchSize = int
 DefaultPostID = int
@@ -61,7 +60,7 @@ ChannelsDict = Dict[ChannelName, ChannelInfo]
 ChannelNames = List[ChannelName]
 ChannelsAndNames = Tuple[ChannelsDict, ChannelNames]
 
-CLIFlags = List[CLIFlag]
+CLIFlags = Sequence[CLIFlag]
 CLIParams = List[CLIParam]
 
 ConfigField = str
@@ -70,13 +69,19 @@ ConfigFields = List[ConfigField]
 FilePath = Union[str, Path]
 FilePaths = List[FilePath]
 
-SortKey = Tuple[int, Union[Any, None]]
+SortKey = Tuple[int, Union[int, str, None]]
 SortKeys = Tuple[SortKey, ...]
 
-V2RayConfig = Dict[str, Any]
-V2RayConfigIterator = Iterator[V2RayConfig]
-V2RayConfigs = List[V2RayConfig]
+ComplexValue = Union[int, str, None, Dict[str, str], List[str], Tuple[str]]
+ScalarValue = Union[int, str, None]
 
-V2RayConfigRaw = str
+V2RayConfigRaw = Dict[str, str]
 V2RayConfigsRaw = List[V2RayConfigRaw]
-PostIDAndConfigsRaw = Tuple[PostID, V2RayConfigsRaw]
+V2RayConfigRawIterator = Iterator[V2RayConfigRaw]
+
+V2RayConfig = Dict[str, Union[int, str, Dict[str, str]]]
+V2RayConfigs = List[V2RayConfig]
+ConfigPredicate = Callable[[V2RayConfig], bool]
+
+V2RayRawLines = List[str]
+PostIDAndRawLines = Tuple[PostID, V2RayRawLines]

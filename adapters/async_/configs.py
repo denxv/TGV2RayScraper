@@ -23,8 +23,8 @@ from core.typing import (
     FileMode,
     FilePath,
     PostID,
-    PostIDAndConfigsRaw,
-    V2RayConfigsRaw,
+    PostIDAndRawLines,
+    V2RayRawLines,
 )
 from core.logger import logger
 
@@ -46,7 +46,7 @@ async def fetch_channel_configs(
     batch_range = range(0, len(list_channel_id), batch_size)
     logger.info(f"Extracting configs from channel '{channel_name}'...")
 
-    async def fetch_and_parse(current_id: PostID) -> PostIDAndConfigsRaw:
+    async def fetch_and_parse(current_id: PostID) -> PostIDAndRawLines:
         response = await client.get(TEMPLATE_TG_URL_AFTER.format(name=channel_name, id=current_id))
         messages = html.fromstring(response.text).xpath(XPATH_TG_MESSAGES_TEXT)
         if v2ray_configs := list(filter(PATTERN_URL_V2RAY_ALL.match, messages)):
@@ -80,7 +80,7 @@ async def fetch_channel_configs(
 
 
 async def write_configs(
-    configs: V2RayConfigsRaw,
+    configs: V2RayRawLines,
     path_configs: FilePath = DEFAULT_FILE_CONFIGS_RAW,
     mode: FileMode = "w",
 ) -> None:

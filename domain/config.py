@@ -12,13 +12,20 @@ from core.constants import (
 from core.logger import logger
 from core.typing import (
     ArgsNamespace,
+    cast,
     ConditionStr,
     ConfigFields,
     SortKeys,
     V2RayConfig,
+    V2RayConfigRaw,
     V2RayConfigs,
+    V2RayConfigsRaw,
 )
-from core.utils import b64decode_safe, b64encode_safe
+from core.utils import (
+    b64decode_safe,
+    b64encode_safe,
+    normalize_scalar,
+)
 from domain.predicates import make_predicate
 
 
@@ -34,37 +41,41 @@ def filter_by_condition(configs: V2RayConfigs, condition: ConditionStr) -> V2Ray
     return filtered_configs
 
 
-def normalize(configs: V2RayConfigs) -> V2RayConfigs:
+def normalize(configs: V2RayConfigsRaw) -> V2RayConfigs:
     total_before = len(configs)
     logger.info(f"Normalizing {total_before} configs...")
-    for config in configs:
-        try:
-            normalize_config(config)
-        except Exception:
-            config.clear()
 
-    normalized_configs = list(filter(None, configs))
+    normalized_configs: V2RayConfigs = []
+    for _config in configs:
+        try:
+            normalized_configs.append(normalize_config(_config))
+        except Exception:
+            _config.clear()
+
     total_after = len(normalized_configs)
     removed = total_before - total_after
     logger.info(f"Configs normalized: {total_after} (removed: {removed}).")
+
     return normalized_configs
 
 
-def normalize_config(config: V2RayConfig) -> None:
-    if config.get("base64"):
-        normalize_config_base64(config)
+def normalize_config(config: V2RayConfigRaw) -> V2RayConfig:
+    _config: V2RayConfig = dict(config)
+
+    if _config.get("base64"):
+        _config = normalize_config_base64(config)
     else:
-        config.pop("base64", None)
+        _config.pop("base64", None)
 
-    if not (config.get("host") and config.get("port") and config.get("url")):
-        raise Exception
+    if not (_config.get("host") and _config.get("port") and _config.get("url")):
+        raise ValueError
 
-    if isinstance(port := config.get("port"), str):
-        config["port"] = int(port)
+    if isinstance(port := _config.get("port"), str):
+        _config["port"] = int(port)
 
-    params = config.get("params", None)
+    params = _config.get("params", None)
     if isinstance(params, str):
-        config.update({
+        _config.update({
             "params": {
                 key: value[0]
                 for key, value in parse_qs(
@@ -74,26 +85,29 @@ def normalize_config(config: V2RayConfig) -> None:
             }
         })
 
-    if not (config.get("protocol") in ["ssr", "vmess"] and config.get("name")):
-        config["name"] = TEMPLATE_CONFIG_NAME.format(**config)
-        config["url"] = "{url}#{name}".format(**config)
+    if not (_config.get("protocol") in ["ssr", "vmess"] and _config.get("name")):
+        _config["name"] = TEMPLATE_CONFIG_NAME.format(**_config)
+        _config["url"] = "{url}#{name}".format(**_config)
+
+    return _config
 
 
-def normalize_config_base64(config: V2RayConfig) -> None:
-    protocol = config.get("protocol", "")
+def normalize_config_base64(config: V2RayConfigRaw) -> V2RayConfig:
     normalizers = {
         "ss": normalize_ss_base64,
         "ssr": normalize_ssr_base64,
         "vmess": normalize_vmess_base64,
     }
 
-    if normalizer := normalizers.get(protocol):
-        normalizer(config)
+    if normalizer := normalizers.get(config.get("protocol", "")):
+        return normalizer(config)
+
+    return dict(config)
 
 
-def normalize_ss_base64(config: V2RayConfig) -> None:
+def normalize_ss_base64(config: V2RayConfigRaw) -> V2RayConfig:
     if not (base64 := config.pop("base64", None)):
-        return
+        return dict(config)
 
     protocol = config.get("protocol", "ss")
     host = config.get("host", "").strip()
@@ -104,23 +118,26 @@ def normalize_ss_base64(config: V2RayConfig) -> None:
         url += f"@{host}:{port}"
 
     if not (ss := PATTERN_URL_SS.search(url)):
-        raise Exception
+        raise ValueError
 
-    config.update(ss.groupdict(default=''))
-    config.pop("base64", None)
+    _config: V2RayConfig = dict(config)
+    _config.update(ss.groupdict(default=""))
+    _config.pop("base64", None)
+
+    return _config
 
 
-def normalize_ssr_base64(config: V2RayConfig) -> None:
+def normalize_ssr_base64(config: V2RayConfigRaw) -> V2RayConfig:
     if not (base64 := config.pop("base64", None)):
-        raise Exception
+        raise ValueError
 
     protocol = config.get("protocol", "ssr")
     url = f"{protocol}://{b64decode_safe(base64)}"
 
     if not (ssr := PATTERN_URL_SSR_PLAIN.search(url)):
-        raise Exception
+        raise ValueError
 
-    ssr_config = ssr.groupdict(default='')
+    ssr_config = ssr.groupdict(default="")
     params = ssr_config.get("params", "")
 
     ssr_params = {
@@ -143,19 +160,24 @@ def normalize_ssr_base64(config: V2RayConfig) -> None:
     ssr_config.update({
         "url": f"{protocol}://{b64encode_safe(TEMPLATE_SSR_BODY.format(**ssr_config))}",
         "password": b64decode_safe(ssr_config.get("password", "")),
-        "params": ssr_params,
         "name": ssr_params.get("remarks", ""),
     })
 
-    config.update(ssr_config)
+    _config: V2RayConfig = dict(config)
+    _config.update({
+        **ssr_config,
+        "params": ssr_params,
+    })
+
+    return _config
 
 
-def normalize_vmess_base64(config: V2RayConfig) -> None:
+def normalize_vmess_base64(config: V2RayConfigRaw) -> V2RayConfig:
     if not (base64 := config.pop("base64", None)):
-        return
+        return dict(config)
 
     if not (vmess := PATTERN_VMESS_JSON.search(b64decode_safe(base64))):
-        raise Exception
+        raise ValueError
 
     try:
         vmess_config = loads(vmess.group("json"))
@@ -167,52 +189,56 @@ def normalize_vmess_base64(config: V2RayConfig) -> None:
             ),
         })
         base64 = b64encode_safe(dumps(vmess_config, separators=(",", ":")))
-
-        config.update({
-            "url": f"{config.get("protocol", "vmess")}://{base64}",
-            "method": vmess_config.get("scy", ""),
-            "uuid": vmess_config.get("id", ""),
-            "host": vmess_config.get("add", ""),
-            "port": vmess_config.get("port", ""),
-            "path": vmess_config.get("path", ""),
-            "params": {
-                "alterId": vmess_config.get("aid", ""),
-                "fp": vmess_config.get("fp", ""),
-                "sni": vmess_config.get("sni", ""),
-                "tls": vmess_config.get("tls", ""),
-                "transport": vmess_config.get("net", ""),
-                "type": vmess_config.get("type", ""),
-            },
-            "name": vmess_config.get("ps", ""),
-        })
     except Exception:
-        raise Exception
+        raise ValueError
+
+    return {
+        "url": f"{config.get("protocol", "vmess")}://{base64}",
+        "method": vmess_config.get("scy", ""),
+        "uuid": vmess_config.get("id", ""),
+        "host": vmess_config.get("add", ""),
+        "port": vmess_config.get("port", ""),
+        "path": vmess_config.get("path", ""),
+        "params": {
+            "alterId": vmess_config.get("aid", ""),
+            "fp": vmess_config.get("fp", ""),
+            "sni": vmess_config.get("sni", ""),
+            "tls": vmess_config.get("tls", ""),
+            "transport": vmess_config.get("net", ""),
+            "type": vmess_config.get("type", ""),
+        },
+        "name": vmess_config.get("ps", ""),
+    }
 
 
-def process_configs(configs: V2RayConfigs, args: ArgsNamespace) -> V2RayConfigs:
+def process_configs(configs: V2RayConfigsRaw, args: ArgsNamespace) -> V2RayConfigs:
+    _configs: V2RayConfigs = cast(V2RayConfigs, configs)
+
     if args.normalize:
-        configs = normalize(configs=configs)
+        _configs = normalize(
+            configs=configs,
+        )
 
     if args.filter:
-        configs = filter_by_condition(
-            configs=configs,
+        _configs = filter_by_condition(
+            configs=_configs,
             condition=args.filter,
         )
 
     if args.duplicate:
-        configs = remove_duplicates_by_fields(
-            configs=configs,
+        _configs = remove_duplicates_by_fields(
+            configs=_configs,
             fields=args.duplicate,
         )
 
     if args.sort:
-        configs = sort_by_fields(
-            configs=configs,
+        _configs = sort_by_fields(
+            configs=_configs,
             fields=args.sort,
             reverse=args.reverse,
         )
 
-    return configs
+    return _configs
 
 
 def remove_duplicates_by_fields(configs: V2RayConfigs, fields: ConfigFields) -> V2RayConfigs:
@@ -227,11 +253,15 @@ def remove_duplicates_by_fields(configs: V2RayConfigs, fields: ConfigFields) -> 
         if not all(field in config for field in fields):
             return False
 
-        signature = tuple(config.get(field, None) for field in fields)
-        if signature in seen:
+        _signature = tuple(
+            normalize_scalar(config.get(field, None))
+            for field in fields
+        )
+
+        if _signature in seen:
             return False
 
-        seen.add(signature)
+        seen.add(_signature)
         return True
 
     unique_configs = list(filter(is_unique, configs))
@@ -248,10 +278,16 @@ def sort_by_fields(configs: V2RayConfigs, fields: ConfigFields, reverse: bool = 
         return configs
 
     def sort_key(config: V2RayConfig) -> SortKeys:
-        return tuple(
-            (0, value) if (value := config.get(field, None)) is not None else (1, None)
-            for field in fields
-        )
+        _values = []
+
+        for field in fields:
+            value = config.get(field, None)
+            if value is not None:
+                _values.append((0, normalize_scalar(value)))
+            else:
+                _values.append((1, None))
+
+        return tuple(_values)
 
     sorted_configs = sorted(configs, key=sort_key, reverse=reverse)
     logger.info(f"Sorting completed: {len(sorted_configs)} configs sorted.")
