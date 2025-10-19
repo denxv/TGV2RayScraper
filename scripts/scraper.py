@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from argparse import ArgumentParser, HelpFormatter
 
 from httpx import Client, Timeout
@@ -7,7 +5,6 @@ from httpx import Client, Timeout
 from adapters.sync.channels import load_channels, save_channels
 from adapters.sync.configs import fetch_channel_configs
 from adapters.sync.scraper import update_info
-from core.logger import logger, log_debug_object
 from core.constants import (
     DEFAULT_HELP_INDENT,
     DEFAULT_HELP_WIDTH,
@@ -16,8 +13,11 @@ from core.constants import (
     DEFAULT_PATH_CONFIGS_RAW,
     HTTP_MAX_TIMEOUT,
     HTTP_MIN_TIMEOUT,
+    MESSAGE_EXIT,
+    MESSAGE_UNEXPECTED_ERROR,
     SUPPRESS,
 )
+from core.logger import log_debug_object, logger
 from core.typing import ArgsNamespace
 from core.utils import (
     abs_path,
@@ -30,10 +30,12 @@ from domain.channel import get_sorted_keys, print_channel_info
 def parse_args() -> ArgsNamespace:
     parser = ArgumentParser(
         add_help=False,
-        description="Synchronous Telegram channel scraper (simpler, slower).",
+        description=(
+            "Synchronous Telegram channel scraper (simpler, slower)."
+        ),
         epilog=(
-            "Example: PYTHONPATH=. python scripts/%(prog)s --time-out 30.0 -C channels.json "
-            "--configs-raw configs-raw.txt"
+            "Example: PYTHONPATH=. python scripts/%(prog)s "
+            "--time-out 30.0 -C channels.json --configs-raw configs-raw.txt"
         ),
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
@@ -46,7 +48,10 @@ def parse_args() -> ArgsNamespace:
         "-C", "--channels",
         default=abs_path(DEFAULT_PATH_CHANNELS),
         dest="channels",
-        help="Path to the input JSON file containing the list of channels (default: %(default)s).",
+        help=(
+            "Path to the input JSON file containing the list of channels "
+            "(default: %(default)s)."
+        ),
         metavar="FILE",
         type=lambda path: validate_file_path(path, must_be_file=True),
     )
@@ -61,7 +66,10 @@ def parse_args() -> ArgsNamespace:
         "-R", "--configs-raw",
         default=abs_path(DEFAULT_PATH_CONFIGS_RAW),
         dest="configs_raw",
-        help="Path to the output file for saving scraped V2Ray configs (default: %(default)s).",
+        help=(
+            "Path to the output file for saving scraped V2Ray configs "
+            "(default: %(default)s)."
+        ),
         metavar="FILE",
         type=lambda path: validate_file_path(path, must_be_file=False),
     )
@@ -71,8 +79,9 @@ def parse_args() -> ArgsNamespace:
         default=DEFAULT_HTTP_TIMEOUT,
         dest="time_out",
         help=(
-            "HTTP client timeout in seconds for requests used while updating "
-            "channel info and extracting V2Ray configurations (default: %(default)s)."
+            "HTTP client timeout in seconds for requests used "
+            "while updating channel info and "
+            "extracting V2Ray configurations (default: %(default)s)."
         ),
         metavar="SECONDS",
         type=lambda value: convert_number_in_range(
@@ -93,10 +102,16 @@ def parse_args() -> ArgsNamespace:
 def main() -> None:
     parsed_args = parse_args()
     try:
+        timeout = Timeout(parsed_args.time_out)
         channels = load_channels(path_channels=parsed_args.channels)
-        with Client(timeout=Timeout(parsed_args.time_out)) as client:
-            update_info(client, channels)
-            print_channel_info(channels)
+
+        with Client(timeout=timeout) as client:
+            update_info(
+                client=client,
+                channels=channels,
+            )
+            print_channel_info(channels=channels)
+
             for name in get_sorted_keys(channels, apply_filter=True):
                 fetch_channel_configs(
                     client=client,
@@ -105,11 +120,14 @@ def main() -> None:
                     path_configs=parsed_args.configs_raw,
                 )
     except KeyboardInterrupt:
-        logger.info("Exit from the program.")
+        logger.info(MESSAGE_EXIT)
     except Exception:
-        logger.exception("Unexpected error occurred.")
+        logger.exception(MESSAGE_UNEXPECTED_ERROR)
     finally:
-        save_channels(channels, path_channels=parsed_args.channels)
+        save_channels(
+            channels=channels,
+            path_channels=parsed_args.channels,
+        )
 
 
 if __name__ == "__main__":

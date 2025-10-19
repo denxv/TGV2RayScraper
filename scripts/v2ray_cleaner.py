@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from argparse import ArgumentParser, HelpFormatter
 
 from adapters.sync.configs import load_configs, save_configs
@@ -8,22 +6,33 @@ from core.constants import (
     DEFAULT_HELP_WIDTH,
     DEFAULT_PATH_CONFIGS_CLEAN,
     DEFAULT_PATH_CONFIGS_RAW,
+    MESSAGE_EXIT,
+    MESSAGE_UNEXPECTED_ERROR,
     PATTERNS_URL_ALL,
     SUPPRESS,
 )
-from core.logger import logger, log_debug_object
+from core.logger import log_debug_object, logger
 from core.typing import ArgsNamespace
-from core.utils import abs_path, parse_valid_fields, validate_file_path
+from core.utils import (
+    abs_path,
+    parse_valid_fields,
+    validate_file_path,
+)
 from domain.config import process_configs
 
 
 def parse_args() -> ArgsNamespace:
     parser = ArgumentParser(
         add_help=False,
-        description="Utility to normalize, filter, deduplicate, and sort proxy configuration entries.",
+        description=(
+            "Utility to normalize, filter, deduplicate, "
+            "and sort proxy configuration entries."
+        ),
         epilog=(
-            "Example: PYTHONPATH=. python scripts/%(prog)s -I configs-raw.txt -O configs-clean.txt "
-            "--filter \"re_search(r'speedtest|google', host)\" -D \"host, port\" -S \"protocol, host, port\""
+            "Example: PYTHONPATH=. python scripts/%(prog)s "
+            "-I configs-raw.txt -O configs-clean.txt "
+            "--filter \"re_search(r'speedtest|google', host)\" "
+            '-D "host, port" -S "protocol, host, port"'
         ),
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
@@ -38,7 +47,8 @@ def parse_args() -> ArgsNamespace:
         dest="duplicate",
         help=(
             "Remove duplicate entries by specified comma-separated fields. "
-            "If used without value (e.g., '-D'), the default fields are '%(const)s'. "
+            "If used without value (e.g., '-D'), "
+            "the default fields are '%(const)s'. "
             "If omitted, duplicates are not removed."
         ),
         metavar="FIELDS",
@@ -69,7 +79,10 @@ def parse_args() -> ArgsNamespace:
         "-I", "--configs-raw",
         default=abs_path(DEFAULT_PATH_CONFIGS_RAW),
         dest="configs_raw",
-        help="Path to the input file with raw V2Ray configs (default: %(default)s).",
+        help=(
+            "Path to the input file with raw V2Ray configs "
+            "(default: %(default)s)."
+        ),
         metavar="FILE",
         type=lambda path: validate_file_path(path, must_be_file=True),
     )
@@ -85,7 +98,10 @@ def parse_args() -> ArgsNamespace:
         "-O", "--configs-clean",
         default=abs_path(DEFAULT_PATH_CONFIGS_CLEAN),
         dest="configs_clean",
-        help="Path to the output file for cleaned and processed configs (default: %(default)s).",
+        help=(
+            "Path to the output file for cleaned and processed configs "
+            "(default: %(default)s)."
+        ),
         metavar="FILE",
         type=lambda path: validate_file_path(path, must_be_file=False),
     )
@@ -103,7 +119,8 @@ def parse_args() -> ArgsNamespace:
         dest="sort",
         help=(
             "Sort entries by comma-separated fields. "
-            "If used without value (e.g., '-S'), the default fields are '%(const)s'. "
+            "If used without value (e.g., '-S'), "
+            "the default fields are '%(const)s'. "
             "If omitted, entries are not sorted."
         ),
         metavar="FIELDS",
@@ -119,22 +136,27 @@ def parse_args() -> ArgsNamespace:
 
 def main() -> None:
     try:
-        log_debug_object("List of compiled URL regex patterns", PATTERNS_URL_ALL)
         parsed_args = parse_args()
+        log_debug_object(
+            title="List of compiled URL regex patterns",
+            obj=PATTERNS_URL_ALL,
+        )
+
         configs_raw = load_configs(path_configs_raw=parsed_args.configs_raw)
         configs_clean = process_configs(
             configs=configs_raw,
             args=parsed_args,
         )
+
         save_configs(
             configs=configs_clean,
             path_configs_clean=parsed_args.configs_clean,
         )
     except KeyboardInterrupt:
-        logger.info("Exit from the program.")
+        logger.info(MESSAGE_EXIT)
     except Exception:
-        logger.exception("Unexpected error occurred.")
+        logger.exception(MESSAGE_UNEXPECTED_ERROR)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

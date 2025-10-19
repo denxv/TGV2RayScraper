@@ -1,18 +1,25 @@
 from json import dumps, loads
-from re import search
 from urllib.parse import parse_qs, urlencode
 
 from core.constants import (
-    PATTERN_VMESS_JSON,
+    MESSAGE_DEDUP_SKIPPED,
     PATTERN_URL_SS,
     PATTERN_URL_SSR_PLAIN,
+    PATTERN_VMESS_JSON,
     TEMPLATE_CONFIG_NAME,
+    TEMPLATE_MSG_DEDUP_COMPLETED,
+    TEMPLATE_MSG_DEDUP_STARTED,
+    TEMPLATE_MSG_FILTER_COMPLETED,
+    TEMPLATE_MSG_FILTER_STARTED,
+    TEMPLATE_MSG_NORM_COMPLETED,
+    TEMPLATE_MSG_NORM_STARTED,
+    TEMPLATE_MSG_SORT_COMPLETED,
+    TEMPLATE_MSG_SORT_STARTED,
     TEMPLATE_SSR_BODY,
 )
 from core.logger import logger
 from core.typing import (
     ArgsNamespace,
-    cast,
     ConditionStr,
     ConfigFields,
     SortKeys,
@@ -20,6 +27,7 @@ from core.typing import (
     V2RayConfigRaw,
     V2RayConfigs,
     V2RayConfigsRaw,
+    cast,
 )
 from core.utils import (
     b64decode_safe,
@@ -29,21 +37,30 @@ from core.utils import (
 from domain.predicates import make_predicate
 
 
-def filter_by_condition(configs: V2RayConfigs, condition: ConditionStr) -> V2RayConfigs:
-    logger.info(f"Filtering {len(configs)} configs by condition: `{condition}`...")
+def filter_by_condition(
+    configs: V2RayConfigs,
+    condition: ConditionStr,
+) -> V2RayConfigs:
+    logger.info(TEMPLATE_MSG_FILTER_STARTED.format(
+        count=len(configs),
+        condition=condition,
+    ))
+
     predicate = make_predicate(condition)
     filtered_configs = list(filter(predicate, configs))
 
     removed = len(configs) - len(filtered_configs)
-    logger.info(
-        f"Filtered: {len(filtered_configs)} configs kept, {removed} removed by condition."
-    )
+    logger.info(TEMPLATE_MSG_FILTER_COMPLETED.format(
+        count=len(configs),
+        removed=removed,
+    ))
+
     return filtered_configs
 
 
 def normalize(configs: V2RayConfigsRaw) -> V2RayConfigs:
     total_before = len(configs)
-    logger.info(f"Normalizing {total_before} configs...")
+    logger.info(TEMPLATE_MSG_NORM_STARTED.format(count=total_before))
 
     normalized_configs: V2RayConfigs = []
     for _config in configs:
@@ -54,7 +71,10 @@ def normalize(configs: V2RayConfigsRaw) -> V2RayConfigs:
 
     total_after = len(normalized_configs)
     removed = total_before - total_after
-    logger.info(f"Configs normalized: {total_after} (removed: {removed}).")
+    logger.info(TEMPLATE_MSG_NORM_COMPLETED.format(
+        count=total_after,
+        removed=removed,
+    ))
 
     return normalized_configs
 
@@ -67,7 +87,7 @@ def normalize_config(config: V2RayConfigRaw) -> V2RayConfig:
     else:
         _config.pop("base64", None)
 
-    if not (_config.get("host") and _config.get("port") and _config.get("url")):
+    if not all(_config.get(key) for key in ("host", "port", "url")):
         raise ValueError
 
     if isinstance(port := _config.get("port"), str):
@@ -79,13 +99,16 @@ def normalize_config(config: V2RayConfigRaw) -> V2RayConfig:
             "params": {
                 key: value[0]
                 for key, value in parse_qs(
-                    params.replace('+', '%2B'),
+                    params.replace("+", "%2B"),
                     keep_blank_values=True,
                 ).items()
-            }
+            },
         })
 
-    if not (_config.get("protocol") in ["ssr", "vmess"] and _config.get("name")):
+    protocol = _config.get("protocol")
+    name = _config.get("name")
+
+    if not (protocol in ("ssr", "vmess") and name):
         _config["name"] = TEMPLATE_CONFIG_NAME.format(**_config)
         _config["url"] = "{url}#{name}".format(**_config)
 
@@ -143,7 +166,7 @@ def normalize_ssr_base64(config: V2RayConfigRaw) -> V2RayConfig:
     ssr_params = {
         key: b64decode_safe(value[0])
         for key, value in parse_qs(
-            params.replace('+', '%2B'),
+            params.replace("+", "%2B"),
             keep_blank_values=True,
         ).items()
     }
@@ -157,8 +180,9 @@ def normalize_ssr_base64(config: V2RayConfigRaw) -> V2RayConfig:
         for key, value in ssr_params.items()
     })
 
+    base64 = b64encode_safe(TEMPLATE_SSR_BODY.format(**ssr_config))
     ssr_config.update({
-        "url": f"{protocol}://{b64encode_safe(TEMPLATE_SSR_BODY.format(**ssr_config))}",
+        "url": f"{protocol}://{base64}",
         "password": b64decode_safe(ssr_config.get("password", "")),
         "name": ssr_params.get("remarks", ""),
     })
@@ -184,13 +208,13 @@ def normalize_vmess_base64(config: V2RayConfigRaw) -> V2RayConfig:
         vmess_config.update({
             "ps": TEMPLATE_CONFIG_NAME.format(
                 protocol=config.get("protocol", "vmess"),
-                host=vmess_config.get("add", "0.0.0.0"),
+                host=vmess_config.get("add", "255.255.255.255"),
                 port=vmess_config.get("port", "0"),
             ),
         })
         base64 = b64encode_safe(dumps(vmess_config, separators=(",", ":")))
     except Exception:
-        raise ValueError
+        raise ValueError from None
 
     return {
         "url": f"{config.get("protocol", "vmess")}://{base64}",
@@ -211,7 +235,10 @@ def normalize_vmess_base64(config: V2RayConfigRaw) -> V2RayConfig:
     }
 
 
-def process_configs(configs: V2RayConfigsRaw, args: ArgsNamespace) -> V2RayConfigs:
+def process_configs(
+    configs: V2RayConfigsRaw,
+    args: ArgsNamespace,
+) -> V2RayConfigs:
     _configs: V2RayConfigs = cast(V2RayConfigs, configs)
 
     if args.normalize:
@@ -241,10 +268,17 @@ def process_configs(configs: V2RayConfigsRaw, args: ArgsNamespace) -> V2RayConfi
     return _configs
 
 
-def remove_duplicates_by_fields(configs: V2RayConfigs, fields: ConfigFields) -> V2RayConfigs:
-    logger.info(f"Removing duplicates from {len(configs)} configs using keys: {fields}...")
+def remove_duplicates_by_fields(
+    configs: V2RayConfigs,
+    fields: ConfigFields,
+) -> V2RayConfigs:
+    logger.info(TEMPLATE_MSG_DEDUP_STARTED.format(
+        count=len(configs),
+        fields=fields,
+    ))
+
     if not fields:
-        logger.warning("Deduplication skipped: no fields specified.")
+        logger.warning(MESSAGE_DEDUP_SKIPPED)
         return configs
 
     seen = set()
@@ -266,14 +300,26 @@ def remove_duplicates_by_fields(configs: V2RayConfigs, fields: ConfigFields) -> 
 
     unique_configs = list(filter(is_unique, configs))
     removed = len(configs) - len(unique_configs)
-    logger.info(
-        f"Duplicate removal completed: {len(unique_configs)} configs remain, {removed} removed."
-    )
+    logger.info(TEMPLATE_MSG_DEDUP_COMPLETED.format(
+        remain=len(unique_configs),
+        removed=removed,
+    ))
+
     return unique_configs
 
 
-def sort_by_fields(configs: V2RayConfigs, fields: ConfigFields, reverse: bool = False) -> V2RayConfigs:
-    logger.info(f"Sorting {len(configs)} configs by fields: {fields} ({reverse=})...")
+def sort_by_fields(
+    configs: V2RayConfigs,
+    fields: ConfigFields,
+    *,
+    reverse: bool = False,
+) -> V2RayConfigs:
+    logger.info(TEMPLATE_MSG_SORT_STARTED.format(
+        count=len(configs),
+        fields=fields,
+        reverse=reverse,
+    ))
+
     if not fields:
         return configs
 
@@ -290,5 +336,8 @@ def sort_by_fields(configs: V2RayConfigs, fields: ConfigFields, reverse: bool = 
         return tuple(_values)
 
     sorted_configs = sorted(configs, key=sort_key, reverse=reverse)
-    logger.info(f"Sorting completed: {len(sorted_configs)} configs sorted.")
+    logger.info(TEMPLATE_MSG_SORT_COMPLETED.format(
+        count=len(sorted_configs),
+    ))
+
     return sorted_configs

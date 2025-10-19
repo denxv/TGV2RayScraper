@@ -49,8 +49,12 @@ show-fixes = true
 target-version = "py313"
 
 [tool.ruff.lint]
-ignore = ["E501"]
-select = ["E", "F", "B", "I", "UP"]
+ignore = [
+    "BLE001",
+    "D",
+    "PTH123"
+]
+select = ["ALL"]
 
 [tool.ruff.format]
 indent-style = "space"

@@ -1,30 +1,33 @@
-#!/usr/bin/env python
-
 from argparse import ArgumentParser, HelpFormatter
-from sys import executable
 from subprocess import run
+from sys import executable
 
 from core.constants import (
-    CHANNEL_MIN_BATCH_EXTRACT,
     CHANNEL_MAX_BATCH_EXTRACT,
-    CHANNEL_MIN_BATCH_UPDATE,
     CHANNEL_MAX_BATCH_UPDATE,
-    CHANNEL_MIN_MESSAGE_OFFSET,
     CHANNEL_MAX_MESSAGE_OFFSET,
+    CHANNEL_MIN_BATCH_EXTRACT,
+    CHANNEL_MIN_BATCH_UPDATE,
+    CHANNEL_MIN_MESSAGE_OFFSET,
     CLI_SCRIPTS_CONFIG,
     DEFAULT_HELP_INDENT,
     DEFAULT_HELP_WIDTH,
-    DEFAULT_LOG_LINE_LENGTH,
     HTTP_MAX_TIMEOUT,
     HTTP_MIN_TIMEOUT,
+    MESSAGE_EXIT,
+    MESSAGE_UNEXPECTED_ERROR,
     SUPPRESS,
+    TEMPLATE_MSG_ERROR_SCRIPT,
+    TEMPLATE_MSG_SCRIPT_COMPLETED,
+    TEMPLATE_MSG_SCRIPT_STARTED,
 )
-from core.logger import logger, log_debug_object
-from core.typing import ArgsNamespace, CLIParams, FilePath, Optional
+from core.logger import log_debug_object, logger
+from core.typing import ArgsNamespace, CLIParams
 from core.utils import (
     collect_args,
     convert_number_in_range,
     normalize_valid_fields,
+    repeat_char_line,
     validate_file_path,
 )
 
@@ -32,7 +35,10 @@ from core.utils import (
 def parse_args() -> ArgsNamespace:
     parser = ArgumentParser(
         add_help=False,
-        description="Run the complete proxy configuration collection and processing pipeline.",
+        description=(
+            "Run the complete proxy configuration collection "
+            "and processing pipeline."
+        ),
         epilog=(
             "Show help for all internal scripts used in the pipeline. "
             "Example: python %(prog)s --help-scripts"
@@ -207,12 +213,15 @@ def parse_args() -> ArgsNamespace:
     return args
 
 
-def run_script(script_name: str, script_args: Optional[CLIParams] = None) -> None:
+def run_script(
+    script_name: str,
+    script_args: CLIParams | None = None,
+) -> None:
     if script_args is None:
-        script_args = list()
+        script_args = []
 
-    logger.info(f"Starting script '{script_name}'...")
-    logger.info('-' * DEFAULT_LOG_LINE_LENGTH)
+    logger.info(TEMPLATE_MSG_SCRIPT_STARTED.format(name=script_name))
+    logger.info(repeat_char_line(char="-"))
 
     arguments = [
         executable,
@@ -222,12 +231,13 @@ def run_script(script_name: str, script_args: Optional[CLIParams] = None) -> Non
     ]
 
     log_debug_object("Script launch arguments", arguments)
-    if run(args=arguments).returncode:
-        raise Exception(f"Script '{script_name}' exited with an error!")
+    if run(check=False, args=arguments).returncode:
+        message = TEMPLATE_MSG_ERROR_SCRIPT.format(name=script_name)
+        raise RuntimeError(message)
 
-    logger.info('-' * DEFAULT_LOG_LINE_LENGTH)
-    logger.info(f"Script '{script_name}' completed successfully!")
-    logger.info('=' * DEFAULT_LOG_LINE_LENGTH)
+    logger.info(repeat_char_line(char="-"))
+    logger.info(TEMPLATE_MSG_SCRIPT_COMPLETED.format(name=script_name))
+    logger.info(repeat_char_line(char="="))
 
 
 def show_scripts_help() -> None:
@@ -254,9 +264,9 @@ def main() -> None:
                 ),
             )
     except KeyboardInterrupt:
-        logger.info("Exit from the program.")
+        logger.info(MESSAGE_EXIT)
     except Exception:
-        logger.exception("Unexpected error occurred.")
+        logger.exception(MESSAGE_UNEXPECTED_ERROR)
 
 
 if __name__ == "__main__":

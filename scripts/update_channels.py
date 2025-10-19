@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from argparse import ArgumentParser, HelpFormatter
 
 from adapters.sync.channels import (
@@ -7,15 +5,17 @@ from adapters.sync.channels import (
     save_channels_and_urls,
 )
 from core.constants import (
-    CHANNEL_MIN_MESSAGE_OFFSET,
     CHANNEL_MAX_MESSAGE_OFFSET,
+    CHANNEL_MIN_MESSAGE_OFFSET,
     DEFAULT_HELP_INDENT,
     DEFAULT_HELP_WIDTH,
     DEFAULT_PATH_CHANNELS,
     DEFAULT_PATH_URLS,
+    MESSAGE_EXIT,
+    MESSAGE_UNEXPECTED_ERROR,
     SUPPRESS,
 )
-from core.logger import logger, log_debug_object
+from core.logger import log_debug_object, logger
 from core.typing import ArgsNamespace
 from core.utils import (
     abs_path,
@@ -31,10 +31,14 @@ from domain.channel import (
 def parse_args() -> ArgsNamespace:
     parser = ArgumentParser(
         add_help=False,
-        description="Backup, merge new channels from URLs, and update Telegram channel data.",
+        description=(
+            "Backup, merge new channels from URLs, "
+            "and update Telegram channel data."
+        ),
         epilog=(
-            "Example: PYTHONPATH=. python scripts/%(prog)s -C channels.json --urls urls.txt "
-            "--delete-channels -M 50 --include-new --no-dry-run --no-backup"
+            "Example: PYTHONPATH=. python scripts/%(prog)s "
+            "-C channels.json --urls urls.txt --delete-channels "
+            "-M 50 --include-new --no-dry-run --no-backup"
         ),
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
@@ -47,7 +51,10 @@ def parse_args() -> ArgsNamespace:
         "--no-dry-run",
         action="store_false",
         dest="check_only",
-        help="Disable check-only mode and actually assign 'current_id' (default: enabled)."
+        help=(
+            "Disable check-only mode and actually assign 'current_id' "
+            "(default: enabled)."
+        ),
     )
 
     parser.add_argument(
@@ -55,7 +62,8 @@ def parse_args() -> ArgsNamespace:
         action="store_false",
         dest="make_backups",
         help=(
-            "Skip creating backup files for channel and Telegram URL lists before saving "
+            "Skip creating backup files for channel and "
+            "Telegram URL lists before saving "
             "(default: enabled)."
         ),
     )
@@ -64,7 +72,10 @@ def parse_args() -> ArgsNamespace:
         "-C", "--channels",
         default=abs_path(DEFAULT_PATH_CHANNELS),
         dest="channels_file",
-        help="Path to the input JSON file containing the list of channels (default: %(default)s).",
+        help=(
+            "Path to the input JSON file containing the list of channels "
+            "(default: %(default)s)."
+        ),
         metavar="FILE",
         type=lambda path: validate_file_path(path, must_be_file=True),
     )
@@ -73,7 +84,10 @@ def parse_args() -> ArgsNamespace:
         "-D", "--delete-channels",
         action="store_true",
         dest="delete_channels",
-        help="Delete channels that are unavailable or meet specific conditions (default: disabled).",
+        help=(
+            "Delete channels that are unavailable or "
+            "meet specific conditions (default: disabled)."
+        ),
     )
 
     parser.add_argument(
@@ -85,7 +99,10 @@ def parse_args() -> ArgsNamespace:
     parser.add_argument(
         "-M", "--message-offset",
         dest="message_offset",
-        help="Number of recent messages to include when assigning 'current_id'.",
+        help=(
+            "Number of recent messages to include "
+            "when assigning 'current_id'."
+        ),
         metavar="N",
         type=lambda value: convert_number_in_range(
             value,
@@ -107,7 +124,10 @@ def parse_args() -> ArgsNamespace:
         "-U", "--urls",
         default=abs_path(DEFAULT_PATH_URLS),
         dest="urls_file",
-        help="Path to a text file containing new channel URLs (default: %(default)s).",
+        help=(
+            "Path to a text file containing new channel URLs "
+            "(default: %(default)s)."
+        ),
         metavar="FILE",
         type=lambda path: validate_file_path(path, must_be_file=True),
     )
@@ -125,6 +145,7 @@ def main() -> None:
             path_channels=parsed_args.channels_file,
             path_urls=parsed_args.urls_file,
         )
+
         current_channels = update_with_new_channels(
             current_channels=current_channels,
             channel_names=list_channel_names,
@@ -133,6 +154,7 @@ def main() -> None:
             channels=current_channels,
             args=parsed_args,
         )
+
         save_channels_and_urls(
             channels=current_channels,
             path_channels=parsed_args.channels_file,
@@ -140,9 +162,9 @@ def main() -> None:
             make_backups=parsed_args.make_backups,
         )
     except KeyboardInterrupt:
-        logger.info("Exit from the program.")
+        logger.info(MESSAGE_EXIT)
     except Exception:
-        logger.exception("Unexpected error occurred.")
+        logger.exception(MESSAGE_UNEXPECTED_ERROR)
 
 
 if __name__ == "__main__":

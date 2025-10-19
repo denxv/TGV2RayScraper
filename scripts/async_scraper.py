@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from argparse import ArgumentParser, HelpFormatter
 from asyncio import CancelledError, run
 
@@ -8,23 +6,25 @@ from httpx import AsyncClient, Timeout
 from adapters.async_.channels import load_channels, save_channels
 from adapters.async_.configs import fetch_channel_configs
 from adapters.async_.scraper import update_info
-from core.logger import logger, log_debug_object
 from core.constants import (
-    CHANNEL_MIN_BATCH_EXTRACT,
     CHANNEL_MAX_BATCH_EXTRACT,
-    CHANNEL_MIN_BATCH_UPDATE,
     CHANNEL_MAX_BATCH_UPDATE,
-    DEFAULT_HELP_INDENT,
-    DEFAULT_HELP_WIDTH,
+    CHANNEL_MIN_BATCH_EXTRACT,
+    CHANNEL_MIN_BATCH_UPDATE,
     DEFAULT_CHANNEL_BATCH_EXTRACT,
     DEFAULT_CHANNEL_BATCH_UPDATE,
+    DEFAULT_HELP_INDENT,
+    DEFAULT_HELP_WIDTH,
     DEFAULT_HTTP_TIMEOUT,
     DEFAULT_PATH_CHANNELS,
     DEFAULT_PATH_CONFIGS_RAW,
     HTTP_MAX_TIMEOUT,
     HTTP_MIN_TIMEOUT,
+    MESSAGE_EXIT,
+    MESSAGE_UNEXPECTED_ERROR,
     SUPPRESS,
 )
+from core.logger import log_debug_object, logger
 from core.typing import ArgsNamespace
 from core.utils import (
     abs_path,
@@ -37,10 +37,12 @@ from domain.channel import get_sorted_keys, print_channel_info
 def parse_args() -> ArgsNamespace:
     parser = ArgumentParser(
         add_help=False,
-        description="Asynchronous Telegram channel scraper (faster, experimental).",
+        description=(
+            "Asynchronous Telegram channel scraper (faster, experimental)."
+        ),
         epilog=(
-            "Example: PYTHONPATH=. python scripts/%(prog)s -E 20 -U 100 -T 30.0 "
-            "--channels channels.json -R configs-raw.txt"
+            "Example: PYTHONPATH=. python scripts/%(prog)s -E 20 "
+            "-U 100 -T 30.0 --channels channels.json -R configs-raw.txt"
         ),
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
@@ -53,7 +55,10 @@ def parse_args() -> ArgsNamespace:
         "-C", "--channels",
         default=abs_path(DEFAULT_PATH_CHANNELS),
         dest="channels",
-        help="Path to the input JSON file containing the list of channels (default: %(default)s).",
+        help=(
+            "Path to the input JSON file containing the list of channels "
+            "(default: %(default)s)."
+        ),
         metavar="FILE",
         type=lambda path: validate_file_path(path, must_be_file=True),
     )
@@ -68,7 +73,10 @@ def parse_args() -> ArgsNamespace:
         "-E", "--batch-extract",
         default=DEFAULT_CHANNEL_BATCH_EXTRACT,
         dest="batch_extract",
-        help="Number of messages processed in parallel to extract V2Ray configs (default: %(default)s).",
+        help=(
+            "Number of messages processed in parallel to extract "
+            "V2Ray configs (default: %(default)s)."
+        ),
         metavar="N",
         type=lambda value: convert_number_in_range(
             value,
@@ -83,7 +91,10 @@ def parse_args() -> ArgsNamespace:
         "-R", "--configs-raw",
         default=abs_path(DEFAULT_PATH_CONFIGS_RAW),
         dest="configs_raw",
-        help="Path to the output file for saving scraped V2Ray configs (default: %(default)s).",
+        help=(
+            "Path to the output file for saving scraped V2Ray configs "
+            "(default: %(default)s)."
+        ),
         metavar="FILE",
         type=lambda path: validate_file_path(path, must_be_file=False),
     )
@@ -93,8 +104,9 @@ def parse_args() -> ArgsNamespace:
         default=DEFAULT_HTTP_TIMEOUT,
         dest="time_out",
         help=(
-            "HTTP client timeout in seconds for requests used while updating "
-            "channel info and extracting V2Ray configurations (default: %(default)s)."
+            "HTTP client timeout in seconds for requests used "
+            "while updating channel info and "
+            "extracting V2Ray configurations (default: %(default)s)."
         ),
         metavar="SECONDS",
         type=lambda value: convert_number_in_range(
@@ -110,7 +122,10 @@ def parse_args() -> ArgsNamespace:
         "-U", "--batch-update",
         default=DEFAULT_CHANNEL_BATCH_UPDATE,
         dest="batch_update",
-        help="Maximum number of channels updated in parallel (default: %(default)s).",
+        help=(
+            "Maximum number of channels updated in parallel "
+            "(default: %(default)s)."
+        ),
         metavar="N",
         type=lambda value: convert_number_in_range(
             value,
@@ -130,10 +145,17 @@ def parse_args() -> ArgsNamespace:
 async def main() -> None:
     parsed_args = parse_args()
     try:
+        timeout = Timeout(parsed_args.time_out)
         channels = await load_channels(path_channels=parsed_args.channels)
-        async with AsyncClient(timeout=Timeout(parsed_args.time_out)) as client:
-            await update_info(client, channels, batch_size=parsed_args.batch_update)
-            print_channel_info(channels)
+
+        async with AsyncClient(timeout=timeout) as client:
+            await update_info(
+                client=client,
+                channels=channels,
+                batch_size=parsed_args.batch_update,
+            )
+            print_channel_info(channels=channels)
+
             for name in get_sorted_keys(channels, apply_filter=True):
                 await fetch_channel_configs(
                     client=client,
@@ -143,11 +165,14 @@ async def main() -> None:
                     path_configs=parsed_args.configs_raw,
                 )
     except (CancelledError, KeyboardInterrupt):
-        logger.info("Exit from the program.")
+        logger.info(MESSAGE_EXIT)
     except Exception:
-        logger.exception("Unexpected error occurred.")
+        logger.exception(MESSAGE_UNEXPECTED_ERROR)
     finally:
-        await save_channels(channels, path_channels=parsed_args.channels)
+        await save_channels(
+            channels=channels,
+            path_channels=parsed_args.channels,
+        )
 
 
 if __name__ == "__main__":
