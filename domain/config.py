@@ -66,7 +66,7 @@ def normalize(configs: V2RayConfigsRaw) -> V2RayConfigs:
     for _config in configs:
         try:
             normalized_configs.append(normalize_config(_config))
-        except Exception:
+        except Exception:  # noqa: PERF203
             _config.clear()
 
     total_after = len(normalized_configs)
@@ -217,7 +217,7 @@ def normalize_vmess_base64(config: V2RayConfigRaw) -> V2RayConfig:
         raise ValueError from None
 
     return {
-        "url": f"{config.get("protocol", "vmess")}://{base64}",
+        "url": f"{config.get('protocol', 'vmess')}://{base64}",
         "method": vmess_config.get("scy", ""),
         "uuid": vmess_config.get("id", ""),
         "host": vmess_config.get("add", ""),

@@ -129,7 +129,7 @@ def save_configs(
 
     with open(path_configs_clean, mode, encoding="utf-8") as file:
         file.writelines(
-            f"{config.get("url", "")}\n"
+            f"{config.get('url', '')}\n"
             for config in configs
         )
 

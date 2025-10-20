@@ -59,11 +59,11 @@ def b64decode_safe(string: B64String) -> B64String:
     if not isinstance(string, str) or not (string := string.strip()):
         return ""
 
-    string = f"{string}{"=" * (-len(string) % BASE64_BLOCK_SIZE)}"
+    string = f"{string}{'=' * (-len(string) % BASE64_BLOCK_SIZE)}"
     for b64_decode in (urlsafe_b64decode, b64decode):
         try:
             return b64_decode(string).decode("utf-8", errors="replace")
-        except Exception:  # noqa: S112
+        except Exception:  # noqa: PERF203, S112
             continue
 
     return ""

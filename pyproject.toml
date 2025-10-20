@@ -1,11 +1,37 @@
-[tool.pytest.ini_options]
-addopts = "-v --tb=short --cov-report=term-missing"
-asyncio_mode = "auto"
-log_cli = true
-log_cli_level = "INFO"
-minversion = "8.0"
-pythonpath = ["."]
-testpaths = ["tests"]
+[project]
+name = "TGV2RayScraper"
+version = "1.4"
+requires-python = ">=3.10"
+dependencies = [
+    "aiofiles",
+    "asteval",
+    "httpx",
+    "lxml",
+    "tqdm",
+]
+
+[dependency-groups]
+dev = [
+    "mypy",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "ruff",
+]
+
+[tool.coverage.run]
+source = [
+    "adapters",
+    "core",
+    "domain",
+    "scripts",
+]
+omit = [
+    "*/__init__.py",
+    "main.py",
+    "scripts/*",
+    "tests/*",
+]
 
 [tool.mypy]
 check_untyped_defs = true
@@ -19,12 +45,18 @@ disallow_subclassing_any = true
 disallow_untyped_calls = true
 disallow_untyped_decorators = true
 disallow_untyped_defs = true
-enable_error_code = ["ignore-without-code", "redundant-self", "truthy-bool"]
-exclude = "tests/"
+enable_error_code = [
+    "ignore-without-code",
+    "redundant-self",
+    "truthy-bool",
+]
+exclude = [
+    "tests/",
+]
 implicit_reexport = true
 no_implicit_optional = true
 pretty = true
-python_version = "3.13"
+python_version = "3.10"
 show_error_codes = true
 strict = true
 strict_concatenate = true
@@ -38,23 +70,43 @@ warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
 ignore_missing_imports = true
-module = ["asteval", "lxml", "pytest"]
+module = [
+    "aiofiles",
+    "asteval",
+    "lxml",
+    "tqdm.*",
+]
+
+[tool.pytest.ini_options]
+addopts = "-v --tb=short --cov=. --cov-report=term-missing"
+asyncio_mode = "auto"
+log_cli = true
+log_cli_level = "INFO"
+minversion = "8.0"
+pythonpath = ["."]
+testpaths = [
+    "tests/",
+]
 
 [tool.ruff]
-exclude = ["tests/", "scripts/"]
+exclude = [
+    "tests/",
+]
 indent-width = 4
 line-length = 79
 respect-gitignore = true
 show-fixes = true
-target-version = "py313"
+target-version = "py310"
 
 [tool.ruff.lint]
 ignore = [
     "BLE001",
     "D",
-    "PTH123"
+    "PTH123",
 ]
-select = ["ALL"]
+select = [
+    "ALL",
+]
 
 [tool.ruff.format]
 indent-style = "space"
