@@ -125,7 +125,6 @@ https://t.me/s/configshub
 https://t.me/s/configshub2
 https://t.me/s/configshubplus
 https://t.me/s/configt
-https://t.me/s/configtrapi
 https://t.me/s/configv2rayforfree
 https://t.me/s/configv2rayng
 https://t.me/s/configv2rayngvpn
@@ -353,7 +352,6 @@ https://t.me/s/ip_cf_config
 https://t.me/s/ipcloudflaretamiz
 https://t.me/s/ipstatic1
 https://t.me/s/ipv2ray
-https://t.me/s/ipv2rayng
 https://t.me/s/ir2nel
 https://t.me/s/ir_v2reyng
 https://t.me/s/iran_access
@@ -984,7 +982,6 @@ https://t.me/s/vpn_meliii
 https://t.me/s/vpn_mikey
 https://t.me/s/vpn_nv1
 https://t.me/s/vpn_ocean
-https://t.me/s/vpn_proxy66
 https://t.me/s/vpn_proxy_custom
 https://t.me/s/vpn_room
 https://t.me/s/vpn_shield

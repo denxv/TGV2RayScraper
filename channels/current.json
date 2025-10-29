@@ -634,11 +634,6 @@
         "current_id": 1,
         "last_id": -1
     },
-    "configtrapi": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "configv2rayforfree": {
         "count": 0,
         "current_id": 1,
@@ -1770,11 +1765,6 @@
         "last_id": -1
     },
     "ipv2ray": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
-    "ipv2rayng": {
         "count": 0,
         "current_id": 1,
         "last_id": -1
@@ -4925,11 +4915,6 @@
         "last_id": -1
     },
     "vpn_ocean": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
-    "vpn_proxy66": {
         "count": 0,
         "current_id": 1,
         "last_id": -1
