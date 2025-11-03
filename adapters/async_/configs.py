@@ -49,21 +49,37 @@ async def fetch_channel_configs(
     logger.info(TEMPLATE_MSG_EXTRACTING_CONFIGS.format(name=channel_name))
 
     async def fetch_and_parse(current_id: PostID) -> PostIDAndRawLines:
-        response = await client.get(TEMPLATE_TG_URL_AFTER.format(
-            name=channel_name,
-            id=current_id,
-        ))
+        try:
+            response = await client.get(TEMPLATE_TG_URL_AFTER.format(
+                name=channel_name,
+                id=current_id,
+            ))
+            response.raise_for_status()
 
-        tree = html.fromstring(response.text)
-        messages = tree.xpath(XPATH_TG_MESSAGES_TEXT)
+            if not response.text.strip():
+                logger.debug(
+                    f"Empty response for ID {current_id} "
+                    f"({channel_name=}, status={response.status_code}).",
+                )
+                return current_id, []
 
-        v2ray_configs = [
-            message
-            for message in messages
-            if PATTERN_URL_V2RAY_ALL.match(message)
-        ]
+            tree = html.fromstring(response.text)
+            messages = tree.xpath(XPATH_TG_MESSAGES_TEXT)
 
-        return current_id, v2ray_configs
+        except Exception as e:
+            logger.exception(
+                f"Error while fetching ID {current_id} "
+                f"({channel_name=}): {e}.",
+            )
+            return current_id, []
+
+        else:
+            configs = [
+                message
+                for message in messages
+                if PATTERN_URL_V2RAY_ALL.match(message)
+            ]
+            return current_id, configs
 
     for channel_id in tqdm(
         batch_range,

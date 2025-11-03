@@ -56,26 +56,44 @@ def fetch_channel_configs(
         leave=False,
     ):
         channel_info["current_id"] = current_id
-        response = client.get(TEMPLATE_TG_URL_AFTER.format(
-            name=channel_name,
-            id=current_id,
-        ))
 
-        tree = html.fromstring(response.content)
-        messages = tree.xpath(XPATH_TG_MESSAGES_TEXT)
+        try:
+            response = client.get(TEMPLATE_TG_URL_AFTER.format(
+                name=channel_name,
+                id=current_id,
+            ))
+            response.raise_for_status()
 
-        v2ray_configs = [
-            message
-            for message in messages
-            if PATTERN_URL_V2RAY_ALL.match(message)
-        ]
+            if not response.content.strip():
+                logger.debug(
+                    f"Empty response for ID {current_id} "
+                    f"({channel_name=}, status={response.status_code}).",
+                )
+                continue
 
-        if v2ray_configs:
-            v2ray_count += len(v2ray_configs)
-            channel_info["count"] += len(v2ray_configs)
+            tree = html.fromstring(response.content)
+            messages = tree.xpath(XPATH_TG_MESSAGES_TEXT)
+
+        except Exception as e:
+            logger.exception(
+                f"Error while fetching ID {current_id} "
+                f"({channel_name=}): {e}.",
+            )
+            continue
+
+        else:
+            configs = [
+                message
+                for message in messages
+                if PATTERN_URL_V2RAY_ALL.match(message)
+            ]
+
+        if len(configs) > 0:
+            v2ray_count += len(configs)
+            channel_info["count"] += len(configs)
 
             write_configs(
-                configs=v2ray_configs,
+                configs=configs,
                 path_configs=path_configs,
                 mode="a",
             )
