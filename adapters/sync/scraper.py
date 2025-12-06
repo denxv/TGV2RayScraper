@@ -2,26 +2,43 @@ from adapters.sync.channels import (
     get_first_post_id,
     get_last_post_id,
 )
-from core.constants import (
+from core.constants.common import (
     DEFAULT_CURRENT_ID,
-    DEFAULT_LAST_ID,
-    TEMPLATE_MSG_UPDATING_CHANNEL_INFO,
 )
-from core.logger import logger
-from core.typing import ChannelsDict, SyncHTTPClient
-from domain.channel import update_count_and_last_id
+from core.constants.templates import (
+    TEMPLATE_CHANNEL_UPDATE_INFO_STARTED,
+)
+from core.logger import (
+    logger,
+)
+from core.typing import (
+    ChannelsDict,
+    SyncHTTPClient,
+)
+from domain.channel import (
+    get_normalized_current_id,
+    update_count_and_last_id,
+)
+from domain.predicates import (
+    is_channel_available,
+)
+
+__all__ = [
+    "update_info",
+]
 
 
 def update_info(
     client: SyncHTTPClient,
     channels: ChannelsDict,
 ) -> None:
-    logger.info(TEMPLATE_MSG_UPDATING_CHANNEL_INFO.format(
-        count=len(channels),
-    ))
+    logger.info(
+        msg=TEMPLATE_CHANNEL_UPDATE_INFO_STARTED.format(
+            count=len(channels),
+        ),
+    )
 
     for channel_name, channel_info in channels.items():
-        current_id = channel_info.get("current_id", DEFAULT_CURRENT_ID)
         last_post_id = get_last_post_id(
             client=client,
             channel_name=channel_name,
@@ -33,22 +50,21 @@ def update_info(
             last_post_id=last_post_id,
         )
 
-        if last_post_id == DEFAULT_LAST_ID:
+        if not is_channel_available(
+            channel_info=channel_info,
+        ):
             continue
 
-        if current_id <= 0:
-            channel_info["current_id"] = max(
-                last_post_id + current_id,
-                DEFAULT_CURRENT_ID,
-            )
-            current_id = channel_info["current_id"]
+        normalized_current_id = get_normalized_current_id(
+            channel_info=channel_info,
+        )
 
-        if current_id == DEFAULT_CURRENT_ID:
+        if normalized_current_id == DEFAULT_CURRENT_ID:
             channel_info["current_id"] = get_first_post_id(
                 client=client,
                 channel_name=channel_name,
             )
-            current_id = channel_info["current_id"]
 
-        if current_id > last_post_id:
-            channel_info["current_id"] = last_post_id
+        channel_info["current_id"] = get_normalized_current_id(
+            channel_info=channel_info,
+        )

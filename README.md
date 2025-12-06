@@ -232,7 +232,17 @@ All dev-dependencies are listed in [`requirements-dev.txt`](requirements-dev.txt
 
 * **core/** — core utilities and constants
 
-  * `constants.py` — constants, default paths, URL templates, regex patterns, script flags
+  * **constants/** — common constants, formats, messages, regex patterns, and string templates
+
+    * `common.py` — core constants, default paths, script settings, channel/message parameters, timeouts, colors, flags
+
+    * `formats.py` — date, time, log, and progress bar formats
+
+    * `messages.py` — text messages for channels and errors
+
+    * `patterns.py` — regular expressions for URLs, configs, and identifiers
+
+    * `templates.py` — templates for logs, channels, configs, errors, files, and URLs
 
   * `decorators.py` — decorators (e.g., for logging)
 
@@ -386,8 +396,10 @@ hysteria2://password@host:port?params#name
 ### **Shadowsocks / ShadowsocksR**
 
 ```text
-ss://base64(method:password)@host:port#name
 ss://method:password@host:port#name
+ss://method:password@host:port/path?params#name
+ss://base64(method:password)@host:port#name
+ss://base64(method:password)@host:port/path?params#name
 ss://base64(method:password@host:port)#name
 ssr://base64(host:port:protocol:method:obfs:base64(password)/?param=base64(value))
 ```
@@ -464,8 +476,6 @@ python -m scripts.update_channels -h
 
 * `-M, --message-offset N` — Number of recent messages to include when assigning `current_id`.
 
-* `-N, --include-new` — Include new channels in processing.
-
 * `-U, --urls FILE` — Path to a text file containing new channel URLs (default: `channels/urls.txt`).
 
 **The script performs the following:**
@@ -478,8 +488,6 @@ python -m scripts.update_channels -h
 
 * Allows assigning `current_id` to channels taking message offset into account (`--message-offset`).
 
-* Can include new channels in processing (`--include-new`).
-
 * Supports deletion of unavailable or flagged channels (`--delete-channels`).
 
 * Creates backup copies of both files with a timestamp (can be disabled using the `--no-backup` option).
@@ -491,7 +499,7 @@ python -m scripts.update_channels -h
 **Example usage:**
 
 ```bash
-python -m scripts.update_channels -C channels/current.json --urls channels/urls.txt --delete-channels -M 50 --include-new --no-dry-run --no-backup
+python -m scripts.update_channels -C channels.json --urls urls.txt -B -D -M 50 --no-dry-run
 ```
 
 > You can add `uv run` before the `python` command to run it through `uv`.

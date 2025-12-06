@@ -1,26 +1,40 @@
-from json import JSONDecodeError, dumps, loads
+from json import (
+    JSONDecodeError,
+    dumps,
+    loads,
+)
 
-from aiofiles import open as aiopen
-from lxml import html
+from aiofiles import (
+    open as aiopen,
+)
+from lxml import (
+    html,
+)
 
-from core.constants import (
+from core.constants.common import (
     DEFAULT_CURRENT_ID,
     DEFAULT_FILE_CHANNELS,
-    DEFAULT_INDENT,
+    DEFAULT_JSON_INDENT,
     DEFAULT_LAST_ID,
-    DEFAULT_POST_ID,
-    MESSAGE_NO_POSTS_FOUND,
+    POST_DEFAULT_ID,
     POST_DEFAULT_INDEX,
     POST_FIRST_ID,
     POST_FIRST_INDEX,
     POST_LAST_INDEX,
-    TEMPLATE_MSG_ERROR_POST_ID,
-    TEMPLATE_MSG_SAVE_CHANNELS,
-    TEMPLATE_TG_URL,
-    TEMPLATE_TG_URL_AFTER,
     XPATH_POST_IDS,
 )
-from core.logger import logger
+from core.constants.messages import (
+    MESSAGE_ERROR_NO_POSTS_FOUND,
+)
+from core.constants.templates import (
+    TEMPLATE_CHANNEL_SAVE_COMPLETED,
+    TEMPLATE_ERROR_FAILED_EXTRACT_POST_ID,
+    TEMPLATE_FORMAT_TG_URL,
+    TEMPLATE_FORMAT_TG_URL_AFTER,
+)
+from core.logger import (
+    logger,
+)
 from core.typing import (
     URL,
     AsyncHTTPClient,
@@ -31,33 +45,51 @@ from core.typing import (
     PostID,
     PostIndex,
 )
+from domain.channel import (
+    normalize_channel_names,
+)
+
+__all__ = [
+    "get_first_post_id",
+    "get_last_post_id",
+    "load_channels",
+    "save_channels",
+]
 
 
 async def _extract_post_id(
     client: AsyncHTTPClient,
     url: URL,
     index: PostIndex = POST_DEFAULT_INDEX,
-    default: DefaultPostID = DEFAULT_POST_ID,
+    default: DefaultPostID = POST_DEFAULT_ID,
 ) -> PostID:
     try:
-        response = await client.get(url)
+        response = await client.get(
+            url=url,
+        )
         response.raise_for_status()
 
-        tree = html.fromstring(response.text)
-        post_ids = tree.xpath(XPATH_POST_IDS)
+        tree = html.fromstring(
+            html=response.text,
+        )
+        post_ids = tree.xpath(
+            XPATH_POST_IDS,
+        )
 
         if not post_ids:
-            raise ValueError(MESSAGE_NO_POSTS_FOUND)  # noqa: TRY301
+            raise ValueError(  # noqa: TRY301
+                MESSAGE_ERROR_NO_POSTS_FOUND,
+            )
 
         post_url = post_ids[index]
         post_id = post_url.split("/")[-1]
 
     except Exception as e:
         logger.debug(
-            TEMPLATE_MSG_ERROR_POST_ID.format(
+            msg=TEMPLATE_ERROR_FAILED_EXTRACT_POST_ID.format(
                 url=url,
                 exc_type=type(e).__name__,
-                exc_msg=e,
+                exc_msg=str(e),
             ),
         )
         return default
@@ -71,7 +103,7 @@ async def get_first_post_id(
 ) -> PostID:
     return await _extract_post_id(
         client=client,
-        url=TEMPLATE_TG_URL_AFTER.format(
+        url=TEMPLATE_FORMAT_TG_URL_AFTER.format(
             name=channel_name,
             id=POST_FIRST_ID,
         ),
@@ -86,7 +118,7 @@ async def get_last_post_id(
 ) -> PostID:
     return await _extract_post_id(
         client=client,
-        url=TEMPLATE_TG_URL.format(
+        url=TEMPLATE_FORMAT_TG_URL.format(
             name=channel_name,
         ),
         index=POST_LAST_INDEX,
@@ -97,29 +129,46 @@ async def get_last_post_id(
 async def load_channels(
     path_channels: FilePath = DEFAULT_FILE_CHANNELS,
 ) -> ChannelsDict:
-    async with aiopen(path_channels, encoding="utf-8") as file:
+    async with aiopen(
+        file=path_channels,
+        encoding="utf-8",
+    ) as file:
         try:
-            data = await file.read()
-            channels: ChannelsDict = loads(data)
+            channels_json_str = await file.read()
+            return normalize_channel_names(
+                channels=loads(
+                    s=channels_json_str,
+                ),
+            )
         except JSONDecodeError:
             return {}
-        else:
-            return channels
 
 
 async def save_channels(
     channels: ChannelsDict,
     path_channels: FilePath = DEFAULT_FILE_CHANNELS,
 ) -> None:
-    async with aiopen(path_channels, "w", encoding="utf-8") as file:
-        await file.write(dumps(
-            channels,
-            indent=DEFAULT_INDENT,
-            sort_keys=True,
-            ensure_ascii=False,
-        ))
+    normalized_channels = normalize_channel_names(
+        channels=channels,
+    )
 
-    logger.info(TEMPLATE_MSG_SAVE_CHANNELS.format(
-        count=len(channels),
-        path=path_channels,
-    ))
+    async with aiopen(
+        file=path_channels,
+        mode="w",
+        encoding="utf-8",
+    ) as file:
+        await file.write(
+            dumps(
+                obj=normalized_channels,
+                ensure_ascii=False,
+                indent=DEFAULT_JSON_INDENT,
+                sort_keys=True,
+            ),
+        )
+
+    logger.info(
+        msg=TEMPLATE_CHANNEL_SAVE_COMPLETED.format(
+            count=len(normalized_channels),
+            path=path_channels,
+        ),
+    )

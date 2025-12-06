@@ -1,6 +1,8 @@
-from asteval import Interpreter
+from asteval import (
+    Interpreter,
+)
 
-from core.constants import (
+from core.constants.common import (
     CHANNEL_ACTIVE_THRESHOLD,
     CHANNEL_FAILED_ATTEMPTS_THRESHOLD,
     CHANNEL_REMOVE_THRESHOLD,
@@ -15,18 +17,67 @@ from core.typing import (
     ConfigPredicate,
     V2RayConfig,
 )
-from core.utils import re_fullmatch, re_search
+from core.utils import (
+    re_fullmatch,
+    re_search,
+)
+
+__all__ = [
+    "is_channel_available",
+    "is_channel_fully_scanned",
+    "is_new_channel",
+    "make_predicate",
+    "should_delete_channel",
+    "should_set_current_id",
+    "should_update_channel",
+]
 
 
-def is_new_channel(channel_info: ChannelInfo) -> bool:
+def is_channel_available(
+    channel_info: ChannelInfo,
+) -> bool:
+    last_id = channel_info.get(
+        "last_id",
+        DEFAULT_LAST_ID,
+    )
+
+    return last_id != DEFAULT_LAST_ID
+
+
+def is_channel_fully_scanned(
+    channel_info: ChannelInfo,
+) -> bool:
+    current_id = channel_info.get(
+        "current_id",
+        DEFAULT_CURRENT_ID,
+    )
+    last_id = channel_info.get(
+        "last_id",
+        DEFAULT_LAST_ID,
+    )
+
+    return (
+        is_channel_available(
+            channel_info=channel_info,
+        )
+        and current_id >= last_id
+    )
+
+
+def is_new_channel(
+    channel_info: ChannelInfo,
+) -> bool:
     return all(
         channel_info.get(key, default) == default
         for key, default in DEFAULT_CHANNEL_VALUES.items()
     )
 
 
-def make_predicate(condition: ConditionStr) -> ConfigPredicate:
+def make_predicate(
+    condition: ConditionStr,
+) -> ConfigPredicate:
     aeval = Interpreter()
+
     symtable = {
         "int": int,
         "len": len,
@@ -35,22 +86,32 @@ def make_predicate(condition: ConditionStr) -> ConfigPredicate:
         "str": str,
     }
 
-    def predicate(config: V2RayConfig) -> bool:
+    def predicate(
+        config: V2RayConfig,
+    ) -> bool:
         aeval.symtable.clear()
         aeval.symtable.update(symtable)
         aeval.symtable.update(config)
+
         try:
-            return bool(aeval(condition))
-        except Exception:
+            result = aeval(
+                expr=condition,
+            )
+        except Exception:  # pragma: no cover
             return False
+        else:
+            return bool(result)
 
     return predicate
 
 
-def should_delete_channel(channel_info: ChannelInfo) -> bool:
-    count = channel_info.get("count", DEFAULT_COUNT)
-    current_id = channel_info.get("current_id", DEFAULT_CURRENT_ID)
-    last_id = channel_info.get("last_id", DEFAULT_LAST_ID)
+def should_delete_channel(
+    channel_info: ChannelInfo,
+) -> bool:
+    count = channel_info.get(
+        "count",
+        DEFAULT_COUNT,
+    )
 
     if count <= CHANNEL_FAILED_ATTEMPTS_THRESHOLD:
         return True
@@ -58,20 +119,35 @@ def should_delete_channel(channel_info: ChannelInfo) -> bool:
     if count == CHANNEL_ACTIVE_THRESHOLD:
         return False
 
-    return count <= CHANNEL_REMOVE_THRESHOLD and \
-       last_id != DEFAULT_LAST_ID and current_id >= last_id
+    return (
+        count <= CHANNEL_REMOVE_THRESHOLD
+        and is_channel_fully_scanned(
+            channel_info=channel_info,
+        )
+    )
 
 
 def should_set_current_id(
     channel_info: ChannelInfo,
-    *,
-    apply_to_new: bool = False,
 ) -> bool:
-    return apply_to_new or not is_new_channel(channel_info)
+    return (
+        not is_new_channel(
+            channel_info=channel_info,
+        )
+        and is_channel_available(
+            channel_info=channel_info,
+        )
+    )
 
 
-def should_update_channel(channel_info: ChannelInfo) -> bool:
-    current_id = channel_info.get("current_id", DEFAULT_CURRENT_ID)
-    last_id = channel_info.get("last_id", DEFAULT_LAST_ID)
-
-    return last_id != DEFAULT_LAST_ID and current_id < last_id
+def should_update_channel(
+    channel_info: ChannelInfo,
+) -> bool:
+    return (
+        is_channel_available(
+            channel_info=channel_info,
+        )
+        and not is_channel_fully_scanned(
+            channel_info=channel_info,
+        )
+    )

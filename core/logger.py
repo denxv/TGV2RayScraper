@@ -1,6 +1,12 @@
-from argparse import Namespace
-from datetime import datetime
-from json import dumps
+from argparse import (
+    Namespace,
+)
+from datetime import (
+    datetime,
+)
+from json import (
+    dumps,
+)
 from logging import (
     FileHandler,
     Filter,
@@ -11,45 +17,102 @@ from logging import (
     getLogger,
 )
 
-from core.constants import (
+from core.constants.common import (
     COLORS,
     DEBUG,
-    DEFAULT_INDENT,
+    DEFAULT_JSON_INDENT,
     DEFAULT_LOG_DIR,
     DEFAULT_LOGGER_NAME,
-    FORMAT_CONSOLE_LOG,
-    FORMAT_FILE_LOG,
     INFO,
 )
+from core.constants.formats import (
+    FORMAT_LOG_CONSOLE,
+    FORMAT_LOG_FILE,
+    FORMAT_LOG_FILENAME_DATE,
+    FORMAT_LOG_TIME_MICROSECONDS,
+)
+from core.constants.templates import (
+    TEMPLATE_ERROR_FAILED_SERIALIZATION,
+    TEMPLATE_FORMAT_FILE_LOG_PATH,
+    TEMPLATE_FORMAT_STRING_COLORED_LEVEL,
+    TEMPLATE_TITLE_OBJECT_PRETTY_PRINT,
+)
+
+__all__ = [
+    "create_logger",
+    "log_debug_object",
+    "logger",
+]
 
 
-class ColorLevelFilter(Filter):
-    def __init__(self, *, color: bool = True) -> None:
+class ColorLevelFilter(
+    Filter,
+):
+    def __init__(
+        self,
+        *,
+        color: bool = True,
+    ) -> None:
         super().__init__()
         self.color = color
 
-    def _color_level(self, levelname: str) -> str:
-        level_color = COLORS.get(levelname.strip(), "")
+    def __eq__(
+        self,
+        other: object,
+    ) -> bool:
+        return (
+            isinstance(other, ColorLevelFilter)
+            and self.color is other.color
+        )
+
+    def __hash__(
+        self,
+    ) -> int:
+        return hash(self.color)  # pragma: no cover
+
+    def _color_level(
+        self,
+        levelname: str,
+    ) -> str:
+        level_color = COLORS.get(
+            levelname.strip().upper(),
+            "",
+        )
         reset_color = COLORS.get("RESET", "")
 
-        return f"{level_color}{levelname}{reset_color}"
+        return TEMPLATE_FORMAT_STRING_COLORED_LEVEL.format(
+            color=level_color,
+            levelname=levelname,
+            reset=reset_color,
+        )
 
-    def filter(self, record: LogRecord) -> bool:
+    def filter(
+        self,
+        record: LogRecord,
+    ) -> bool:
         if self.color:
-            record.colored_levelname = self._color_level(record.levelname)
+            record.colored_levelname = self._color_level(
+                levelname=record.levelname,
+            )
 
         return True
 
 
-class MicrosecondFormatter(Formatter):
+class MicrosecondFormatter(
+    Formatter,
+):
     def formatTime(  # noqa: N802
         self,
         record: LogRecord,
         datefmt: str | None = None,
-        ) -> str:
-        fmt = "%H:%M:%S.%f"
-        if isinstance(datefmt, str) and datefmt.strip():
-            fmt = datefmt.strip()
+    ) -> str:
+        fmt = FORMAT_LOG_TIME_MICROSECONDS
+
+        if (
+            isinstance(datefmt, str)
+            and (stripped := datefmt.strip())
+        ):
+            fmt = stripped
 
         ct = datetime.fromtimestamp(
             record.created,
@@ -66,24 +129,57 @@ def create_logger(
     *,
     color_console: bool = True,
 ) -> Logger:
-    logger = getLogger(name)
-    logger.setLevel(DEBUG)
+    logger = getLogger(
+        name=name,
+    )
+    logger.setLevel(
+        level=DEBUG,
+    )
 
     console_handler = StreamHandler()
-    console_handler.addFilter(ColorLevelFilter(color=color_console))
-    console_handler.setFormatter(MicrosecondFormatter(FORMAT_CONSOLE_LOG))
-    console_handler.setLevel(console_level)
+    console_handler.addFilter(
+        filter=ColorLevelFilter(
+            color=color_console,
+        ),
+    )
+    console_handler.setFormatter(
+        fmt=MicrosecondFormatter(
+            fmt=FORMAT_LOG_CONSOLE,
+        ),
+    )
+    console_handler.setLevel(
+        level=console_level,
+    )
 
     file_handler = FileHandler(
-        f"{DEFAULT_LOG_DIR}/{datetime.now().astimezone():%Y-%m-%d}.log",
+        filename=TEMPLATE_FORMAT_FILE_LOG_PATH.format(
+            dir=DEFAULT_LOG_DIR,
+            name=datetime.now().astimezone().strftime(
+                FORMAT_LOG_FILENAME_DATE,
+            ),
+        ),
         encoding="utf-8",
     )
-    file_handler.addFilter(ColorLevelFilter(color=False))
-    file_handler.setFormatter(MicrosecondFormatter(FORMAT_FILE_LOG))
-    file_handler.setLevel(file_level)
+    file_handler.addFilter(
+        filter=ColorLevelFilter(
+            color=False,
+        ),
+    )
+    file_handler.setFormatter(
+        fmt=MicrosecondFormatter(
+            fmt=FORMAT_LOG_FILE,
+        ),
+    )
+    file_handler.setLevel(
+        level=file_level,
+    )
 
-    logger.addHandler(console_handler)
-    logger.addHandler(file_handler)
+    logger.addHandler(
+        hdlr=console_handler,
+    )
+    logger.addHandler(
+        hdlr=file_handler,
+    )
 
     return logger
 
@@ -92,19 +188,34 @@ def log_debug_object(
     title: str,
     obj: object,
     *,
-    indent: int = DEFAULT_INDENT,
+    indent: int = DEFAULT_JSON_INDENT,
 ) -> None:
     try:
-        formatted = dumps(
-            vars(obj) if isinstance(obj, Namespace) else obj,
+        serialized_obj = dumps(
+            obj=vars(obj) if isinstance(obj, Namespace) else obj,
             default=str,
             ensure_ascii=False,
             indent=indent,
             sort_keys=True,
         )
-        logger.debug("%s:\n%s", title, formatted)
-    except (TypeError, ValueError) as e:
-        logger.debug("Failed to serialize object '%s': %s.", title, e)
+
+        logger.debug(
+            msg=TEMPLATE_TITLE_OBJECT_PRETTY_PRINT.format(
+                title=title,
+                formatted=serialized_obj,
+            ),
+        )
+    except (
+        TypeError,
+        ValueError,
+    ) as e:
+        logger.debug(
+            msg=TEMPLATE_ERROR_FAILED_SERIALIZATION.format(
+                title=title,
+                exc_type=type(e).__name__,
+                exc_msg=str(e),
+            ),
+        )
 
 
 logger = create_logger()

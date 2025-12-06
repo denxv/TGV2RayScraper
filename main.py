@@ -1,28 +1,45 @@
-from argparse import ArgumentParser, HelpFormatter
-from subprocess import run
-from sys import executable
+from argparse import (
+    ArgumentParser,
+    HelpFormatter,
+)
+from subprocess import (
+    run,
+)
+from sys import (
+    executable,
+)
 
-from core.constants import (
-    CHANNEL_MAX_BATCH_EXTRACT,
-    CHANNEL_MAX_BATCH_UPDATE,
-    CHANNEL_MAX_MESSAGE_OFFSET,
-    CHANNEL_MIN_BATCH_EXTRACT,
-    CHANNEL_MIN_BATCH_UPDATE,
-    CHANNEL_MIN_MESSAGE_OFFSET,
+from core.constants.common import (
+    BATCH_EXTRACT_MAX,
+    BATCH_EXTRACT_MIN,
+    BATCH_UPDATE_MAX,
+    BATCH_UPDATE_MIN,
     CLI_SCRIPTS_CONFIG,
     DEFAULT_HELP_INDENT,
     DEFAULT_HELP_WIDTH,
-    HTTP_MAX_TIMEOUT,
-    HTTP_MIN_TIMEOUT,
-    MESSAGE_EXIT,
-    MESSAGE_UNEXPECTED_ERROR,
+    HTTP_TIMEOUT_MAX,
+    HTTP_TIMEOUT_MIN,
+    MESSAGE_OFFSET_MAX,
+    MESSAGE_OFFSET_MIN,
     SUPPRESS,
-    TEMPLATE_MSG_ERROR_SCRIPT,
+)
+from core.constants.messages import (
+    MESSAGE_ERROR_PROGRAM_EXIT,
+    MESSAGE_ERROR_UNEXPECTED_FAILURE,
+)
+from core.constants.templates import (
+    TEMPLATE_ERROR_FAILED_SCRIPT_EXECUTION,
     TEMPLATE_MSG_SCRIPT_COMPLETED,
     TEMPLATE_MSG_SCRIPT_STARTED,
 )
-from core.logger import log_debug_object, logger
-from core.typing import ArgsNamespace, CLIParams
+from core.logger import (
+    log_debug_object,
+    logger,
+)
+from core.typing import (
+    ArgsNamespace,
+    CLIParams,
+)
 from core.utils import (
     collect_args,
     convert_number_in_range,
@@ -54,9 +71,9 @@ def parse_args() -> ArgsNamespace:
         "--batch-extract",
         help=SUPPRESS,
         type=lambda value: convert_number_in_range(
-            value,
-            min_value=CHANNEL_MIN_BATCH_EXTRACT,
-            max_value=CHANNEL_MAX_BATCH_EXTRACT,
+            value=value,
+            min_value=BATCH_EXTRACT_MIN,
+            max_value=BATCH_EXTRACT_MAX,
             as_int=True,
             as_str=True,
         ),
@@ -66,9 +83,9 @@ def parse_args() -> ArgsNamespace:
         "--batch-update",
         help=SUPPRESS,
         type=lambda value: convert_number_in_range(
-            value,
-            min_value=CHANNEL_MIN_BATCH_UPDATE,
-            max_value=CHANNEL_MAX_BATCH_UPDATE,
+            value=value,
+            min_value=BATCH_UPDATE_MIN,
+            max_value=BATCH_UPDATE_MAX,
             as_int=True,
             as_str=True,
         ),
@@ -77,19 +94,28 @@ def parse_args() -> ArgsNamespace:
     parser.add_argument(
         "--channels",
         help=SUPPRESS,
-        type=lambda path: validate_file_path(path, must_be_file=True),
+        type=lambda path: validate_file_path(
+            path=path,
+            must_be_file=True,
+        ),
     )
 
     parser.add_argument(
         "--configs-clean",
         help=SUPPRESS,
-        type=lambda path: validate_file_path(path, must_be_file=False),
+        type=lambda path: validate_file_path(
+            path=path,
+            must_be_file=False,
+        ),
     )
 
     parser.add_argument(
         "--configs-raw",
         help=SUPPRESS,
-        type=lambda path: validate_file_path(path, must_be_file=False),
+        type=lambda path: validate_file_path(
+            path=path,
+            must_be_file=False,
+        ),
     )
 
     parser.add_argument(
@@ -126,19 +152,12 @@ def parse_args() -> ArgsNamespace:
     )
 
     parser.add_argument(
-        "--include-new",
-        action="store_const",
-        const="",
-        help=SUPPRESS,
-    )
-
-    parser.add_argument(
         "--message-offset",
         help=SUPPRESS,
         type=lambda value: convert_number_in_range(
-            value,
-            min_value=CHANNEL_MIN_MESSAGE_OFFSET,
-            max_value=CHANNEL_MAX_MESSAGE_OFFSET,
+            value=value,
+            min_value=MESSAGE_OFFSET_MIN,
+            max_value=MESSAGE_OFFSET_MAX,
             as_int=True,
             as_str=True,
         ),
@@ -193,9 +212,9 @@ def parse_args() -> ArgsNamespace:
         "--time-out",
         help=SUPPRESS,
         type=lambda value: convert_number_in_range(
-            value,
-            min_value=HTTP_MIN_TIMEOUT,
-            max_value=HTTP_MAX_TIMEOUT,
+            value=value,
+            min_value=HTTP_TIMEOUT_MIN,
+            max_value=HTTP_TIMEOUT_MAX,
             as_int=False,
             as_str=True,
         ),
@@ -204,11 +223,17 @@ def parse_args() -> ArgsNamespace:
     parser.add_argument(
         "--urls",
         help=SUPPRESS,
-        type=lambda path: validate_file_path(path, must_be_file=True),
+        type=lambda path: validate_file_path(
+            path=path,
+            must_be_file=True,
+        ),
     )
 
     args = parser.parse_args()
-    log_debug_object("Parsed command-line arguments", args)
+    log_debug_object(
+        title="Parsed command-line arguments",
+        obj=args,
+    )
 
     return args
 
@@ -220,8 +245,16 @@ def run_script(
     if script_args is None:
         script_args = []
 
-    logger.info(TEMPLATE_MSG_SCRIPT_STARTED.format(name=script_name))
-    logger.info(repeat_char_line(char="-"))
+    logger.info(
+        msg=TEMPLATE_MSG_SCRIPT_STARTED.format(
+            name=script_name,
+        ),
+    )
+    logger.info(
+        msg=repeat_char_line(
+            char="-",
+        ),
+    )
 
     arguments = [
         executable,
@@ -230,19 +263,45 @@ def run_script(
         *script_args,
     ]
 
-    log_debug_object("Script launch arguments", arguments)
-    if run(check=False, args=arguments).returncode:
-        message = TEMPLATE_MSG_ERROR_SCRIPT.format(name=script_name)
-        raise RuntimeError(message)
+    log_debug_object(
+        title="Script launch arguments",
+        obj=arguments,
+    )
+    if run(
+        check=False,
+        args=arguments,
+    ).returncode:
+        raise RuntimeError(
+            TEMPLATE_ERROR_FAILED_SCRIPT_EXECUTION.format(
+                name=script_name,
+            ),
+        )
 
-    logger.info(repeat_char_line(char="-"))
-    logger.info(TEMPLATE_MSG_SCRIPT_COMPLETED.format(name=script_name))
-    logger.info(repeat_char_line(char="="))
+    logger.info(
+        msg=repeat_char_line(
+            char="-",
+        ),
+    )
+    logger.info(
+        msg=TEMPLATE_MSG_SCRIPT_COMPLETED.format(
+            name=script_name,
+        ),
+    )
+    logger.info(
+        msg=repeat_char_line(
+            char="=",
+        ),
+    )
 
 
 def show_scripts_help() -> None:
     for script_name in CLI_SCRIPTS_CONFIG:
-        run_script(script_name, script_args=["--help"])
+        run_script(
+            script_name=script_name,
+            script_args=[
+                "--help",
+            ],
+        )
 
 
 def main() -> None:
@@ -264,9 +323,13 @@ def main() -> None:
                 ),
             )
     except KeyboardInterrupt:
-        logger.info(MESSAGE_EXIT)
+        logger.info(
+            msg=MESSAGE_ERROR_PROGRAM_EXIT,
+        )
     except Exception:
-        logger.exception(MESSAGE_UNEXPECTED_ERROR)
+        logger.exception(
+            msg=MESSAGE_ERROR_UNEXPECTED_FAILURE,
+        )
 
 
 if __name__ == "__main__":

@@ -232,7 +232,17 @@ ruff check .
 
 * **core/** — основные утилиты и константы
 
-  * `constants.py` — константы, дефолтные пути, шаблоны URL, регулярные выражения, флаги скриптов
+  * **constants/** — общие константы, форматы, сообщения, шаблоны строк и регулярные выражения
+
+    * `common.py` — основные константы, пути по умолчанию, настройки скрипта, параметры каналов/сообщений, тайм-ауты, цвета, флаги
+
+    * `formats.py` — форматы дат, времени, логов и индикаторов прогресса
+
+    * `messages.py` — текстовые сообщения для каналов и ошибок
+
+    * `patterns.py` — регулярные выражения для URL, конфигов и идентификаторов
+
+    * `templates.py` — шаблоны для логов, каналов, конфигов, ошибок, файлов и URL
 
   * `decorators.py` — декораторы (например, для логирования)
 
@@ -386,8 +396,10 @@ hysteria2://password@host:port?params#name
 ### **Shadowsocks / ShadowsocksR**
 
 ```text
-ss://base64(method:password)@host:port#name
 ss://method:password@host:port#name
+ss://method:password@host:port/path?params#name
+ss://base64(method:password)@host:port#name
+ss://base64(method:password)@host:port/path?params#name
 ss://base64(method:password@host:port)#name
 ssr://base64(host:port:protocol:method:obfs:base64(password)/?param=base64(value))
 ```
@@ -464,8 +476,6 @@ python -m scripts.update_channels -h
 
 * `-M, --message-offset N` — Количество последних сообщений, учитываемых при присвоении `current_id`.
 
-* `-N, --include-new` — Включать новые каналы в обработку.
-
 * `-U, --urls FILE` — Путь к текстовому файлу с новыми URL каналов (по умолчанию: `channels/urls.txt`).
 
 **Скрипт выполняет следующее:**
@@ -478,8 +488,6 @@ python -m scripts.update_channels -h
 
 * Позволяет присвоить `current_id` каналам с учётом смещения сообщений (`--message-offset`).
 
-* Может включать новые каналы в обработку (`--include-new`).
-
 * Поддерживает удаление недоступных или помеченных каналов (`--delete-channels`).
 
 * Создаёт резервные копии обоих файлов с меткой времени (можно отключить с помощью параметра `--no-backup`).
@@ -491,7 +499,7 @@ python -m scripts.update_channels -h
 **Пример использования:**
 
 ```bash
-python -m scripts.update_channels -C channels/current.json --urls channels/urls.txt --delete-channels -M 50 --include-new --no-dry-run --no-backup
+python -m scripts.update_channels -C channels.json --urls urls.txt -B -D -M 50 --no-dry-run
 ```
 
 > Можете добавить `uv run` перед командой `python`, чтобы запустить её через `uv`.

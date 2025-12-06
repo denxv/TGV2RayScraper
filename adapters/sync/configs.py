@@ -1,26 +1,43 @@
-from urllib.parse import unquote
+from urllib.parse import (
+    unquote,
+)
 
-from lxml import html
-from tqdm import tqdm
+from lxml import (
+    html,
+)
+from tqdm import (
+    tqdm,
+)
 
-from core.constants import (
+from core.constants.common import (
+    BATCH_ID,
     DEFAULT_CURRENT_ID,
     DEFAULT_FILE_CONFIGS_CLEAN,
     DEFAULT_FILE_CONFIGS_RAW,
     DEFAULT_LAST_ID,
-    FORMAT_CHANNEL_PROGRESS_BAR,
-    PATTERN_URL_V2RAY_ALL,
-    PATTERNS_URL_ALL,
-    TEMPLATE_MSG_CONFIGS_FOUND,
-    TEMPLATE_MSG_EXTRACTING_CONFIGS,
-    TEMPLATE_MSG_LOADED_CONFIGS,
-    TEMPLATE_MSG_LOADING_CONFIGS,
-    TEMPLATE_MSG_SAVED_CONFIGS,
-    TEMPLATE_MSG_SAVING_CONFIGS,
-    TEMPLATE_TG_URL_AFTER,
     XPATH_TG_MESSAGES_TEXT,
 )
-from core.logger import logger
+from core.constants.formats import (
+    FORMAT_PROGRESS_BAR,
+)
+from core.constants.patterns import (
+    PATTERN_V2RAY_PROTOCOLS_URL,
+    PATTERNS_V2RAY_URLS_BY_PROTOCOL,
+)
+from core.constants.templates import (
+    TEMPLATE_CHANNEL_CONFIGS_FOUND,
+    TEMPLATE_CONFIG_EXTRACT_STARTED,
+    TEMPLATE_CONFIG_LOAD_COMPLETED,
+    TEMPLATE_CONFIG_LOAD_STARTED,
+    TEMPLATE_CONFIG_SAVE_COMPLETED,
+    TEMPLATE_CONFIG_SAVE_STARTED,
+    TEMPLATE_ERROR_FAILED_FETCH_ID,
+    TEMPLATE_ERROR_RESPONSE_EMPTY,
+    TEMPLATE_FORMAT_TG_URL_AFTER,
+)
+from core.logger import (
+    logger,
+)
 from core.typing import (
     ChannelInfo,
     ChannelName,
@@ -33,6 +50,13 @@ from core.typing import (
     V2RayRawLines,
 )
 
+__all__ = [
+    "fetch_channel_configs",
+    "load_configs",
+    "save_configs",
+    "write_configs",
+]
+
 
 def fetch_channel_configs(
     client: SyncHTTPClient,
@@ -41,51 +65,74 @@ def fetch_channel_configs(
     path_configs: FilePath = DEFAULT_FILE_CONFIGS_RAW,
 ) -> None:
     v2ray_count = 0
-    batch_id = 20
     range_channel_id = range(
-        channel_info.get("current_id", DEFAULT_CURRENT_ID),
-        channel_info.get("last_id", DEFAULT_LAST_ID),
-        batch_id,
+        channel_info.get(
+            "current_id",
+            DEFAULT_CURRENT_ID,
+        ),
+        channel_info.get(
+            "last_id",
+            DEFAULT_LAST_ID,
+        ),
+        BATCH_ID,
     )
-    logger.info(TEMPLATE_MSG_EXTRACTING_CONFIGS.format(name=channel_name))
+
+    logger.info(
+        msg=TEMPLATE_CONFIG_EXTRACT_STARTED.format(
+            name=channel_name,
+        ),
+    )
 
     for current_id in tqdm(
-        range_channel_id,
+        iterable=range_channel_id,
         ascii=True,
-        bar_format=FORMAT_CHANNEL_PROGRESS_BAR,
+        bar_format=FORMAT_PROGRESS_BAR,
         leave=False,
     ):
         channel_info["current_id"] = current_id
 
         try:
-            response = client.get(TEMPLATE_TG_URL_AFTER.format(
-                name=channel_name,
-                id=current_id,
-            ))
+            response = client.get(
+                url=TEMPLATE_FORMAT_TG_URL_AFTER.format(
+                    name=channel_name,
+                    id=current_id,
+                ),
+            )
             response.raise_for_status()
 
             if not response.content.strip():
                 logger.debug(
-                    f"Empty response for ID {current_id} "
-                    f"({channel_name=}, status={response.status_code}).",
+                    msg=TEMPLATE_ERROR_RESPONSE_EMPTY.format(
+                        current_id=current_id,
+                        channel_name=channel_name,
+                        status=response.status_code,
+                    ),
                 )
                 continue
 
-            tree = html.fromstring(response.content)
-            messages = tree.xpath(XPATH_TG_MESSAGES_TEXT)
-
+            tree = html.fromstring(
+                html=response.content,
+            )
+            messages = tree.xpath(
+                XPATH_TG_MESSAGES_TEXT,
+            )
         except Exception as e:
             logger.exception(
-                f"Error while fetching ID {current_id} "
-                f"({channel_name=}): {e}.",
+                msg=TEMPLATE_ERROR_FAILED_FETCH_ID.format(
+                    current_id=current_id,
+                    channel_name=channel_name,
+                    exc_type=type(e).__name__,
+                    exc_msg=str(e),
+                ),
             )
             continue
-
         else:
             configs = [
-                message
+                match.group("url")
                 for message in messages
-                if PATTERN_URL_V2RAY_ALL.match(message)
+                for match in PATTERN_V2RAY_PROTOCOLS_URL.finditer(
+                    string=message,
+                )
             ]
 
         if len(configs) > 0:
@@ -99,38 +146,70 @@ def fetch_channel_configs(
             )
 
     channel_info["current_id"] = max(
-        channel_info.get("last_id", DEFAULT_LAST_ID),
+        channel_info.get(
+            "last_id",
+            DEFAULT_LAST_ID,
+        ),
         DEFAULT_CURRENT_ID,
     )
 
-    logger.info(TEMPLATE_MSG_CONFIGS_FOUND.format(count=v2ray_count))
+    logger.info(
+        msg=TEMPLATE_CHANNEL_CONFIGS_FOUND.format(
+            count=v2ray_count,
+        ),
+    )
 
 
 def load_configs(
     path_configs_raw: FilePath = DEFAULT_FILE_CONFIGS_RAW,
 ) -> V2RayConfigsRaw:
-    logger.info(TEMPLATE_MSG_LOADING_CONFIGS.format(path=path_configs_raw))
+    logger.info(
+        msg=TEMPLATE_CONFIG_LOAD_STARTED.format(
+            path=path_configs_raw,
+        ),
+    )
 
-    def line_to_configs(line: str) -> V2RayConfigRawIterator:
-        clean_line = unquote(line.strip())
-
-        return (
-            match.groupdict(default="")
-            for pattern in PATTERNS_URL_ALL
-            for match in pattern.finditer(clean_line)
+    def line_to_configs(
+        line: str,
+    ) -> V2RayConfigRawIterator:
+        clean_line = unquote(
+            string=line.strip(),
         )
 
-    with open(path_configs_raw, encoding="utf-8") as file:
+        return (
+            config_match.groupdict(
+                default="",
+            )
+            for url_match in PATTERN_V2RAY_PROTOCOLS_URL.finditer(
+                string=clean_line,
+            )
+            for pattern in PATTERNS_V2RAY_URLS_BY_PROTOCOL.get(
+                url_match.group("protocol"),
+                (),
+            )
+            for config_match in pattern.finditer(
+                string=url_match.group("url"),
+            )
+        )
+
+    with open(
+        file=path_configs_raw,
+        encoding="utf-8",
+    ) as file:
         configs = [
             config
             for line in file
-            for config in line_to_configs(line)
+            for config in line_to_configs(
+                line=line,
+            )
         ]
 
-    logger.info(TEMPLATE_MSG_LOADED_CONFIGS.format(
-        count=len(configs),
-        path=path_configs_raw,
-    ))
+    logger.info(
+        msg=TEMPLATE_CONFIG_LOAD_COMPLETED.format(
+            count=len(configs),
+            path=path_configs_raw,
+        ),
+    )
 
     return configs
 
@@ -140,21 +219,29 @@ def save_configs(
     path_configs_clean: FilePath = DEFAULT_FILE_CONFIGS_CLEAN,
     mode: FileMode = "w",
 ) -> None:
-    logger.info(TEMPLATE_MSG_SAVING_CONFIGS.format(
-        count=len(configs),
-        path=path_configs_clean,
-    ))
+    logger.info(
+        msg=TEMPLATE_CONFIG_SAVE_STARTED.format(
+            count=len(configs),
+            path=path_configs_clean,
+        ),
+    )
 
-    with open(path_configs_clean, mode, encoding="utf-8") as file:
+    with open(
+        file=path_configs_clean,
+        mode=mode,
+        encoding="utf-8",
+    ) as file:
         file.writelines(
             f"{config.get('url', '')}\n"
             for config in configs
         )
 
-    logger.info(TEMPLATE_MSG_SAVED_CONFIGS.format(
-        count=len(configs),
-        path=path_configs_clean,
-    ))
+    logger.info(
+        msg=TEMPLATE_CONFIG_SAVE_COMPLETED.format(
+            count=len(configs),
+            path=path_configs_clean,
+        ),
+    )
 
 
 def write_configs(
@@ -162,7 +249,11 @@ def write_configs(
     path_configs: FilePath = DEFAULT_FILE_CONFIGS_RAW,
     mode: FileMode = "w",
 ) -> None:
-    with open(path_configs, mode, encoding="utf-8") as file:
+    with open(
+        file=path_configs,
+        mode=mode,
+        encoding="utf-8",
+    ) as file:
         file.writelines(
             f"{config}\n"
             for config in configs

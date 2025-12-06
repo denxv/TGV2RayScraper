@@ -1,24 +1,41 @@
-from argparse import ArgumentParser, HelpFormatter
+from argparse import (
+    ArgumentParser,
+    HelpFormatter,
+)
 
-from adapters.sync.configs import load_configs, save_configs
-from core.constants import (
+from adapters.sync.configs import (
+    load_configs,
+    save_configs,
+)
+from core.constants.common import (
     DEFAULT_HELP_INDENT,
     DEFAULT_HELP_WIDTH,
     DEFAULT_PATH_CONFIGS_CLEAN,
     DEFAULT_PATH_CONFIGS_RAW,
-    MESSAGE_EXIT,
-    MESSAGE_UNEXPECTED_ERROR,
-    PATTERNS_URL_ALL,
     SUPPRESS,
 )
-from core.logger import log_debug_object, logger
-from core.typing import ArgsNamespace
+from core.constants.messages import (
+    MESSAGE_ERROR_PROGRAM_EXIT,
+    MESSAGE_ERROR_UNEXPECTED_FAILURE,
+)
+from core.constants.patterns import (
+    PATTERNS_V2RAY_URLS_BY_PROTOCOL,
+)
+from core.logger import (
+    log_debug_object,
+    logger,
+)
+from core.typing import (
+    ArgsNamespace,
+)
 from core.utils import (
     abs_path,
     parse_valid_fields,
     validate_file_path,
 )
-from domain.config import process_configs
+from domain.config import (
+    process_configs,
+)
 
 
 def parse_args() -> ArgsNamespace:
@@ -77,14 +94,19 @@ def parse_args() -> ArgsNamespace:
 
     parser.add_argument(
         "-I", "--configs-raw",
-        default=abs_path(DEFAULT_PATH_CONFIGS_RAW),
+        default=abs_path(
+            path=DEFAULT_PATH_CONFIGS_RAW,
+        ),
         dest="configs_raw",
         help=(
             "Path to the input file with raw V2Ray configs "
             "(default: %(default)s)."
         ),
         metavar="FILE",
-        type=lambda path: validate_file_path(path, must_be_file=True),
+        type=lambda path: validate_file_path(
+            path=path,
+            must_be_file=True,
+        ),
     )
 
     parser.add_argument(
@@ -96,14 +118,19 @@ def parse_args() -> ArgsNamespace:
 
     parser.add_argument(
         "-O", "--configs-clean",
-        default=abs_path(DEFAULT_PATH_CONFIGS_CLEAN),
+        default=abs_path(
+            path=DEFAULT_PATH_CONFIGS_CLEAN,
+        ),
         dest="configs_clean",
         help=(
             "Path to the output file for cleaned and processed configs "
             "(default: %(default)s)."
         ),
         metavar="FILE",
-        type=lambda path: validate_file_path(path, must_be_file=False),
+        type=lambda path: validate_file_path(
+            path=path,
+            must_be_file=False,
+        ),
     )
 
     parser.add_argument(
@@ -129,7 +156,10 @@ def parse_args() -> ArgsNamespace:
     )
 
     args = parser.parse_args()
-    log_debug_object("Parsed command-line arguments", args)
+    log_debug_object(
+        title="Parsed command-line arguments",
+        obj=args,
+    )
 
     return args
 
@@ -138,11 +168,14 @@ def main() -> None:
     try:
         parsed_args = parse_args()
         log_debug_object(
-            title="List of compiled URL regex patterns",
-            obj=PATTERNS_URL_ALL,
+            title="Compiled URL regex patterns by V2Ray protocol",
+            obj=PATTERNS_V2RAY_URLS_BY_PROTOCOL,
         )
 
-        configs_raw = load_configs(path_configs_raw=parsed_args.configs_raw)
+        configs_raw = load_configs(
+            path_configs_raw=parsed_args.configs_raw,
+        )
+
         configs_clean = process_configs(
             configs=configs_raw,
             args=parsed_args,
@@ -153,9 +186,13 @@ def main() -> None:
             path_configs_clean=parsed_args.configs_clean,
         )
     except KeyboardInterrupt:
-        logger.info(MESSAGE_EXIT)
+        logger.info(
+            msg=MESSAGE_ERROR_PROGRAM_EXIT,
+        )
     except Exception:
-        logger.exception(MESSAGE_UNEXPECTED_ERROR)
+        logger.exception(
+            msg=MESSAGE_ERROR_UNEXPECTED_FAILURE,
+        )
 
 
 if __name__ == "__main__":

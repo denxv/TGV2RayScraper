@@ -1,22 +1,32 @@
-from argparse import ArgumentParser, HelpFormatter
+from argparse import (
+    ArgumentParser,
+    HelpFormatter,
+)
 
 from adapters.sync.channels import (
     load_channels_and_urls,
     save_channels_and_urls,
 )
-from core.constants import (
-    CHANNEL_MAX_MESSAGE_OFFSET,
-    CHANNEL_MIN_MESSAGE_OFFSET,
+from core.constants.common import (
     DEFAULT_HELP_INDENT,
     DEFAULT_HELP_WIDTH,
     DEFAULT_PATH_CHANNELS,
     DEFAULT_PATH_URLS,
-    MESSAGE_EXIT,
-    MESSAGE_UNEXPECTED_ERROR,
+    MESSAGE_OFFSET_MAX,
+    MESSAGE_OFFSET_MIN,
     SUPPRESS,
 )
-from core.logger import log_debug_object, logger
-from core.typing import ArgsNamespace
+from core.constants.messages import (
+    MESSAGE_ERROR_PROGRAM_EXIT,
+    MESSAGE_ERROR_UNEXPECTED_FAILURE,
+)
+from core.logger import (
+    log_debug_object,
+    logger,
+)
+from core.typing import (
+    ArgsNamespace,
+)
 from core.utils import (
     abs_path,
     convert_number_in_range,
@@ -37,8 +47,7 @@ def parse_args() -> ArgsNamespace:
         ),
         epilog=(
             "Example: PYTHONPATH=. python scripts/%(prog)s "
-            "-C channels.json --urls urls.txt --delete-channels "
-            "-M 50 --include-new --no-dry-run --no-backup"
+            "-C channels.json --urls urls.txt -B -D -M 50 --no-dry-run"
         ),
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
@@ -70,14 +79,19 @@ def parse_args() -> ArgsNamespace:
 
     parser.add_argument(
         "-C", "--channels",
-        default=abs_path(DEFAULT_PATH_CHANNELS),
+        default=abs_path(
+            path=DEFAULT_PATH_CHANNELS,
+        ),
         dest="channels_file",
         help=(
             "Path to the input JSON file containing the list of channels "
             "(default: %(default)s)."
         ),
         metavar="FILE",
-        type=lambda path: validate_file_path(path, must_be_file=True),
+        type=lambda path: validate_file_path(
+            path=path,
+            must_be_file=True,
+        ),
     )
 
     parser.add_argument(
@@ -105,35 +119,36 @@ def parse_args() -> ArgsNamespace:
         ),
         metavar="N",
         type=lambda value: convert_number_in_range(
-            value,
-            min_value=CHANNEL_MIN_MESSAGE_OFFSET,
-            max_value=CHANNEL_MAX_MESSAGE_OFFSET,
+            value=value,
+            min_value=MESSAGE_OFFSET_MIN,
+            max_value=MESSAGE_OFFSET_MAX,
             as_int=True,
             as_str=False,
         ),
     )
 
     parser.add_argument(
-        "-N", "--include-new",
-        action="store_true",
-        dest="include_new_channels",
-        help="Include new channels in processing.",
-    )
-
-    parser.add_argument(
         "-U", "--urls",
-        default=abs_path(DEFAULT_PATH_URLS),
+        default=abs_path(
+            path=DEFAULT_PATH_URLS,
+        ),
         dest="urls_file",
         help=(
             "Path to a text file containing new channel URLs "
             "(default: %(default)s)."
         ),
         metavar="FILE",
-        type=lambda path: validate_file_path(path, must_be_file=True),
+        type=lambda path: validate_file_path(
+            path=path,
+            must_be_file=True,
+        ),
     )
 
     args = parser.parse_args()
-    log_debug_object("Parsed command-line arguments", args)
+    log_debug_object(
+        title="Parsed command-line arguments",
+        obj=args,
+    )
 
     return args
 
@@ -162,9 +177,13 @@ def main() -> None:
             make_backups=parsed_args.make_backups,
         )
     except KeyboardInterrupt:
-        logger.info(MESSAGE_EXIT)
+        logger.info(
+            msg=MESSAGE_ERROR_PROGRAM_EXIT,
+        )
     except Exception:
-        logger.exception(MESSAGE_UNEXPECTED_ERROR)
+        logger.exception(
+            msg=MESSAGE_ERROR_UNEXPECTED_FAILURE,
+        )
 
 
 if __name__ == "__main__":

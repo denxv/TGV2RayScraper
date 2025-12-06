@@ -1,30 +1,53 @@
-from argparse import ArgumentParser, HelpFormatter
+from argparse import (
+    ArgumentParser,
+    HelpFormatter,
+)
 
-from httpx import Client, Timeout
+from httpx import (
+    Client,
+    Timeout,
+)
 
-from adapters.sync.channels import load_channels, save_channels
-from adapters.sync.configs import fetch_channel_configs
-from adapters.sync.scraper import update_info
-from core.constants import (
+from adapters.sync.channels import (
+    load_channels,
+    save_channels,
+)
+from adapters.sync.configs import (
+    fetch_channel_configs,
+)
+from adapters.sync.scraper import (
+    update_info,
+)
+from core.constants.common import (
     DEFAULT_HELP_INDENT,
     DEFAULT_HELP_WIDTH,
-    DEFAULT_HTTP_TIMEOUT,
     DEFAULT_PATH_CHANNELS,
     DEFAULT_PATH_CONFIGS_RAW,
-    HTTP_MAX_TIMEOUT,
-    HTTP_MIN_TIMEOUT,
-    MESSAGE_EXIT,
-    MESSAGE_UNEXPECTED_ERROR,
+    HTTP_TIMEOUT_DEFAULT,
+    HTTP_TIMEOUT_MAX,
+    HTTP_TIMEOUT_MIN,
     SUPPRESS,
 )
-from core.logger import log_debug_object, logger
-from core.typing import ArgsNamespace
+from core.constants.messages import (
+    MESSAGE_ERROR_PROGRAM_EXIT,
+    MESSAGE_ERROR_UNEXPECTED_FAILURE,
+)
+from core.logger import (
+    log_debug_object,
+    logger,
+)
+from core.typing import (
+    ArgsNamespace,
+)
 from core.utils import (
     abs_path,
     convert_number_in_range,
     validate_file_path,
 )
-from domain.channel import get_sorted_keys, print_channel_info
+from domain.channel import (
+    get_sorted_keys,
+    print_channel_info,
+)
 
 
 def parse_args() -> ArgsNamespace:
@@ -46,14 +69,19 @@ def parse_args() -> ArgsNamespace:
 
     parser.add_argument(
         "-C", "--channels",
-        default=abs_path(DEFAULT_PATH_CHANNELS),
+        default=abs_path(
+            path=DEFAULT_PATH_CHANNELS,
+        ),
         dest="channels",
         help=(
             "Path to the input JSON file containing the list of channels "
             "(default: %(default)s)."
         ),
         metavar="FILE",
-        type=lambda path: validate_file_path(path, must_be_file=True),
+        type=lambda path: validate_file_path(
+            path=path,
+            must_be_file=True,
+        ),
     )
 
     parser.add_argument(
@@ -64,19 +92,24 @@ def parse_args() -> ArgsNamespace:
 
     parser.add_argument(
         "-R", "--configs-raw",
-        default=abs_path(DEFAULT_PATH_CONFIGS_RAW),
+        default=abs_path(
+            path=DEFAULT_PATH_CONFIGS_RAW,
+        ),
         dest="configs_raw",
         help=(
             "Path to the output file for saving scraped V2Ray configs "
             "(default: %(default)s)."
         ),
         metavar="FILE",
-        type=lambda path: validate_file_path(path, must_be_file=False),
+        type=lambda path: validate_file_path(
+            path=path,
+            must_be_file=False,
+        ),
     )
 
     parser.add_argument(
         "-T", "--time-out",
-        default=DEFAULT_HTTP_TIMEOUT,
+        default=HTTP_TIMEOUT_DEFAULT,
         dest="time_out",
         help=(
             "HTTP client timeout in seconds for requests used "
@@ -85,16 +118,19 @@ def parse_args() -> ArgsNamespace:
         ),
         metavar="SECONDS",
         type=lambda value: convert_number_in_range(
-            value,
-            min_value=HTTP_MIN_TIMEOUT,
-            max_value=HTTP_MAX_TIMEOUT,
+            value=value,
+            min_value=HTTP_TIMEOUT_MIN,
+            max_value=HTTP_TIMEOUT_MAX,
             as_int=False,
             as_str=False,
         ),
     )
 
     args = parser.parse_args()
-    log_debug_object("Parsed command-line arguments", args)
+    log_debug_object(
+        title="Parsed command-line arguments",
+        obj=args,
+    )
 
     return args
 
@@ -102,17 +138,27 @@ def parse_args() -> ArgsNamespace:
 def main() -> None:
     parsed_args = parse_args()
     try:
-        timeout = Timeout(parsed_args.time_out)
-        channels = load_channels(path_channels=parsed_args.channels)
+        channels = load_channels(
+            path_channels=parsed_args.channels,
+        )
 
-        with Client(timeout=timeout) as client:
+        with Client(
+            timeout=Timeout(
+                timeout=parsed_args.time_out,
+            ),
+        ) as client:
             update_info(
                 client=client,
                 channels=channels,
             )
-            print_channel_info(channels=channels)
+            print_channel_info(
+                channels=channels,
+            )
 
-            for name in get_sorted_keys(channels, apply_filter=True):
+            for name in get_sorted_keys(
+                channels=channels,
+                apply_filter=True,
+            ):
                 fetch_channel_configs(
                     client=client,
                     channel_name=name,
@@ -120,9 +166,13 @@ def main() -> None:
                     path_configs=parsed_args.configs_raw,
                 )
     except KeyboardInterrupt:
-        logger.info(MESSAGE_EXIT)
+        logger.info(
+            msg=MESSAGE_ERROR_PROGRAM_EXIT,
+        )
     except Exception:
-        logger.exception(MESSAGE_UNEXPECTED_ERROR)
+        logger.exception(
+            msg=MESSAGE_ERROR_UNEXPECTED_FAILURE,
+        )
     finally:
         save_channels(
             channels=channels,

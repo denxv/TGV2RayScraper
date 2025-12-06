@@ -1,22 +1,41 @@
-from asyncio import gather
+from asyncio import (
+    gather,
+)
 
-from aiofiles import open as aiopen
-from lxml import html
-from tqdm.asyncio import tqdm
+from aiofiles import (
+    open as aiopen,
+)
+from lxml import (
+    html,
+)
+from tqdm.asyncio import (
+    tqdm,
+)
 
-from core.constants import (
-    DEFAULT_CHANNEL_BATCH_EXTRACT,
+from core.constants.common import (
+    BATCH_EXTRACT_DEFAULT,
+    BATCH_ID,
     DEFAULT_CURRENT_ID,
     DEFAULT_FILE_CONFIGS_RAW,
     DEFAULT_LAST_ID,
-    FORMAT_CHANNEL_PROGRESS_BAR,
-    PATTERN_URL_V2RAY_ALL,
-    TEMPLATE_MSG_CONFIGS_FOUND,
-    TEMPLATE_MSG_EXTRACTING_CONFIGS,
-    TEMPLATE_TG_URL_AFTER,
     XPATH_TG_MESSAGES_TEXT,
 )
-from core.logger import logger
+from core.constants.formats import (
+    FORMAT_PROGRESS_BAR,
+)
+from core.constants.patterns import (
+    PATTERN_V2RAY_PROTOCOLS_URL,
+)
+from core.constants.templates import (
+    TEMPLATE_CHANNEL_CONFIGS_FOUND,
+    TEMPLATE_CONFIG_EXTRACT_STARTED,
+    TEMPLATE_ERROR_FAILED_FETCH_ID,
+    TEMPLATE_ERROR_RESPONSE_EMPTY,
+    TEMPLATE_FORMAT_TG_URL_AFTER,
+)
+from core.logger import (
+    logger,
+)
 from core.typing import (
     AsyncHTTPClient,
     BatchSize,
@@ -29,66 +48,103 @@ from core.typing import (
     V2RayRawLines,
 )
 
+__all__ = [
+    "fetch_channel_configs",
+    "write_configs",
+]
+
 
 async def fetch_channel_configs(
     client: AsyncHTTPClient,
     channel_name: ChannelName,
     channel_info: ChannelInfo,
-    batch_size: BatchSize = DEFAULT_CHANNEL_BATCH_EXTRACT,
+    batch_size: BatchSize = BATCH_EXTRACT_DEFAULT,
     path_configs: FilePath = DEFAULT_FILE_CONFIGS_RAW,
 ) -> None:
     v2ray_count = 0
-    batch_id = 20
-    list_channel_id = list(range(
-        channel_info.get("current_id", DEFAULT_CURRENT_ID),
-        channel_info.get("last_id", DEFAULT_LAST_ID),
-        batch_id,
-    ))
-
+    list_channel_id = list(
+        range(
+            channel_info.get(
+                "current_id",
+                DEFAULT_CURRENT_ID,
+            ),
+            channel_info.get(
+                "last_id",
+                DEFAULT_LAST_ID,
+            ),
+            BATCH_ID,
+        ),
+    )
     batch_range = range(0, len(list_channel_id), batch_size)
-    logger.info(TEMPLATE_MSG_EXTRACTING_CONFIGS.format(name=channel_name))
 
-    async def fetch_and_parse(current_id: PostID) -> PostIDAndRawLines:
+    logger.info(
+        msg=TEMPLATE_CONFIG_EXTRACT_STARTED.format(
+            name=channel_name,
+        ),
+    )
+
+    async def fetch_and_parse(
+        current_id: PostID,
+    ) -> PostIDAndRawLines:
         try:
-            response = await client.get(TEMPLATE_TG_URL_AFTER.format(
-                name=channel_name,
-                id=current_id,
-            ))
+            response = await client.get(
+                url=TEMPLATE_FORMAT_TG_URL_AFTER.format(
+                    name=channel_name,
+                    id=current_id,
+                ),
+            )
             response.raise_for_status()
 
             if not response.text.strip():
                 logger.debug(
-                    f"Empty response for ID {current_id} "
-                    f"({channel_name=}, status={response.status_code}).",
+                    msg=TEMPLATE_ERROR_RESPONSE_EMPTY.format(
+                        current_id=current_id,
+                        channel_name=channel_name,
+                        status=response.status_code,
+                    ),
                 )
                 return current_id, []
 
-            tree = html.fromstring(response.text)
-            messages = tree.xpath(XPATH_TG_MESSAGES_TEXT)
-
+            tree = html.fromstring(
+                html=response.text,
+            )
+            messages = tree.xpath(
+                XPATH_TG_MESSAGES_TEXT,
+            )
         except Exception as e:
             logger.exception(
-                f"Error while fetching ID {current_id} "
-                f"({channel_name=}): {e}.",
+                msg=TEMPLATE_ERROR_FAILED_FETCH_ID.format(
+                    current_id=current_id,
+                    channel_name=channel_name,
+                    exc_type=type(e).__name__,
+                    exc_msg=str(e),
+                ),
             )
             return current_id, []
-
         else:
             configs = [
-                message
+                match.group("url")
                 for message in messages
-                if PATTERN_URL_V2RAY_ALL.match(message)
+                for match in PATTERN_V2RAY_PROTOCOLS_URL.finditer(
+                    string=message,
+                )
             ]
             return current_id, configs
 
     for channel_id in tqdm(
-        batch_range,
+        iterable=batch_range,
         ascii=True,
         leave=False,
-        bar_format=FORMAT_CHANNEL_PROGRESS_BAR,
+        bar_format=FORMAT_PROGRESS_BAR,
     ):
-        batch = list_channel_id[channel_id:channel_id + batch_size]
-        results = await gather(*(fetch_and_parse(_id) for _id in batch))
+        results = await gather(*(
+            fetch_and_parse(
+                current_id=_id,
+            )
+            for _id in list_channel_id[
+                channel_id:channel_id + batch_size
+            ]
+        ))
 
         for current_id, configs in results:
             channel_info["current_id"] = current_id
@@ -104,11 +160,18 @@ async def fetch_channel_configs(
                 )
 
     channel_info["current_id"] = max(
-        channel_info.get("last_id", DEFAULT_LAST_ID),
+        channel_info.get(
+            "last_id",
+            DEFAULT_LAST_ID,
+        ),
         DEFAULT_CURRENT_ID,
     )
 
-    logger.info(TEMPLATE_MSG_CONFIGS_FOUND.format(count=v2ray_count))
+    logger.info(
+        msg=TEMPLATE_CHANNEL_CONFIGS_FOUND.format(
+            count=v2ray_count,
+        ),
+    )
 
 
 async def write_configs(
@@ -116,7 +179,11 @@ async def write_configs(
     path_configs: FilePath = DEFAULT_FILE_CONFIGS_RAW,
     mode: FileMode = "w",
 ) -> None:
-    async with aiopen(path_configs, mode, encoding="utf-8") as file:
+    async with aiopen(
+        file=path_configs,
+        mode=mode,
+        encoding="utf-8",
+    ) as file:
         await file.writelines(
             f"{config}\n"
             for config in configs
