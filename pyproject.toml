@@ -12,10 +12,12 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "freezegun",
     "mypy",
     "pytest",
     "pytest-asyncio",
     "pytest-cov",
+    "pytest-mock",
     "ruff",
 ]
 
@@ -50,9 +52,6 @@ enable_error_code = [
     "redundant-self",
     "truthy-bool",
 ]
-exclude = [
-    "tests/",
-]
 implicit_reexport = true
 no_implicit_optional = true
 pretty = true
@@ -74,7 +73,11 @@ module = [
     "aiofiles",
     "asteval",
     "lxml",
+    "tests.*",
     "tqdm.*",
+]
+disable_error_code = [
+    "arg-type",
 ]
 
 [tool.pytest.ini_options]
@@ -82,16 +85,20 @@ addopts = "-v --tb=short --cov=. --cov-report=term-missing"
 asyncio_mode = "auto"
 log_cli = true
 log_cli_level = "INFO"
+markers = [
+    "e2e: Marks a test as an end-to-end test.",
+    "integration: Marks a test as an integration test.",
+    "unit: Marks a test as a unit test.",
+]
 minversion = "8.0"
-pythonpath = ["."]
+pythonpath = [
+    ".",
+]
 testpaths = [
     "tests/",
 ]
 
 [tool.ruff]
-exclude = [
-    "tests/",
-]
 indent-width = 4
 line-length = 79
 respect-gitignore = true
@@ -106,6 +113,17 @@ ignore = [
 ]
 select = [
     "ALL",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*" = [
+    "ARG001",
+    "ARG005",
+    "E731",
+    "EM101",
+    "PLR0913",
+    "PLR2004",
+    "S101",
 ]
 
 [tool.ruff.format]
