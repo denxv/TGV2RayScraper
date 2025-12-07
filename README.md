@@ -282,17 +282,129 @@ All dev-dependencies are listed in [`requirements-dev.txt`](requirements-dev.txt
 
   * `v2ray_cleaner.py` — script cleans, normalizes, and processes obtained V2Ray configurations
 
-* **tests/** — directory with all project tests, verifying correctness, stability, and module functionality (currently in progress...)
+* **tests/** — directory with all project tests, verifying correctness, stability, and module functionality
 
-  * **e2e/** — end-to-end tests, covering full usage scenarios
+  * **e2e/** — end-to-end tests, verifying full system behavior under different usage scenarios (**not implemented**)
 
-  * **fixtures/** — helper files and test data
+    * `test_async_scraper.py` — checks the asynchronous scraper with real data
 
-  * **integration/** — integration tests, checking module interactions
+    * `test_sync_scraper.py` — checks the synchronous scraper with real data
 
-  * **unit/** — unit tests, checking individual functions and classes in isolation
+    * `test_update_channels.py` — tests the process of updating channel information
 
-  * **conftest.py** — `pytest` configuration: fixtures, hooks, and common test settings
+    * `test_v2ray_cleaner.py` — verifies correct cleaning of V2Ray configurations
+
+  * **fixtures/** — helper files and test data used across different tests (**not implemented**)
+
+    * **channels/** — test data and lists for channel processing checks
+
+      * `sample_current.json` — contains current channels for testing functions
+
+      * `sample_urls.txt` — list of URLs for testing data loading
+
+    * **configs/** — test configuration files for processing checks
+
+      * `sample_v2ray_clean.txt` — contains cleaned configs for tests
+
+      * `sample_v2ray_raw.txt` — contains raw, original configs for tests
+
+  * **integration/** — integration tests, checking interaction between multiple modules (**not implemented**)
+
+    * **async_/** — asynchronous integration scenarios to verify data flows
+
+      * `test_async_channels_flow.py` — verifies correct processing of channels asynchronously
+
+      * `test_async_configs_flow.py` — verifies correct processing of configs asynchronously
+
+    * **sync/** — synchronous integration scenarios to verify data flows
+
+      * `test_sync_channels_flow.py` — verifies correct processing of channels synchronously
+
+      * `test_sync_configs_flow.py` — verifies correct processing of configs synchronously
+
+  * **unit/** — unit tests, verifying individual functions and classes of the project
+
+    * **adapters/** — adapter tests for data handling (**not implemented**)
+
+      * **async_/** — asynchronous adapters for function verification
+
+        * `test_async_channels.py` — checks processing and validation of channels
+
+        * `test_async_configs.py` — checks processing and validation of configs
+
+        * `test_async_scraper.py` — checks asynchronous scraper locally
+
+      * **sync/** — synchronous adapters for function verification
+
+        * `test_sync_channels.py` — checks processing and validation of channels
+
+        * `test_sync_configs.py` — checks processing and validation of configs
+
+        * `test_sync_scraper.py` — checks synchronous scraper locally
+
+    * **core/** — tests for core utilities and constants
+
+      * **constants/** — constants and test data used for function verification
+
+        * **examples/** — test data for function verification
+
+          * `decorators.py` — test data for verifying decorator functionality
+
+          * `logger.py` — test data for verifying logging and message output
+
+          * `utils.py` — test data for verifying helper functions and utilities
+
+        * **test_cases/** — pre-prepared test cases for parameterization
+
+          * `decorators.py` — test cases for verifying decorators
+
+          * `logger.py` — test cases for verifying logging
+
+          * `utils.py` — test cases for verifying helper functions
+
+        * `common.py` — local constants for core tests
+
+      * `test_decorators.py` — verifies correctness of custom decorators
+
+      * `test_logger.py` — verifies logging functionality and message formatting
+
+      * `test_utils.py` — verifies helper utilities and functions
+
+    * **domain/** — tests verifying domain logic of the project
+
+      * **constants/** — domain constants, fixtures, and pre-prepared cases
+
+        * **examples/** — test data for domain model verification
+
+          * `channel.py` — examples of channels for logic verification
+
+          * `config.py` — examples of configs for verification (**in progress**)
+
+          * `predicates.py` — examples of predicates for filter verification
+
+        * **fixtures/** — ready-to-use objects for tests
+
+          * `channel.py` — ready channel objects for tests
+
+          * `config.py` — ready config objects for tests (**in progress**)
+
+        * **test_cases/** — ready test scenarios for parameterization
+
+          * `channel.py` — test cases for channel logic verification
+
+          * `config.py` — test cases for config logic verification (**in progress**)
+
+          * `predicates.py` — test cases for predicate verification
+
+        * `common.py` — local constants for domain logic tests
+
+      * `test_channel.py` — verifies correctness of channel logic
+
+      * `test_config.py` — verifies correctness of config logic (**in progress**)
+
+      * `test_predicates.py` — verifies correctness of predicates
+
+  * `conftest.py` — global pytest configuration, including fixtures and hooks for all tests
 
 * **LICENSE** — project license (default in English)
 

@@ -1,0 +1,1002 @@
+from argparse import (
+    Namespace,
+)
+from base64 import (
+    b64encode,
+    urlsafe_b64encode,
+)
+from json import (
+    dumps,
+)
+from pathlib import (
+    Path,
+)
+
+from tests.unit.core.constants.common import (
+    DEFAULT_LOG_LINE_LENGTH,
+)
+
+__all__ = [
+    "ABS_PATH_ABSOLUTE_EXAMPLES",
+    "ABS_PATH_INVALID_TYPE_EXAMPLES",
+    "ABS_PATH_RELATIVE_EXAMPLES",
+    "B64DECODE_SAFE_INVALID_INPUTS_EXAMPLES",
+    "B64DECODE_SAFE_VALID_AND_INVALID_EXAMPLES",
+    "B64ENCODE_SAFE_INVALID_TYPE_EXAMPLES",
+    "B64ENCODE_SAFE_VALID_EXAMPLES",
+    "COLLECT_ARGS_COMBINED_EXAMPLES",
+    "CONVERT_NUMBER_IN_RANGE_INVALID_VALUE_EXAMPLES",
+    "CONVERT_NUMBER_IN_RANGE_OUT_OF_BOUNDS_EXAMPLES",
+    "CONVERT_NUMBER_IN_RANGE_VALID_EXAMPLES",
+    "FLAG_NAME_ROUNDTRIP_EXAMPLES",
+    "NORMALIZE_SCALAR_EXAMPLES",
+    "NORMALIZE_VALID_FIELDS_VALID_EXAMPLES",
+    "PARSE_VALID_FIELDS_INVALID_EXAMPLES",
+    "REPEAT_CHAR_LINE_EXAMPLES",
+    "RE_FULLMATCH_AND_SEARCH_EXAMPLES",
+    "VALIDATE_FILE_PATH_SUCCESS_EXAMPLES",
+]
+
+ABS_PATH_ABSOLUTE_EXAMPLES: tuple[
+    tuple[
+        str,
+        str,
+    ],
+    ...,
+] = (
+    (
+        str(
+            Path.home().resolve(),
+        ),
+        "home_path",
+    ),
+    (
+        "/etc/default",
+        "etc_default",
+    ),
+    (
+        str(
+            Path("/usr/local/bin").resolve(),
+        ),
+        "usr_local_bin",
+    ),
+)
+
+ABS_PATH_INVALID_TYPE_EXAMPLES: tuple[
+    tuple[
+        object,
+        str,
+    ],
+    ...,
+] = (
+    (
+        {
+            "a": 1,
+        },
+        "type_dict",
+    ),
+    (
+        123,
+        "type_int",
+    ),
+    (
+        [
+            1,
+            2,
+            3,
+        ],
+        "type_list",
+    ),
+    (
+        None,
+        "type_none",
+    ),
+    (
+        object(),
+        "type_object",
+    ),
+)
+
+ABS_PATH_RELATIVE_EXAMPLES: tuple[
+    tuple[
+        str,
+        str,
+    ],
+    ...,
+] = (
+    (
+        "../backup/",
+        "backup_relative",
+    ),
+    (
+        "channels/current.json",
+        "channels_current",
+    ),
+    (
+        "configs/v2ray-clean.txt",
+        "configs_v2ray_clean",
+    ),
+    (
+        "./data/../data",
+        "data_relative",
+    ),
+    (
+        "logs/",
+        "logs",
+    ),
+)
+
+B64DECODE_SAFE_INVALID_INPUTS_EXAMPLES: tuple[
+    tuple[
+        object,
+        str,
+    ],
+    ...,
+] = (
+    (
+        "a=",
+        "bad_padding",
+    ),
+    (
+        "###$$$",
+        "nonsensical",
+    ),
+    (
+        b"bytes",
+        "type_bytes",
+    ),
+    (
+        {
+            "dict": 1,
+        },
+        "type_dict",
+    ),
+    (
+        123,
+        "type_int",
+    ),
+    (
+        [
+            "list",
+        ],
+        "type_list",
+    ),
+    (
+        None,
+        "type_none",
+    ),
+)
+
+B64DECODE_SAFE_VALID_AND_INVALID_EXAMPLES: tuple[
+    tuple[
+        str,
+        str,
+        str,
+    ],
+    ...,
+] = (
+    (
+        "",
+        "",
+        "empty_string",
+    ),
+    (
+        "$$$%%%!!!",
+        "",
+        "invalid_b64_string",
+    ),
+    (
+        b64encode(b"\xff\xfe\xfd").decode(),
+        "���",
+        "invalid_utf8_bytes",
+    ),
+    (
+        b64encode(b"hello").decode(),
+        "hello",
+        "missing_padding",
+    ),
+    (
+        b64encode(b"data").decode().rstrip("="),
+        "data",
+        "standard_base64",
+    ),
+    (
+        f"  {b64encode(b'trim').decode()}  ",
+        "trim",
+        "trim_spaces",
+    ),
+    (
+        urlsafe_b64encode(b"test123").decode(),
+        "test123",
+        "urlsafe_base64",
+    ),
+)
+
+B64ENCODE_SAFE_INVALID_TYPE_EXAMPLES: tuple[
+    tuple[
+        object,
+        str,
+    ],
+    ...,
+] = (
+    (
+        b"bytes",
+        "type_bytes",
+    ),
+    (
+        {
+            "dict": 1,
+        },
+        "type_dict",
+    ),
+    (
+        123,
+        "type_int",
+    ),
+    (
+        [
+            "list",
+        ],
+        "type_list",
+    ),
+    (
+        None,
+        "type_none",
+    ),
+)
+
+B64ENCODE_SAFE_VALID_EXAMPLES: tuple[
+    tuple[
+        str,
+        str,
+        str,
+    ],
+    ...,
+] = (
+    (
+        "hello",
+        b64encode(b"hello").decode(),
+        "ascii_text",
+    ),
+    (
+        "Привет",
+        b64encode("Привет".encode()).decode(),
+        "cyrillic_text",
+    ),
+    (
+        "",
+        b64encode(b"").decode(),
+        "empty_string",
+    ),
+    (
+        "こんにちは",
+        b64encode("こんにちは".encode()).decode(),
+        "japanese_text",
+    ),
+    (
+        "with space!",
+        b64encode(b"with space!").decode(),
+        "text_with_space",
+    ),
+)
+
+COLLECT_ARGS_COMBINED_EXAMPLES: tuple[
+    tuple[
+        Namespace,
+        list[str],
+        list[object],
+        str,
+    ],
+    ...,
+] = (
+    (
+        Namespace(
+            no_async=False,
+            reverse=True,
+        ),
+        [
+            "--no_async",
+            "--reverse",
+        ],
+        [
+            "--no-async",
+            "--reverse",
+        ],
+        "flag_with_underscores",
+    ),
+    (
+        Namespace(
+            include=[
+                "a",
+                "b",
+                "c",
+            ],
+            params={
+                "a": 1,
+            },
+        ),
+        [
+            "--include",
+            "--params",
+        ],
+        [
+            "--include",
+            [
+                "a",
+                "b",
+                "c",
+            ],
+            "--params",
+            {
+                "a": 1,
+            },
+        ],
+        "list_and_dict_values",
+    ),
+    (
+        Namespace(),
+        [
+            "--missing",
+        ],
+        [],
+        "missing_attr",
+    ),
+    (
+        Namespace(
+            config=None,
+            dry_run=False,
+            output="log.txt",
+            retry=0,
+            threshold=0.1,
+            verbose=True,
+        ),
+        [
+            "--config",
+            "--dry-run",
+            "--output",
+            "--retry",
+            "--threshold",
+            "--verbose",
+        ],
+        [
+            "--dry-run",
+            "--output",
+            "log.txt",
+            "--retry",
+            0,
+            "--threshold",
+            0.1,
+            "--verbose",
+        ],
+        "mixed_types",
+    ),
+    (
+        Namespace(
+            test_special_case=True,
+        ),
+        [
+            "----test-special_case",
+        ],
+        [
+            "--test-special-case",
+        ],
+        "quadruple_dash_flag",
+    ),
+    (
+        Namespace(
+            weird_flag=True,
+        ),
+        [
+            "---weird-flag",
+        ],
+        [
+            "--weird-flag",
+        ],
+        "triple_dash_flag",
+    ),
+)
+
+CONVERT_NUMBER_IN_RANGE_INVALID_VALUE_EXAMPLES: tuple[
+    tuple[
+        str | None,
+        str,
+    ],
+    ...,
+] = (
+    (
+        "5,5",
+        "comma_in_number",
+    ),
+    (
+        "7..2",
+        "double_dot",
+    ),
+    (
+        "",
+        "empty_str",
+    ),
+    (
+        "abc",
+        "non_numeric_str",
+    ),
+    (
+        None,
+        "none_value",
+    ),
+)
+
+CONVERT_NUMBER_IN_RANGE_OUT_OF_BOUNDS_EXAMPLES: tuple[
+    tuple[
+        str,
+        int,
+        int,
+        str,
+    ],
+    ...,
+] = (
+    (
+        "111",
+        0,
+        100,
+        "above_max1",
+    ),
+    (
+        "1234",
+        500,
+        1000,
+        "above_max2",
+    ),
+    (
+        "-10",
+        0,
+        10,
+        "below_min1",
+    ),
+    (
+        "-500",
+        -300,
+        300,
+        "below_min2",
+    ),
+)
+
+CONVERT_NUMBER_IN_RANGE_VALID_EXAMPLES: tuple[
+    tuple[
+        str,
+        int,
+        int,
+        bool,
+        bool,
+        float | int | str,
+        str,
+    ],
+    ...,
+] = (
+    (
+        "5.5",
+        0,
+        10,
+        False,
+        False,
+        5.5,
+        "float_middle",
+    ),
+    (
+        "0.0",
+        0,
+        10,
+        False,
+        False,
+        0.0,
+        "float_min",
+    ),
+    (
+        "10.0",
+        0,
+        10,
+        False,
+        False,
+        10.0,
+        "float_max",
+    ),
+    (
+        "5",
+        0,
+        10,
+        True,
+        False,
+        5,
+        "int_middle",
+    ),
+    (
+        "0",
+        0,
+        10,
+        True,
+        False,
+        0,
+        "int_min",
+    ),
+    (
+        "10",
+        0,
+        10,
+        True,
+        False,
+        10,
+        "int_max",
+    ),
+    (
+        "7",
+        0,
+        10,
+        True,
+        True,
+        "7",
+        "str_int",
+    ),
+    (
+        "3.14",
+        0,
+        10,
+        False,
+        True,
+        "3.14",
+        "str_float",
+    ),
+)
+
+FLAG_NAME_ROUNDTRIP_EXAMPLES: tuple[
+    tuple[
+        str,
+        str,
+        str,
+    ],
+    ...,
+] = (
+    (
+        "--verbose",
+        "verbose",
+        "double_dash",
+    ),
+    (
+        "----multi--dash",
+        "multi__dash",
+        "double_inner_dash",
+    ),
+    (
+        "--with_underscore",
+        "with_underscore",
+        "existing_underscore",
+    ),
+    (
+        "--dry-run",
+        "dry_run",
+        "inner_dash",
+    ),
+    (
+        "--step1",
+        "step1",
+        "number_in_name",
+    ),
+    (
+        "-a",
+        "a",
+        "single_dash",
+    ),
+    (
+        "---weird-flag",
+        "weird_flag",
+        "triple_dash",
+    ),
+)
+
+NORMALIZE_SCALAR_EXAMPLES: tuple[
+    tuple[
+        object,
+        str | None,
+        str,
+    ],
+    ...,
+] = (
+    (
+        {
+            "b": 2,
+            "a": 1,
+        },
+        dumps(
+            obj={
+                "b": 2,
+                "a": 1,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        ),
+        "dict",
+    ),
+    (
+        3.14,
+        "3.14",
+        "float",
+    ),
+    (
+        42,
+        "42",
+        "int",
+    ),
+    (
+        [
+            1,
+            2,
+            3,
+        ],
+        dumps(
+            obj=[
+                1,
+                2,
+                3,
+            ],
+            sort_keys=True,
+            separators=(",", ":"),
+        ),
+        "list",
+    ),
+    (
+        None,
+        None,
+        "none",
+    ),
+    (
+        "hello",
+        "hello",
+        "str",
+    ),
+    (
+        (
+            1,
+            2,
+            3,
+        ),
+        dumps(
+            obj=(
+                1,
+                2,
+                3,
+            ),
+            sort_keys=True,
+            separators=(",", ":"),
+        ),
+        "tuple",
+    ),
+)
+
+NORMALIZE_VALID_FIELDS_VALID_EXAMPLES: tuple[
+    tuple[
+        str,
+        str,
+        str,
+    ],
+    ...,
+] = (
+    (
+        "a1,b2,c3",
+        "a1,b2,c3",
+        "comma_only",
+    ),
+    (
+        "",
+        "",
+        "empty",
+    ),
+    (
+        "a1, b2 c3",
+        "a1,b2,c3",
+        "mixed_sep",
+    ),
+    (
+        "field1",
+        "field1",
+        "single_field",
+    ),
+    (
+        "a1 b2 c3",
+        "a1,b2,c3",
+        "space_only",
+    ),
+    (
+        "field1 , field2 ",
+        "field1,field2",
+        "spaces_around",
+    ),
+    (
+        "   ",
+        "",
+        "spaces_only",
+    ),
+    (
+        "_field1 field_2",
+        "_field1,field_2",
+        "underscores",
+    ),
+    (
+        "F1,F2 F3",
+        "F1,F2,F3",
+        "uppercase",
+    ),
+)
+
+PARSE_VALID_FIELDS_INVALID_EXAMPLES: tuple[
+    tuple[
+        object,
+        str,
+    ],
+    ...,
+] = (
+    (
+        "field1,field1",
+        "duplicate_field",
+    ),
+    (
+        "field1,,field2",
+        "empty_between_commas",
+    ),
+    (
+        "field1,",
+        "empty_end",
+    ),
+    (
+        ",field1",
+        "empty_start",
+    ),
+    (
+        "field@",
+        "invalid_at",
+    ),
+    (
+        "field!name",
+        "invalid_exclaim",
+    ),
+    (
+        "123-invalid",
+        "invalid_start_digit",
+    ),
+    (
+        " , , ",
+        "only_empty_spaces",
+    ),
+    (
+        {
+            "a": 1,
+        },
+        "type_dict",
+    ),
+    (
+        123,
+        "type_int",
+    ),
+    (
+        [
+            "a",
+            "b",
+        ],
+        "type_list",
+    ),
+    (
+        None,
+        "type_none",
+    ),
+)
+
+RE_FULLMATCH_AND_SEARCH_EXAMPLES: tuple[
+    tuple[
+        str,
+        float | None | str,
+        bool,
+        bool,
+        str,
+    ],
+    ...,
+] = (
+    (
+        r"(?i)true|false",
+        False,
+        True,
+        True,
+        "bool_false",
+    ),
+    (
+        r"(?i)true|false",
+        True,
+        True,
+        True,
+        "bool_true",
+    ),
+    (
+        r".*",
+        "",
+        True,
+        True,
+        "empty_string",
+    ),
+    (
+        r"\d+\.\d+",
+        3.14,
+        True,
+        True,
+        "float_value",
+    ),
+    (
+        r"\d+",
+        "123",
+        True,
+        True,
+        "full_digits_match",
+    ),
+    (
+        r"\d+",
+        456,
+        True,
+        True,
+        "int_value",
+    ),
+    (
+        r"[a-z]+\s\d+",
+        "abc123",
+        False,
+        False,
+        "letters_no_space_digits",
+    ),
+    (
+        r"[a-z]+\s\d+",
+        "abc 123",
+        True,
+        True,
+        "letters_space_digits",
+    ),
+    (
+        r"\d+[a-z]+",
+        "123abc",
+        True,
+        True,
+        "mixed_digits_letters",
+    ),
+    (
+        r"\d+[a-z]+",
+        "123abcXYZ",
+        False,
+        True,
+        "mixed_digits_letters_extra",
+    ),
+    (
+        r"None",
+        None,
+        True,
+        True,
+        "none_value",
+    ),
+    (
+        r"\S+",
+        "   ",
+        False,
+        False,
+        "non_space_only",
+    ),
+    (
+        r"\d+",
+        "123abc",
+        False,
+        True,
+        "partial_digits_mismatch",
+    ),
+    (
+        r"\w+",
+        "  abc  ",
+        False,
+        True,
+        "spaces_fullmatch_fail",
+    ),
+    (
+        r"\s+",
+        "   ",
+        True,
+        True,
+        "spaces_only",
+    ),
+    (
+        r"[!@#]+",
+        "!@#",
+        True,
+        True,
+        "special_chars_exact",
+    ),
+    (
+        r"[!@#]+",
+        "!@#abc",
+        False,
+        True,
+        "special_chars_extra",
+    ),
+    (
+        r"abc",
+        "abc",
+        True,
+        True,
+        "string_abc",
+    ),
+    (
+        r"abc",
+        "abcd",
+        False,
+        True,
+        "string_abcd",
+    ),
+    (
+        r"[a-zA-Z_]+",
+        "_varName",
+        True,
+        True,
+        "underscore_var",
+    ),
+    (
+        r"[a-zA-Z_]+",
+        "_var123",
+        False,
+        True,
+        "underscore_var_with_digits",
+    ),
+)
+
+REPEAT_CHAR_LINE_EXAMPLES: tuple[
+    tuple[
+        str,
+        int,
+        str,
+    ],
+    ...,
+] = (
+    (
+        "@",
+        1,
+        "char_at_len_1",
+    ),
+    (
+        "-",
+        DEFAULT_LOG_LINE_LENGTH,
+        "char_dash_default_len",
+    ),
+    (
+        "$",
+        10,
+        "char_dollar_len_10",
+    ),
+    (
+        "#",
+        0,
+        "char_hash_len_0",
+    ),
+    (
+        "*",
+        5,
+        "char_star_len_5",
+    ),
+)
+
+VALIDATE_FILE_PATH_SUCCESS_EXAMPLES: tuple[
+    tuple[
+        str,
+        bool,
+        str,
+    ],
+    ...,
+] = (
+    (
+        "file.txt",
+        True,
+        "file_exists",
+    ),
+    (
+        "new_file.txt",
+        False,
+        "file_missing_must_be_file_false",
+    ),
+)
