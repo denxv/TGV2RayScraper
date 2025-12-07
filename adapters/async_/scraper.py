@@ -1,6 +1,6 @@
 from asyncio import (
+    as_completed,
     create_task,
-    gather,
 )
 
 from adapters.async_.channels import (
@@ -94,4 +94,5 @@ async def update_info(
             for name in channel_names[i:i + batch_size]
         ]
 
-        await gather(*tasks)
+        for task in as_completed(tasks):
+            await task
