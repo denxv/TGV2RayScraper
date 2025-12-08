@@ -1169,6 +1169,11 @@
         "current_id": 1,
         "last_id": -1
     },
+    "oneclickvpnkeys": {
+        "count": 0,
+        "current_id": 1,
+        "last_id": -1
+    },
     "oonfig": {
         "count": 0,
         "current_id": 1,
@@ -1199,6 +1204,11 @@
         "current_id": 1,
         "last_id": -1
     },
+    "outline_vpn": {
+        "count": 0,
+        "current_id": 1,
+        "last_id": -1
+    },
     "outlineopenkey": {
         "count": 0,
         "current_id": 1,
@@ -1210,6 +1220,11 @@
         "last_id": -1
     },
     "outlinevpn_ru": {
+        "count": 0,
+        "current_id": 1,
+        "last_id": -1
+    },
+    "outlinevpnofficial": {
         "count": 0,
         "current_id": 1,
         "last_id": -1
@@ -1955,6 +1970,11 @@
         "last_id": -1
     },
     "v2rayopen": {
+        "count": 0,
+        "current_id": 1,
+        "last_id": -1
+    },
+    "v2raypooliran": {
         "count": 0,
         "current_id": 1,
         "last_id": -1
