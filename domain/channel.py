@@ -3,12 +3,13 @@ from copy import (
 )
 
 from core.constants.common import (
-    CHANNEL_ACTIVE_THRESHOLD,
     CHANNEL_MIN_ID_DIFF,
+    CHANNEL_STATE_AVAILABLE,
+    CHANNEL_STATE_UNAVAILABLE,
     DEFAULT_CHANNEL_VALUES,
-    DEFAULT_COUNT,
     DEFAULT_CURRENT_ID,
     DEFAULT_LAST_ID,
+    DEFAULT_STATE,
     MESSAGE_OFFSET_DEFAULT,
 )
 from core.constants.messages import (
@@ -70,7 +71,7 @@ __all__ = [
     "print_channel_info",
     "process_channels",
     "sort_channel_names",
-    "update_count_and_last_id",
+    "update_last_id_and_state",
     "update_with_new_channels",
 ]
 
@@ -415,18 +416,18 @@ def sort_channel_names(
     )
 
 
-def update_count_and_last_id(
+def update_last_id_and_state(
     channel_name: ChannelName,
     channel_info: ChannelInfo,
     last_post_id: PostID,
 ) -> None:
-    count = channel_info.get(
-        "count",
-        DEFAULT_COUNT,
-    )
     last_id = channel_info.get(
         "last_id",
         DEFAULT_LAST_ID,
+    )
+    state = channel_info.get(
+        "state",
+        DEFAULT_STATE,
     )
 
     if last_id != last_post_id:
@@ -437,18 +438,16 @@ def update_count_and_last_id(
                 last_post_id=last_post_id,
             ),
         )
-
         channel_info["last_id"] = last_post_id
-        channel_info["count"] = max(
-            count,
-            CHANNEL_ACTIVE_THRESHOLD,
-        )
-    elif not is_channel_available(
-        channel_info=channel_info,
-    ):
-        channel_info["count"] = min(
-            count - 1,
-            DEFAULT_COUNT,
+
+    if last_post_id != DEFAULT_LAST_ID:
+        channel_info["state"] = CHANNEL_STATE_AVAILABLE
+    elif last_id != last_post_id:
+        channel_info["state"] = DEFAULT_STATE
+    else:
+        channel_info["state"] = min(
+            state - 1,
+            CHANNEL_STATE_UNAVAILABLE,
         )
 
 

@@ -81,6 +81,7 @@ class ChannelInfo(
     count: int
     current_id: int
     last_id: int
+    state: int
 
 
 ArgsNamespace = Namespace

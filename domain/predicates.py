@@ -3,13 +3,14 @@ from asteval import (
 )
 
 from core.constants.common import (
-    CHANNEL_ACTIVE_THRESHOLD,
     CHANNEL_FAILED_ATTEMPTS_THRESHOLD,
     CHANNEL_REMOVE_THRESHOLD,
+    CHANNEL_STATE_AVAILABLE,
     DEFAULT_CHANNEL_VALUES,
     DEFAULT_COUNT,
     DEFAULT_CURRENT_ID,
     DEFAULT_LAST_ID,
+    DEFAULT_STATE,
 )
 from core.typing import (
     ChannelInfo,
@@ -40,8 +41,15 @@ def is_channel_available(
         "last_id",
         DEFAULT_LAST_ID,
     )
+    state = channel_info.get(
+        "state",
+        DEFAULT_STATE,
+    )
 
-    return last_id != DEFAULT_LAST_ID
+    return (
+        last_id != DEFAULT_LAST_ID
+        and state == CHANNEL_STATE_AVAILABLE
+    )
 
 
 def is_channel_fully_scanned(
@@ -112,11 +120,17 @@ def should_delete_channel(
         "count",
         DEFAULT_COUNT,
     )
+    state = channel_info.get(
+        "state",
+        DEFAULT_STATE,
+    )
 
-    if count <= CHANNEL_FAILED_ATTEMPTS_THRESHOLD:
+    if state <= CHANNEL_FAILED_ATTEMPTS_THRESHOLD:
         return True
 
-    if count == CHANNEL_ACTIVE_THRESHOLD:
+    if is_new_channel(
+        channel_info=channel_info,
+    ):
         return False
 
     return (

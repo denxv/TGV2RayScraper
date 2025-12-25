@@ -26,7 +26,7 @@ from core.typing import (
 )
 from domain.channel import (
     get_normalized_current_id,
-    update_count_and_last_id,
+    update_last_id_and_state,
 )
 from domain.predicates import (
     is_channel_available,
@@ -57,7 +57,7 @@ async def update_info(
             channel_name=channel_name,
         )
 
-        update_count_and_last_id(
+        update_last_id_and_state(
             channel_name=channel_name,
             channel_info=channel_info,
             last_post_id=last_post_id,

@@ -13,7 +13,7 @@ from tests.unit.domain.constants.examples.channel import (
     PRINT_CHANNEL_INFO_VARIOUS_EXAMPLES,
     PROCESS_CHANNELS_CALLS_EXAMPLES,
     SORT_CHANNEL_NAMES_EXAMPLES,
-    UPDATE_COUNT_AND_LAST_ID_EXAMPLES,
+    UPDATE_LAST_ID_AND_STATE_EXAMPLES,
     UPDATE_WITH_NEW_CHANNELS_EXAMPLES,
 )
 
@@ -246,13 +246,13 @@ SORT_CHANNEL_NAMES_CASES = tuple(
     ]
 )
 
-UPDATE_COUNT_AND_LAST_ID_ARGS = (
+UPDATE_LAST_ID_AND_STATE_ARGS = (
     "channel_name",
     "channel_info",
     "last_post_id",
     "expected",
 )
-UPDATE_COUNT_AND_LAST_ID_CASES = tuple(
+UPDATE_LAST_ID_AND_STATE_CASES = tuple(
     pytest.param(
         channel_name,
         channel_info,
@@ -266,7 +266,7 @@ UPDATE_COUNT_AND_LAST_ID_CASES = tuple(
         last_post_id,
         expected,
         case_id,
-    ) in UPDATE_COUNT_AND_LAST_ID_EXAMPLES
+    ) in UPDATE_LAST_ID_AND_STATE_EXAMPLES
 )
 
 UPDATE_WITH_NEW_CHANNELS_ARGS = (

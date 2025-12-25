@@ -370,7 +370,7 @@ All dev-dependencies are listed in [`requirements-dev.txt`](requirements-dev.txt
 
       * `test_utils.py` — verifies helper utilities and functions
 
-    * **domain/** — tests verifying domain logic of the project
+    * **domain/** — tests verifying the project's domain logic (**skipped because the logic has been changed and the tests have not been rewritten yet**).
 
       * **constants/** — domain constants, fixtures, and pre-prepared cases
 
@@ -420,70 +420,76 @@ All dev-dependencies are listed in [`requirements-dev.txt`](requirements-dev.txt
 
 * **uv.lock** — dependency lock file, recording exact package versions for a reproducible environment
 
-## Channel JSON Structure
+## Structure of Channel JSON File
 
-The file `channels/current.json` stores metadata about Telegram channels. Top-level keys are **channel usernames**, and values are objects with channel state.
+The file `channels/current.json` contains information about Telegram channels. Each key is the **channel name**, and the value is an **object with the channel's metadata**.
 
-### Example
+### Example of Channel JSON
 
 ```json
 {
+    "channel_available": {
+        "count": 5555,
+        "current_id": 4444,
+        "last_id": 4444,
+        "state": 1
+    },
     "channel_new_default": {
         "count": 0,
         "current_id": 1,
-        "last_id": -1
-    },
-    "channel_is_not_live": {
-        "count": -1,
-        "current_id": 100,
-        "last_id": -1
-    },
-    "channel_live": {
-        "count": 500,
-        "current_id": 100,
-        "last_id": 100
+        "last_id": -1,
+        "state": 0
     },
     "channel_will_be_deleted": {
-        "count": -3,
-        "current_id": 100,
-        "last_id": -1
+        "count": 1234,
+        "current_id": 5678,
+        "last_id": -1,
+        "state": -3
+    },
+    "channel_unavailable": {
+        "count": 1000,
+        "current_id": 3000,
+        "last_id": -1,
+        "state": -1
     }
 }
 ```
 
-### Field Description
+### Detailed Description of Fields
 
-* **`count`**
+* `count` — the number of V2Ray configurations found in the channel.
 
-  * `> 0` → number of V2Ray configurations in an active channel (`count = 1`)
+  * `0` — default value, the channel has not been processed yet or no configurations have been found.
 
-  * `= 0` → nothing found, or channel temporarily unavailable (`last_id = -1`)
+  * `> 0` — the number of configurations found in an active channel.
 
-  * `< 0` → number of failed attempts to access the channel
+    > The `count` value can grow indefinitely as new configurations appear in the channel.
 
-    * Each failed attempt decreases the value (`-1, -2, …`).
+* `current_id` — the ID of the current message from which scanning begins.
 
-    * When `count <= -3`, the channel is considered inactive and removed from `current.json` and `urls.txt`.
+  * `1` — default value, scanning starts from the very beginning of the channel (old messages).
 
-* **`current_id`**
+  * `< 0` — take the last `N` messages (new messages).
 
-  * starting message ID for scraping
+    > Example: if `last_id = 500` and `current_id = -100`, scanning goes from message `≥ 400` to the last message `≤ 500`.
 
-  * `1` → start from the beginning of the channel
+* `last_id` — the ID of the last message in the channel.
 
-  * negative → take the last N messages
+  * `-1` — default value, the channel is temporarily or permanently unavailable.
 
-    * Example: if `last_id = 150` and `current_id = -100`, the effective `current_id` is `150 - 100 = 50`. Scraping will start from message 50 and move toward the last message (`last_id = 150`).
+  * `> 0` — the ID of the last available message.
 
-* **`last_id`**
+    > Updated on each scan run.
 
-  * latest message ID in the channel
+* `state` — the channel status (active/undefined/inactive).
 
-  * updated on each run
+  * `1` — active channel when `last_id != -1`.
 
-  * `-1` → channel temporarily or permanently unavailable
+  * `0` — default value, status is not yet determined.
 
-  * otherwise, a positive integer
+  * `-1` — inactive channel when `last_id == -1`.
+
+    > If the channel is unavailable (`last_id == -1`), the `state` value decreases by 1 on each run, indicating the number of failed attempts to access the channel.
 
 ## Supported Protocols
 

@@ -30,7 +30,7 @@ from domain.channel import (
     print_channel_info,
     process_channels,
     sort_channel_names,
-    update_count_and_last_id,
+    update_last_id_and_state,
     update_with_new_channels,
 )
 from tests.unit.domain.constants.common import (
@@ -81,8 +81,8 @@ from tests.unit.domain.constants.test_cases.channel import (
     PROCESS_CHANNELS_CALLS_CASES,
     SORT_CHANNEL_NAMES_ARGS,
     SORT_CHANNEL_NAMES_CASES,
-    UPDATE_COUNT_AND_LAST_ID_ARGS,
-    UPDATE_COUNT_AND_LAST_ID_CASES,
+    UPDATE_LAST_ID_AND_STATE_ARGS,
+    UPDATE_LAST_ID_AND_STATE_CASES,
     UPDATE_WITH_NEW_CHANNELS_ARGS,
     UPDATE_WITH_NEW_CHANNELS_CASES,
 )
@@ -493,10 +493,10 @@ def test_sort_channel_names(
 
 
 @pytest.mark.parametrize(
-    UPDATE_COUNT_AND_LAST_ID_ARGS,
-    UPDATE_COUNT_AND_LAST_ID_CASES,
+    UPDATE_LAST_ID_AND_STATE_ARGS,
+    UPDATE_LAST_ID_AND_STATE_CASES,
 )
-def test_update_count_and_last_id(
+def test_update_last_id_and_state(
     mock_logger: Mock,
     channel_name: ChannelName,
     channel_info: ChannelInfo,
@@ -508,7 +508,7 @@ def test_update_count_and_last_id(
         DEFAULT_LAST_ID,
     )
 
-    update_count_and_last_id(
+    update_last_id_and_state(
         channel_name=channel_name,
         channel_info=channel_info,
         last_post_id=last_post_id,
