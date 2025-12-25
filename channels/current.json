@@ -779,11 +779,6 @@
         "current_id": 1,
         "last_id": -1
     },
-    "httpproxygo": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "i10vpn": {
         "count": 0,
         "current_id": 1,
@@ -1274,11 +1269,6 @@
         "current_id": 1,
         "last_id": -1
     },
-    "polproxy": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
     "porteqal3": {
         "count": 0,
         "current_id": 1,
@@ -1564,7 +1554,7 @@
         "current_id": 1,
         "last_id": -1
     },
-    "suevpnx": {
+    "stretten": {
         "count": 0,
         "current_id": 1,
         "last_id": -1
@@ -1800,11 +1790,6 @@
         "last_id": -1
     },
     "v2ray_spatial": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1
-    },
-    "v2ray_sub": {
         "count": 0,
         "current_id": 1,
         "last_id": -1
