@@ -1,9 +1,10 @@
 from tests.unit.domain.constants.common import (
-    CHANNEL_ACTIVE_THRESHOLD,
     CHANNEL_MIN_ID_DIFF,
-    DEFAULT_COUNT,
+    CHANNEL_STATE_AVAILABLE,
+    CHANNEL_STATE_UNAVAILABLE,
     DEFAULT_CURRENT_ID,
     DEFAULT_LAST_ID,
+    DEFAULT_STATE,
     LAST_POST_ID,
     MESSAGE_OFFSET,
     NUM1,
@@ -21,12 +22,11 @@ from tests.unit.domain.constants.fixtures.channel import (
     CHANNEL_DEFAULT_LAST_ID,
     CHANNEL_INFO_BY_NAME,
     CHANNEL_INFO_BY_NAMES,
-    CHANNEL_MISSING_COUNT,
     CHANNEL_MISSING_LAST_ID,
+    CHANNEL_MISSING_STATE,
     CHANNEL_NAMES_SAMPLE,
     CHANNEL_NEGATIVE_CURRENT_ID,
     CHANNEL_NEW,
-    CHANNEL_SCANNED_NO_FOUND_CONFIGS,
     CHANNEL_ZERO_CURRENT_ID,
     CHANNELS_FROM_NAMES_SAMPLE,
     CHANNELS_SAMPLE,
@@ -781,56 +781,34 @@ UPDATE_LAST_ID_AND_STATE_EXAMPLES: tuple[
         LAST_POST_ID,
         {
             **CHANNEL_BASE_SAMPLE,
-            "count": max(
-                NUM1,
-                CHANNEL_ACTIVE_THRESHOLD,
-            ),
             "last_id": LAST_POST_ID,
+            "state": CHANNEL_STATE_AVAILABLE,
         },
         "basic_update_last_id",
     ),
     (
-        "channel_base_count_below_threshold",
-        {
-            **CHANNEL_SCANNED_NO_FOUND_CONFIGS,
-        },
-        LAST_POST_ID,
-        {
-            **CHANNEL_SCANNED_NO_FOUND_CONFIGS,
-            "count": max(
-                DEFAULT_COUNT,
-                CHANNEL_ACTIVE_THRESHOLD,
-            ),
-            "last_id": LAST_POST_ID,
-        },
-        "count_below_threshold",
-    ),
-    (
-        "channel_base_default_last_id_decrease_count",
+        "channel_base_default_last_id_decrease_state",
         {
             **CHANNEL_DEFAULT_LAST_ID,
-            "count": NUM1,
         },
         DEFAULT_LAST_ID,
         {
             **CHANNEL_DEFAULT_LAST_ID,
-            "count": min(
-                NUM1 - 1,
-                DEFAULT_COUNT,
+            "last_id": DEFAULT_LAST_ID,
+            "state": min(
+                CHANNEL_STATE_UNAVAILABLE - 1,
+                CHANNEL_STATE_UNAVAILABLE,
             ),
         },
-        "default_last_id_decrease_count",
+        "default_last_id_decrease_state",
     ),
     (
         "channel_base_empty_channel_info",
         {},
         LAST_POST_ID,
         {
-            "count": max(
-                DEFAULT_COUNT,
-                CHANNEL_ACTIVE_THRESHOLD,
-            ),
             "last_id": LAST_POST_ID,
+            "state": CHANNEL_STATE_AVAILABLE,
         },
         "empty_channel_info",
     ),
@@ -842,28 +820,10 @@ UPDATE_LAST_ID_AND_STATE_EXAMPLES: tuple[
         NUM3,
         {
             **CHANNEL_BASE_SAMPLE,
-            "count": max(
-                NUM1,
-                CHANNEL_ACTIVE_THRESHOLD,
-            ),
+            "last_id": NUM3,
+            "state": CHANNEL_STATE_AVAILABLE,
         },
         "last_id_equal_last_post_id",
-    ),
-    (
-        "channel_base_missing_count",
-        {
-            **CHANNEL_MISSING_COUNT,
-        },
-        LAST_POST_ID,
-        {
-            **CHANNEL_MISSING_COUNT,
-            "count": max(
-                DEFAULT_COUNT,
-                CHANNEL_ACTIVE_THRESHOLD,
-            ),
-            "last_id": LAST_POST_ID,
-        },
-        "missing_count",
     ),
     (
         "channel_base_missing_last_id",
@@ -873,13 +833,23 @@ UPDATE_LAST_ID_AND_STATE_EXAMPLES: tuple[
         LAST_POST_ID,
         {
             **CHANNEL_MISSING_LAST_ID,
-            "count": max(
-                DEFAULT_COUNT,
-                CHANNEL_ACTIVE_THRESHOLD,
-            ),
             "last_id": LAST_POST_ID,
+            "state": CHANNEL_STATE_AVAILABLE,
         },
         "missing_last_id",
+    ),
+    (
+        "channel_base_missing_state",
+        {
+            **CHANNEL_MISSING_STATE,
+        },
+        LAST_POST_ID,
+        {
+            **CHANNEL_MISSING_STATE,
+            "last_id": LAST_POST_ID,
+            "state": CHANNEL_STATE_AVAILABLE,
+        },
+        "missing_state",
     ),
     (
         "channel_base_negative_last_post_id",
@@ -889,11 +859,8 @@ UPDATE_LAST_ID_AND_STATE_EXAMPLES: tuple[
         DEFAULT_LAST_ID,
         {
             **CHANNEL_BASE_SAMPLE,
-            "count": max(
-                NUM1,
-                CHANNEL_ACTIVE_THRESHOLD,
-            ),
             "last_id": DEFAULT_LAST_ID,
+            "state": DEFAULT_STATE,
         },
         "negative_last_post_id",
     ),

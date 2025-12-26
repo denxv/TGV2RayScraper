@@ -17,10 +17,13 @@ from tests.unit.domain.constants.fixtures.channel import (
     CHANNEL_MISSING_COUNT,
     CHANNEL_MISSING_CURRENT_ID,
     CHANNEL_MISSING_LAST_ID,
+    CHANNEL_MISSING_STATE,
     CHANNEL_NEW,
     CHANNEL_REMOVED,
     CHANNEL_REMOVED_ABOVE_THRESHOLD,
     CHANNEL_REMOVED_BELOW_THRESHOLD,
+    CHANNEL_SCANNED_ABOVE_REMOVE_THRESHOLD,
+    CHANNEL_SCANNED_BELOW_REMOVE_THRESHOLD,
     CHANNEL_SCANNED_REMOVE_THRESHOLD,
     CHANNEL_UNAVAILABLE,
 )
@@ -255,12 +258,12 @@ SHOULD_DELETE_CHANNEL_EXAMPLES: tuple[
     (
         CHANNEL_AVAILABLE,
         False,
-        "active_channel",
+        "channel_available",
     ),
     (
-        CHANNEL_BASE,
+        CHANNEL_NEW,
         False,
-        "all_default",
+        "channel_new",
     ),
     (
         {
@@ -314,18 +317,17 @@ SHOULD_DELETE_CHANNEL_EXAMPLES: tuple[
         "missing_last_id",
     ),
     (
-        {
-            **CHANNEL_SCANNED_REMOVE_THRESHOLD,
-            "count": CHANNEL_REMOVE_THRESHOLD + NUM1,
-        },
+        CHANNEL_MISSING_STATE,
+        False,
+        "missing_state",
+    ),
+    (
+        CHANNEL_SCANNED_ABOVE_REMOVE_THRESHOLD,
         False,
         "remove_threshold_above",
     ),
     (
-        {
-            **CHANNEL_SCANNED_REMOVE_THRESHOLD,
-            "count": CHANNEL_REMOVE_THRESHOLD - NUM1,
-        },
+        CHANNEL_SCANNED_BELOW_REMOVE_THRESHOLD,
         True,
         "remove_threshold_below",
     ),

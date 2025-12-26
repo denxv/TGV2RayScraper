@@ -199,13 +199,6 @@ def pytest_collection_modifyitems(
             for mark in markers_map[marker]
         ]
 
-        if "domain" in path.relative_to(root).parts:
-            markers.append(
-                pytest.mark.skip(
-                    reason="logic changed, tests temporarily skipped",
-                ),
-            )
-
         for mark in markers:
             item.add_marker(mark)
 

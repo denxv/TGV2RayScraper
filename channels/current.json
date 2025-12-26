@@ -1745,6 +1745,12 @@
         "last_id": -1,
         "state": 0
     },
+    "shadowsocks_phs": {
+        "count": 0,
+        "current_id": 1,
+        "last_id": -1,
+        "state": 0
+    },
     "shadowsocks_s": {
         "count": 0,
         "current_id": 1,

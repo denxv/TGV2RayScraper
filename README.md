@@ -370,7 +370,7 @@ All dev-dependencies are listed in [`requirements-dev.txt`](requirements-dev.txt
 
       * `test_utils.py` — verifies helper utilities and functions
 
-    * **domain/** — tests verifying the project's domain logic (**skipped because the logic has been changed and the tests have not been rewritten yet**).
+    * **domain/** — tests verifying the project's domain logic
 
       * **constants/** — domain constants, fixtures, and pre-prepared cases
 
