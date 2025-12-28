@@ -151,6 +151,7 @@ async def fetch_and_write_configs(
         ascii=True,
         leave=False,
         bar_format=FORMAT_PROGRESS_BAR,
+        desc=channel_name,
     ):
         results = await gather(*(
             _fetch_and_parse_configs(

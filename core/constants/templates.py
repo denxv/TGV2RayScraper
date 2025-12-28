@@ -72,16 +72,24 @@ __all__ = [
 ]
 
 TEMPLATE_CHANNEL_ASSIGNMENT_APPLIED = (
-    f"Channel {{name:<{TEXT_LENGTH_NAME + 2}}} | "
-    "applied offset = {offset} | current_id normalized."
+    f"Channel {{name:<{TEXT_LENGTH_NAME + 2}}}"
+    " | "
+    "applied offset = {offset}"
+    " | "
+    "current_id normalized."
 )
 TEMPLATE_CHANNEL_ASSIGNMENT_OFFSET_APPLIED = (
-    "{message} — assignment applied."
+    "{message}"
+    " - "
+    "assignment applied."
 )
 TEMPLATE_CHANNEL_ASSIGNMENT_OFFSET_SKIPPED = (
-    f"Channel {{name:<{TEXT_LENGTH_NAME + 2}}} | "
-    f"ID diff = {{diff:<{TEXT_LENGTH_MSG_OFFSET}}} | "
-    f"offset = {{offset:<{TEXT_LENGTH_MSG_OFFSET}}} | "
+    f"Channel {{name:<{TEXT_LENGTH_NAME + 2}}}"
+    " | "
+    f"ID diff = {{diff:<{TEXT_LENGTH_MSG_OFFSET}}}"
+    " | "
+    f"offset = {{offset:<{TEXT_LENGTH_MSG_OFFSET}}}"
+    " | "
     "skipped messages due to diff > offset."
 )
 TEMPLATE_CHANNEL_ASSIGNMENT_SKIPPED = (
@@ -91,23 +99,33 @@ TEMPLATE_CHANNEL_CONFIGS_FOUND = (
     "Found: {count} configs."
 )
 TEMPLATE_CHANNEL_COUNT_DIFFERENCE = (
-    "Old count: {old_size} | New count: {new_size} | ({diff:+})"
+    "Old count: {old_size}"
+    " | "
+    "New count: {new_size}"
+    " | "
+    "({diff:+})"
 )
 TEMPLATE_CHANNEL_LEFT_TO_CHECK = (
     "Channels left to check: {count}."
 )
 TEMPLATE_CHANNEL_LOG_STATUS = (
     "| <SS> | "
-    f"{{name:<{TEXT_LENGTH_NAME}}} | "
-    f"{{current_id:>{TEXT_LENGTH_NUMBER}}} / "
-    f"{{last_id:<{TEXT_LENGTH_NUMBER}}} | "
+    f"{{name:<{TEXT_LENGTH_NAME}}}"
+    " | "
+    f"{{current_id:>{TEXT_LENGTH_NUMBER}}}"
+    " / "
+    f"{{last_id:<{TEXT_LENGTH_NUMBER}}}"
+    " | "
     "(+{diff:,})"
 )
 TEMPLATE_CHANNEL_LOG_UPDATE = (
     "| <UU> | "
-    f"{{name:<{TEXT_LENGTH_NAME}}} | "
-    f"{{last_id:>{TEXT_LENGTH_NUMBER}}} -> "
-    f"{{last_post_id:<{TEXT_LENGTH_NUMBER}}} |"
+    f"{{name:<{TEXT_LENGTH_NAME}}}"
+    " | "
+    f"{{last_id:>{TEXT_LENGTH_NUMBER}}}"
+    " -> "
+    f"{{last_post_id:<{TEXT_LENGTH_NUMBER}}}"
+    " |"
 )
 TEMPLATE_CHANNEL_MISSING_ADD_COMPLETED = (
     "Channel '{name}' missing, adding to list."
@@ -125,7 +143,8 @@ TEMPLATE_CHANNEL_UPDATE_INFO_STARTED = (
     "Updating channel information for {count} channels..."
 )
 TEMPLATE_CONFIG_DEDUPLICATION_COMPLETED = (
-    "Duplicate removal completed: "
+    "Duplicate removal completed:"
+    " "
     "{remain} configs remain, {removed} removed."
 )
 TEMPLATE_CONFIG_DEDUPLICATION_STARTED = (
@@ -168,9 +187,12 @@ TEMPLATE_ERROR_CONFIG_MISSING_REQUIRED_FIELDS = (
     "{protocol} config is missing required fields: {fields}"
 )
 TEMPLATE_ERROR_CONFIG_UNEXPECTED_FAILURE = (
-    "Unexpected failure while normalizing config:\n"
-    "{config}\n"
-    "Exception type: {exc_type}.\n"
+    "Unexpected failure while normalizing config:"
+    "\n"
+    "{config}"
+    "\n"
+    "Exception type: {exc_type}."
+    "\n"
     "Exception message: {exc_msg}."
 )
 TEMPLATE_ERROR_CONFIG_URL_PARSE_FAILED = (
@@ -208,8 +230,9 @@ TEMPLATE_ERROR_INVALID_NUMBER = (
     "Invalid number: {value}."
 )
 TEMPLATE_ERROR_INVALID_OFFSET = (
-    "Invalid offset {offset}, "
-    "expected positive integer — assignment skipped."
+    "Invalid offset {offset}, expected positive integer"
+    " - "
+    "assignment skipped."
 )
 TEMPLATE_ERROR_NUMBER_OUT_OF_RANGE = (
     "Expected {min_value} to {max_value}, got {value}."
@@ -218,7 +241,8 @@ TEMPLATE_ERROR_PARENT_DIRECTORY_NOT_EXIST = (
     "Parent directory does not exist: '{parent}'."
 )
 TEMPLATE_ERROR_RESPONSE_EMPTY = (
-    "Received empty response for ID {current_id} "
+    "Received empty response for ID {current_id}"
+    " "
     "(channel_name={channel_name}, status={status})."
 )
 TEMPLATE_ERROR_VMESS_JSON_DECODE_FAILED = (
@@ -228,31 +252,65 @@ TEMPLATE_ERROR_VMESS_JSON_PARSE_FAILED = (
     "VMESS JSON could not be parsed from base64: '{base64}'"
 )
 TEMPLATE_FORMAT_CONFIG_NAME = (
-    "{protocol}-{host}-{port}"
+    "{protocol}"
+    "-"
+    "{host}"
+    "-"
+    "{port}"
 )
 TEMPLATE_FORMAT_CONFIG_SSR_BODY = (
-    "{host}:{port}:{origin}:{method}:{obfs}:{password}/?{params}"
+    "{host}"
+    ":"
+    "{port}"
+    ":"
+    "{origin}"
+    ":"
+    "{method}"
+    ":"
+    "{obfs}"
+    ":"
+    "{password}"
+    "/?"
+    "{params}"
 )
 TEMPLATE_FORMAT_CONFIG_URL = (
-    "{url}#{name}"
+    "{url}"
+    "#"
+    "{name}"
 )
 TEMPLATE_FORMAT_CONFIG_URL_BODY = (
-    "{protocol}://{body}"
+    "{protocol}"
+    "://"
+    "{body}"
 )
 TEMPLATE_FORMAT_CONFIG_URL_LOCATION = (
-    "@{host}:{port}"
+    "@"
+    "{host}"
+    ":"
+    "{port}"
 )
 TEMPLATE_FORMAT_FILE_BACKUP_NAME = (
-    "{stem}-backup-{date}{suffix}"
+    "{stem}"
+    "-"
+    "backup"
+    "-"
+    "{date}"
+    "{suffix}"
 )
 TEMPLATE_FORMAT_FILE_LOG_PATH = (
-    "{dir}/{name}.log"
+    "{dir}"
+    "/"
+    "{name}"
+    ".log"
 )
 TEMPLATE_FORMAT_STRING_BASE64_PADDING = (
-    "{string}{padding}"
+    "{string}"
+    "{padding}"
 )
 TEMPLATE_FORMAT_STRING_COLORED_LEVEL = (
-    "{color}{levelname}{reset}"
+    "{color}"
+    "{levelname}"
+    "{reset}"
 )
 TEMPLATE_FORMAT_STRING_QUOTED_NAME = (
     "'{name}'"
@@ -279,5 +337,7 @@ TEMPLATE_TITLE_DELETING_CHANNEL = (
     "Deleting channel '{name}' with the following information"
 )
 TEMPLATE_TITLE_OBJECT_PRETTY_PRINT = (
-    "{title}:\n{formatted}"
+    "{title}:"
+    "\n"
+    "{formatted}"
 )
