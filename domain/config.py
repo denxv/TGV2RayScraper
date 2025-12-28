@@ -4,6 +4,7 @@ from json import (
 )
 from urllib.parse import (
     parse_qsl,
+    unquote,
     urlencode,
 )
 
@@ -17,7 +18,9 @@ from core.constants.messages import (
 from core.constants.patterns import (
     PATTERN_URL_SS,
     PATTERN_URL_SSR_PLAIN,
+    PATTERN_V2RAY_PROTOCOLS_URL,
     PATTERN_VMESS_JSON,
+    PATTERNS_V2RAY_URLS_BY_PROTOCOL,
 )
 from core.constants.templates import (
     TEMPLATE_CONFIG_DEDUPLICATION_COMPLETED,
@@ -49,6 +52,7 @@ from core.typing import (
     SortKeys,
     V2RayConfig,
     V2RayConfigRaw,
+    V2RayConfigRawIterator,
     V2RayConfigs,
     V2RayConfigsRaw,
 )
@@ -63,6 +67,7 @@ from domain.predicates import (
 
 __all__ = [
     "filter_by_condition",
+    "line_to_configs",
     "normalize",
     "normalize_config",
     "normalize_config_base64",
@@ -103,6 +108,30 @@ def filter_by_condition(
     )
 
     return filtered_configs
+
+
+def line_to_configs(
+    line: str,
+) -> V2RayConfigRawIterator:
+    clean_line = unquote(
+        string=line.strip(),
+    )
+
+    return (
+        config_match.groupdict(
+            default="",
+        )
+        for url_match in PATTERN_V2RAY_PROTOCOLS_URL.finditer(
+            string=clean_line,
+        )
+        for pattern in PATTERNS_V2RAY_URLS_BY_PROTOCOL.get(
+            url_match.group("protocol"),
+            (),
+        )
+        for config_match in pattern.finditer(
+            string=url_match.group("url"),
+        )
+    )
 
 
 def normalize(

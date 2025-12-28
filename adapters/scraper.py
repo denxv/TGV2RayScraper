@@ -37,6 +37,42 @@ __all__ = [
 ]
 
 
+async def _update_channel(
+    client: AsyncHTTPClient,
+    channel_name: ChannelName,
+    channel_info: ChannelInfo,
+) -> None:
+    last_post_id = await get_last_post_id(
+        client=client,
+        channel_name=channel_name,
+    )
+
+    update_last_id_and_state(
+        channel_name=channel_name,
+        channel_info=channel_info,
+        last_post_id=last_post_id,
+    )
+
+    if not is_channel_available(
+        channel_info=channel_info,
+    ):
+        return
+
+    normalized_current_id = get_normalized_current_id(
+        channel_info=channel_info,
+    )
+
+    if normalized_current_id == DEFAULT_CURRENT_ID:
+        channel_info["current_id"] = await get_first_post_id(
+            client=client,
+            channel_name=channel_name,
+        )
+
+    channel_info["current_id"] = get_normalized_current_id(
+        channel_info=channel_info,
+    )
+
+
 async def update_info(
     client: AsyncHTTPClient,
     channels: ChannelsDict,
@@ -48,45 +84,12 @@ async def update_info(
         ),
     )
 
-    async def update_channel(
-        channel_name: ChannelName,
-        channel_info: ChannelInfo,
-    ) -> None:
-        last_post_id = await get_last_post_id(
-            client=client,
-            channel_name=channel_name,
-        )
-
-        update_last_id_and_state(
-            channel_name=channel_name,
-            channel_info=channel_info,
-            last_post_id=last_post_id,
-        )
-
-        if not is_channel_available(
-            channel_info=channel_info,
-        ):
-            return
-
-        normalized_current_id = get_normalized_current_id(
-            channel_info=channel_info,
-        )
-
-        if normalized_current_id == DEFAULT_CURRENT_ID:
-            channel_info["current_id"] = await get_first_post_id(
-                client=client,
-                channel_name=channel_name,
-            )
-
-        channel_info["current_id"] = get_normalized_current_id(
-            channel_info=channel_info,
-        )
-
     channel_names = list(channels)
     for i in range(0, len(channel_names), batch_size):
         tasks = [
             create_task(
-                update_channel(
+                _update_channel(
+                    client=client,
                     channel_name=name,
                     channel_info=channels[name],
                 ),

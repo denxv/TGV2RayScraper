@@ -17,7 +17,7 @@ from adapters.channel import (
     save_channels,
 )
 from adapters.config import (
-    fetch_channel_configs,
+    fetch_and_write_configs,
 )
 from adapters.scraper import (
     update_info,
@@ -206,7 +206,7 @@ async def main() -> None:
                 channels=channels,
                 apply_filter=True,
             ):
-                await fetch_channel_configs(
+                await fetch_and_write_configs(
                     client=client,
                     channel_name=name,
                     channel_info=channels[name],

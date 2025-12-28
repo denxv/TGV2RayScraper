@@ -1,9 +1,6 @@
 from asyncio import (
     gather,
 )
-from urllib.parse import (
-    unquote,
-)
 
 from aiofiles import (
     open as aiopen,
@@ -29,7 +26,6 @@ from core.constants.formats import (
 )
 from core.constants.patterns import (
     PATTERN_V2RAY_PROTOCOLS_URL,
-    PATTERNS_V2RAY_URLS_BY_PROTOCOL,
 )
 from core.constants.templates import (
     TEMPLATE_CHANNEL_CONFIGS_FOUND,
@@ -54,21 +50,74 @@ from core.typing import (
     FilePath,
     PostID,
     PostIDAndRawLines,
-    V2RayConfigRawIterator,
     V2RayConfigs,
     V2RayConfigsRaw,
     V2RayRawLines,
 )
+from domain.config import (
+    line_to_configs,
+)
 
 __all__ = [
-    "fetch_channel_configs",
+    "fetch_and_write_configs",
     "load_configs",
     "save_configs",
     "write_configs",
 ]
 
 
-async def fetch_channel_configs(
+async def _fetch_and_parse_configs(
+    client: AsyncHTTPClient,
+    channel_name: ChannelName,
+    current_id: PostID,
+) -> PostIDAndRawLines:
+    try:
+        response = await client.get(
+            url=TEMPLATE_FORMAT_TG_URL_AFTER.format(
+                name=channel_name,
+                id=current_id,
+            ),
+        )
+        response.raise_for_status()
+
+        if not response.text.strip():
+            logger.debug(
+                msg=TEMPLATE_ERROR_RESPONSE_EMPTY.format(
+                    current_id=current_id,
+                    channel_name=channel_name,
+                    status=response.status_code,
+                ),
+            )
+            return current_id, []
+
+        tree = html.fromstring(
+            html=response.text,
+        )
+        messages = tree.xpath(
+            XPATH_TG_MESSAGES_TEXT,
+        )
+    except Exception as e:
+        logger.exception(
+            msg=TEMPLATE_ERROR_FAILED_FETCH_ID.format(
+                current_id=current_id,
+                channel_name=channel_name,
+                exc_type=type(e).__name__,
+                exc_msg=str(e),
+            ),
+        )
+        return current_id, []
+    else:
+        configs = [
+            match.group("url")
+            for message in messages
+            for match in PATTERN_V2RAY_PROTOCOLS_URL.finditer(
+                string=message,
+            )
+        ]
+        return current_id, configs
+
+
+async def fetch_and_write_configs(
     client: AsyncHTTPClient,
     channel_name: ChannelName,
     channel_info: ChannelInfo,
@@ -97,54 +146,6 @@ async def fetch_channel_configs(
         ),
     )
 
-    async def fetch_and_parse(
-        current_id: PostID,
-    ) -> PostIDAndRawLines:
-        try:
-            response = await client.get(
-                url=TEMPLATE_FORMAT_TG_URL_AFTER.format(
-                    name=channel_name,
-                    id=current_id,
-                ),
-            )
-            response.raise_for_status()
-
-            if not response.text.strip():
-                logger.debug(
-                    msg=TEMPLATE_ERROR_RESPONSE_EMPTY.format(
-                        current_id=current_id,
-                        channel_name=channel_name,
-                        status=response.status_code,
-                    ),
-                )
-                return current_id, []
-
-            tree = html.fromstring(
-                html=response.text,
-            )
-            messages = tree.xpath(
-                XPATH_TG_MESSAGES_TEXT,
-            )
-        except Exception as e:
-            logger.exception(
-                msg=TEMPLATE_ERROR_FAILED_FETCH_ID.format(
-                    current_id=current_id,
-                    channel_name=channel_name,
-                    exc_type=type(e).__name__,
-                    exc_msg=str(e),
-                ),
-            )
-            return current_id, []
-        else:
-            configs = [
-                match.group("url")
-                for message in messages
-                for match in PATTERN_V2RAY_PROTOCOLS_URL.finditer(
-                    string=message,
-                )
-            ]
-            return current_id, configs
-
     for channel_id in tqdm(
         iterable=batch_range,
         ascii=True,
@@ -152,7 +153,9 @@ async def fetch_channel_configs(
         bar_format=FORMAT_PROGRESS_BAR,
     ):
         results = await gather(*(
-            fetch_and_parse(
+            _fetch_and_parse_configs(
+                client=client,
+                channel_name=channel_name,
                 current_id=_id,
             )
             for _id in list_channel_id[
@@ -196,29 +199,6 @@ async def load_configs(
             path=path_configs_raw,
         ),
     )
-
-    def line_to_configs(
-        line: str,
-    ) -> V2RayConfigRawIterator:
-        clean_line = unquote(
-            string=line.strip(),
-        )
-
-        return (
-            config_match.groupdict(
-                default="",
-            )
-            for url_match in PATTERN_V2RAY_PROTOCOLS_URL.finditer(
-                string=clean_line,
-            )
-            for pattern in PATTERNS_V2RAY_URLS_BY_PROTOCOL.get(
-                url_match.group("protocol"),
-                (),
-            )
-            for config_match in pattern.finditer(
-                string=url_match.group("url"),
-            )
-        )
 
     async with aiopen(
         file=path_configs_raw,
