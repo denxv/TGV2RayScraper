@@ -164,15 +164,6 @@ def parse_args() -> ArgsNamespace:
     )
 
     parser.add_argument(
-        "-N", "--no-async",
-        action="store_true",
-        help=(
-            "Use slower but simpler synchronous scraping mode "
-            "instead of the default asynchronous mode."
-        ),
-    )
-
-    parser.add_argument(
         "--no-backup",
         action="store_const",
         const="",
@@ -310,11 +301,7 @@ def main() -> None:
         if parsed_args.help_scripts:
             return show_scripts_help()
 
-        skipped_mode = "async" if parsed_args.no_async else "sync"
         for script_name, script_config in CLI_SCRIPTS_CONFIG.items():
-            if script_config.get("mode") == skipped_mode:
-                continue
-
             run_script(
                 script_name=script_name,
                 script_args=collect_args(

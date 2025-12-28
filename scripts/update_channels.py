@@ -2,8 +2,12 @@ from argparse import (
     ArgumentParser,
     HelpFormatter,
 )
+from asyncio import (
+    CancelledError,
+    run,
+)
 
-from adapters.sync.channels import (
+from adapters.channel import (
     load_channels_and_urls,
     save_channels_and_urls,
 )
@@ -153,10 +157,10 @@ def parse_args() -> ArgsNamespace:
     return args
 
 
-def main() -> None:
+async def main() -> None:
     try:
         parsed_args = parse_args()
-        current_channels, list_channel_names = load_channels_and_urls(
+        current_channels, list_channel_names = await load_channels_and_urls(
             path_channels=parsed_args.channels_file,
             path_urls=parsed_args.urls_file,
         )
@@ -170,13 +174,16 @@ def main() -> None:
             args=parsed_args,
         )
 
-        save_channels_and_urls(
+        await save_channels_and_urls(
             channels=current_channels,
             path_channels=parsed_args.channels_file,
             path_urls=parsed_args.urls_file,
             make_backups=parsed_args.make_backups,
         )
-    except KeyboardInterrupt:
+    except (
+        CancelledError,
+        KeyboardInterrupt,
+    ):
         logger.info(
             msg=MESSAGE_ERROR_PROGRAM_EXIT,
         )
@@ -187,4 +194,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    run(
+        main=main(),
+    )

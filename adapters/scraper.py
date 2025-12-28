@@ -1,8 +1,14 @@
-from adapters.sync.channels import (
+from asyncio import (
+    as_completed,
+    create_task,
+)
+
+from adapters.channel import (
     get_first_post_id,
     get_last_post_id,
 )
 from core.constants.common import (
+    BATCH_UPDATE_DEFAULT,
     DEFAULT_CURRENT_ID,
 )
 from core.constants.templates import (
@@ -12,8 +18,11 @@ from core.logger import (
     logger,
 )
 from core.typing import (
+    AsyncHTTPClient,
+    BatchSize,
+    ChannelInfo,
+    ChannelName,
     ChannelsDict,
-    SyncHTTPClient,
 )
 from domain.channel import (
     get_normalized_current_id,
@@ -28,9 +37,10 @@ __all__ = [
 ]
 
 
-def update_info(
-    client: SyncHTTPClient,
+async def update_info(
+    client: AsyncHTTPClient,
     channels: ChannelsDict,
+    batch_size: BatchSize = BATCH_UPDATE_DEFAULT,
 ) -> None:
     logger.info(
         msg=TEMPLATE_CHANNEL_UPDATE_INFO_STARTED.format(
@@ -38,8 +48,11 @@ def update_info(
         ),
     )
 
-    for channel_name, channel_info in channels.items():
-        last_post_id = get_last_post_id(
+    async def update_channel(
+        channel_name: ChannelName,
+        channel_info: ChannelInfo,
+    ) -> None:
+        last_post_id = await get_last_post_id(
             client=client,
             channel_name=channel_name,
         )
@@ -53,14 +66,14 @@ def update_info(
         if not is_channel_available(
             channel_info=channel_info,
         ):
-            continue
+            return
 
         normalized_current_id = get_normalized_current_id(
             channel_info=channel_info,
         )
 
         if normalized_current_id == DEFAULT_CURRENT_ID:
-            channel_info["current_id"] = get_first_post_id(
+            channel_info["current_id"] = await get_first_post_id(
                 client=client,
                 channel_name=channel_name,
             )
@@ -68,3 +81,18 @@ def update_info(
         channel_info["current_id"] = get_normalized_current_id(
             channel_info=channel_info,
         )
+
+    channel_names = list(channels)
+    for i in range(0, len(channel_names), batch_size):
+        tasks = [
+            create_task(
+                update_channel(
+                    channel_name=name,
+                    channel_info=channels[name],
+                ),
+            )
+            for name in channel_names[i:i + batch_size]
+        ]
+
+        for task in as_completed(tasks):
+            await task

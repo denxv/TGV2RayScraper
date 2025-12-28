@@ -1,6 +1,9 @@
 from asyncio import (
     gather,
 )
+from urllib.parse import (
+    unquote,
+)
 
 from aiofiles import (
     open as aiopen,
@@ -16,6 +19,7 @@ from core.constants.common import (
     BATCH_EXTRACT_DEFAULT,
     BATCH_ID,
     DEFAULT_CURRENT_ID,
+    DEFAULT_FILE_CONFIGS_CLEAN,
     DEFAULT_FILE_CONFIGS_RAW,
     DEFAULT_LAST_ID,
     XPATH_TG_MESSAGES_TEXT,
@@ -25,10 +29,15 @@ from core.constants.formats import (
 )
 from core.constants.patterns import (
     PATTERN_V2RAY_PROTOCOLS_URL,
+    PATTERNS_V2RAY_URLS_BY_PROTOCOL,
 )
 from core.constants.templates import (
     TEMPLATE_CHANNEL_CONFIGS_FOUND,
     TEMPLATE_CONFIG_EXTRACT_STARTED,
+    TEMPLATE_CONFIG_LOAD_COMPLETED,
+    TEMPLATE_CONFIG_LOAD_STARTED,
+    TEMPLATE_CONFIG_SAVE_COMPLETED,
+    TEMPLATE_CONFIG_SAVE_STARTED,
     TEMPLATE_ERROR_FAILED_FETCH_ID,
     TEMPLATE_ERROR_RESPONSE_EMPTY,
     TEMPLATE_FORMAT_TG_URL_AFTER,
@@ -45,11 +54,16 @@ from core.typing import (
     FilePath,
     PostID,
     PostIDAndRawLines,
+    V2RayConfigRawIterator,
+    V2RayConfigs,
+    V2RayConfigsRaw,
     V2RayRawLines,
 )
 
 __all__ = [
     "fetch_channel_configs",
+    "load_configs",
+    "save_configs",
     "write_configs",
 ]
 
@@ -170,6 +184,90 @@ async def fetch_channel_configs(
     logger.info(
         msg=TEMPLATE_CHANNEL_CONFIGS_FOUND.format(
             count=v2ray_count,
+        ),
+    )
+
+
+async def load_configs(
+    path_configs_raw: FilePath = DEFAULT_FILE_CONFIGS_RAW,
+) -> V2RayConfigsRaw:
+    logger.info(
+        msg=TEMPLATE_CONFIG_LOAD_STARTED.format(
+            path=path_configs_raw,
+        ),
+    )
+
+    def line_to_configs(
+        line: str,
+    ) -> V2RayConfigRawIterator:
+        clean_line = unquote(
+            string=line.strip(),
+        )
+
+        return (
+            config_match.groupdict(
+                default="",
+            )
+            for url_match in PATTERN_V2RAY_PROTOCOLS_URL.finditer(
+                string=clean_line,
+            )
+            for pattern in PATTERNS_V2RAY_URLS_BY_PROTOCOL.get(
+                url_match.group("protocol"),
+                (),
+            )
+            for config_match in pattern.finditer(
+                string=url_match.group("url"),
+            )
+        )
+
+    async with aiopen(
+        file=path_configs_raw,
+        encoding="utf-8",
+    ) as file:
+        configs: V2RayConfigsRaw = []
+        async for line in file:
+            configs.extend(
+                line_to_configs(
+                    line=line,
+                ),
+            )
+
+    logger.info(
+        msg=TEMPLATE_CONFIG_LOAD_COMPLETED.format(
+            count=len(configs),
+            path=path_configs_raw,
+        ),
+    )
+
+    return configs
+
+
+async def save_configs(
+    configs: V2RayConfigs,
+    path_configs_clean: FilePath = DEFAULT_FILE_CONFIGS_CLEAN,
+    mode: FileMode = "w",
+) -> None:
+    logger.info(
+        msg=TEMPLATE_CONFIG_SAVE_STARTED.format(
+            count=len(configs),
+            path=path_configs_clean,
+        ),
+    )
+
+    async with aiopen(
+        file=path_configs_clean,
+        mode=mode,
+        encoding="utf-8",
+    ) as file:
+        await file.writelines(
+            f"{config.get('url', '')}\n"
+            for config in configs
+        )
+
+    logger.info(
+        msg=TEMPLATE_CONFIG_SAVE_COMPLETED.format(
+            count=len(configs),
+            path=path_configs_clean,
         ),
     )
 

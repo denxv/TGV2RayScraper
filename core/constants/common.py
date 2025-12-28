@@ -109,9 +109,8 @@ CLI_SCRIPTS_CONFIG = {
             "--no-dry-run",
             "--urls",
         ],
-        "mode": "any",
     },
-    "async_scraper": {
+    "scraper": {
         "flags": [
             "--batch-extract",
             "--batch-update",
@@ -119,15 +118,6 @@ CLI_SCRIPTS_CONFIG = {
             "--configs-raw",
             "--time-out",
         ],
-        "mode": "async",
-    },
-    "scraper": {
-        "flags": [
-            "--channels",
-            "--configs-raw",
-            "--time-out",
-        ],
-        "mode": "sync",
     },
     "v2ray_cleaner": {
         "flags": [
@@ -139,7 +129,6 @@ CLI_SCRIPTS_CONFIG = {
             "--reverse",
             "--sort",
         ],
-        "mode": "any",
     },
 }
 

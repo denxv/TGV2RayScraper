@@ -2,8 +2,12 @@ from argparse import (
     ArgumentParser,
     HelpFormatter,
 )
+from asyncio import (
+    CancelledError,
+    run,
+)
 
-from adapters.sync.configs import (
+from adapters.config import (
     load_configs,
     save_configs,
 )
@@ -164,7 +168,7 @@ def parse_args() -> ArgsNamespace:
     return args
 
 
-def main() -> None:
+async def main() -> None:
     try:
         parsed_args = parse_args()
         log_debug_object(
@@ -172,7 +176,7 @@ def main() -> None:
             obj=PATTERNS_V2RAY_URLS_BY_PROTOCOL,
         )
 
-        configs_raw = load_configs(
+        configs_raw = await load_configs(
             path_configs_raw=parsed_args.configs_raw,
         )
 
@@ -181,11 +185,14 @@ def main() -> None:
             args=parsed_args,
         )
 
-        save_configs(
+        await save_configs(
             configs=configs_clean,
             path_configs_clean=parsed_args.configs_clean,
         )
-    except KeyboardInterrupt:
+    except (
+        CancelledError,
+        KeyboardInterrupt,
+    ):
         logger.info(
             msg=MESSAGE_ERROR_PROGRAM_EXIT,
         )
@@ -196,4 +203,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    run(
+        main=main(),
+    )

@@ -198,23 +198,13 @@ All dev-dependencies are listed in [`requirements-dev.txt`](requirements-dev.txt
 
 ## Project Structure
 
-* **adapters/** — adapters for synchronous and asynchronous data operations
+* **adapters/** — adapters for asynchronous data operations
 
-  * **async_/** — asynchronous implementations (channels, configurations, scraping)
+  * `channel.py` — asynchronous operations with channels
 
-    * `channels.py` — asynchronous operations with channels
+  * `config.py` — asynchronous processing of configurations
 
-    * `configs.py` — asynchronous processing of configurations
-
-    * `scraper.py` — asynchronous channel data scraper
-
-  * **sync/** — synchronous implementations
-
-    * `channels.py` — synchronous operations with channels
-
-    * `configs.py` — synchronous processing of configurations
-
-    * `scraper.py` — synchronous channel data scraper
+  * `scraper.py` — asynchronous channel data scraper
 
 * **channels/** — folder for storing channel and URL list files
 
@@ -274,9 +264,7 @@ All dev-dependencies are listed in [`requirements-dev.txt`](requirements-dev.txt
 
 * **scripts/** — helper scripts for performing project tasks
 
-  * `async_scraper.py` — script collects data from Telegram channels asynchronously
-
-  * `scraper.py` — script collects data from Telegram channels synchronously
+  * `scraper.py` — script collects data from Telegram channels asynchronously
 
   * `update_channels.py` — script to update channels (removing inactive channels and adding new ones)
 
@@ -287,8 +275,6 @@ All dev-dependencies are listed in [`requirements-dev.txt`](requirements-dev.txt
   * **e2e/** — end-to-end tests, verifying full system behavior under different usage scenarios (**not implemented**)
 
     * `test_async_scraper.py` — checks the asynchronous scraper with real data
-
-    * `test_sync_scraper.py` — checks the synchronous scraper with real data
 
     * `test_update_channels.py` — tests the process of updating channel information
 
@@ -326,21 +312,11 @@ All dev-dependencies are listed in [`requirements-dev.txt`](requirements-dev.txt
 
     * **adapters/** — adapter tests for data handling (**not implemented**)
 
-      * **async_/** — asynchronous adapters for function verification
+      * `test_async_channel.py` — checks processing and validation of channels asynchronously
 
-        * `test_async_channels.py` — checks processing and validation of channels
+      * `test_async_config.py` — checks processing and validation of configs asynchronously
 
-        * `test_async_configs.py` — checks processing and validation of configs
-
-        * `test_async_scraper.py` — checks asynchronous scraper locally
-
-      * **sync/** — synchronous adapters for function verification
-
-        * `test_sync_channels.py` — checks processing and validation of channels
-
-        * `test_sync_configs.py` — checks processing and validation of configs
-
-        * `test_sync_scraper.py` — checks synchronous scraper locally
+      * `test_async_scraper.py` — checks scraper locally asynchronously
 
     * **core/** — tests for core utilities and constants
 
@@ -626,12 +602,12 @@ python -m scripts.update_channels -C channels.json --urls urls.txt -B -D -M 50 -
 
 ### **2. Running Scrapers**
 
-#### **Asynchronous Scraper** (faster, experimental)
+#### **Asynchronous Scraper** (fast and stable)
 
 You can run the asynchronous scraper as follows:
 
 ```bash
-python -m scripts.async_scraper
+python -m scripts.scraper
 ```
 
 > You can also prepend `uv run` before any `python` command to run it through `uv`.
@@ -639,13 +615,13 @@ python -m scripts.async_scraper
 An alternative method using `PYTHONPATH` is also available:
 
 ```bash
-PYTHONPATH=. python scripts/async_scraper.py
+PYTHONPATH=. python scripts/scraper.py
 ```
 
 You can use the `-h` flag to see all available options:
 
 ```bash
-python -m scripts.async_scraper -h
+python -m scripts.scraper -h
 ```
 
 **Options include:**
@@ -663,47 +639,7 @@ python -m scripts.async_scraper -h
 **Example usage:**
 
 ```bash
-python -m scripts.async_scraper -E 20 -U 100 --time-out 30.0 -C channels/current.json -R configs/v2ray-raw.txt
-```
-
-> You can add `uv run` before the `python` command to run it through `uv`.
-
----
-
-#### **Synchronous Scraper** (simpler, slower)
-
-You can run the synchronous scraper as follows:
-
-```bash
-python -m scripts.scraper
-```
-
-> You can also prepend `uv run` before any `python` command to run it through `uv`.
-
-Alternatively, you can run it with `PYTHONPATH`:
-
-```bash
-PYTHONPATH=. python scripts/scraper.py
-```
-
-Use `-h` to see all available options:
-
-```bash
-python -m scripts.scraper -h
-```
-
-**Options include:**
-
-* `-C, --channels FILE` — Path to the input JSON file containing the list of channels (default: `channels/current.json`).
-
-* `-R, --configs-raw FILE` — Path to the output file for saving scraped V2Ray configs (default: `configs/v2ray-raw.txt`).
-
-* `-T, --time-out SECONDS` — HTTP client timeout in seconds for requests used while updating channel info and extracting V2Ray configurations (default: 30.0).
-
-**Example usage:**
-
-```bash
-python -m scripts.scraper --time-out 30.0 -C channels/current.json -R configs/v2ray-raw.txt
+python -m scripts.scraper -E 20 -U 100 --time-out 30.0 -C channels/current.json -R configs/v2ray-raw.txt
 ```
 
 > You can add `uv run` before the `python` command to run it through `uv`.
@@ -792,19 +728,15 @@ python main.py --help-scripts
 
 * `-H, --help-scripts` — Display help information for all internal pipeline scripts.
 
-* `-N, --no-async` — Use slower but simpler synchronous scraping mode instead of the default asynchronous mode.
-
 **The script performs the following:**
 
 * Executes all pipeline steps in order:
 
   1. `update_channels.py` – updates the list of channels.
 
-  2. `async_scraper.py` – collects channel data from Telegram asynchronously (faster, used by default).
+  2. `scraper.py` – collects channel data from Telegram asynchronously.
 
-  3. `scraper.py` – collects channel data synchronously if `--no-async` is used (slower, simpler).
-
-  4. `v2ray_cleaner.py` – cleans, normalizes, and processes the scraped proxy configuration files.
+  3. `v2ray_cleaner.py` – cleans, normalizes, and processes the scraped proxy configuration files.
 
 * Collects only relevant arguments for each script automatically.
 

@@ -18,7 +18,6 @@ from typing import (
 
 from httpx import (
     AsyncClient,
-    Client,
 )
 
 __all__ = [
@@ -63,7 +62,6 @@ __all__ = [
     "ScalarValue",
     "SortKey",
     "SortKeys",
-    "SyncHTTPClient",
     "T",
     "V2RayConfig",
     "V2RayConfigRaw",
@@ -86,7 +84,6 @@ class ChannelInfo(
 
 ArgsNamespace = Namespace
 AsyncHTTPClient = AsyncClient
-SyncHTTPClient = Client
 
 P = ParamSpec("P")
 T = TypeVar("T")

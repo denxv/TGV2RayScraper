@@ -2,23 +2,33 @@ from argparse import (
     ArgumentParser,
     HelpFormatter,
 )
+from asyncio import (
+    CancelledError,
+    run,
+)
 
 from httpx import (
-    Client,
+    AsyncClient,
     Timeout,
 )
 
-from adapters.sync.channels import (
+from adapters.channel import (
     load_channels,
     save_channels,
 )
-from adapters.sync.configs import (
+from adapters.config import (
     fetch_channel_configs,
 )
-from adapters.sync.scraper import (
+from adapters.scraper import (
     update_info,
 )
 from core.constants.common import (
+    BATCH_EXTRACT_DEFAULT,
+    BATCH_EXTRACT_MAX,
+    BATCH_EXTRACT_MIN,
+    BATCH_UPDATE_DEFAULT,
+    BATCH_UPDATE_MAX,
+    BATCH_UPDATE_MIN,
     DEFAULT_HELP_INDENT,
     DEFAULT_HELP_WIDTH,
     DEFAULT_PATH_CHANNELS,
@@ -54,11 +64,11 @@ def parse_args() -> ArgsNamespace:
     parser = ArgumentParser(
         add_help=False,
         description=(
-            "Synchronous Telegram channel scraper (simpler, slower)."
+            "Asynchronous Telegram channel scraper (stable and fast)."
         ),
         epilog=(
-            "Example: PYTHONPATH=. python scripts/%(prog)s "
-            "--time-out 30.0 -C channels.json --configs-raw configs-raw.txt"
+            "Example: PYTHONPATH=. python scripts/%(prog)s -E 20 "
+            "-U 100 -T 30.0 --channels channels.json -R configs-raw.txt"
         ),
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
@@ -88,6 +98,24 @@ def parse_args() -> ArgsNamespace:
         "-h", "--help",
         action="help",
         help=SUPPRESS,
+    )
+
+    parser.add_argument(
+        "-E", "--batch-extract",
+        default=BATCH_EXTRACT_DEFAULT,
+        dest="batch_extract",
+        help=(
+            "Number of messages processed in parallel to extract "
+            "V2Ray configs (default: %(default)s)."
+        ),
+        metavar="N",
+        type=lambda value: convert_number_in_range(
+            value=value,
+            min_value=BATCH_EXTRACT_MIN,
+            max_value=BATCH_EXTRACT_MAX,
+            as_int=True,
+            as_str=False,
+        ),
     )
 
     parser.add_argument(
@@ -126,6 +154,24 @@ def parse_args() -> ArgsNamespace:
         ),
     )
 
+    parser.add_argument(
+        "-U", "--batch-update",
+        default=BATCH_UPDATE_DEFAULT,
+        dest="batch_update",
+        help=(
+            "Maximum number of channels updated in parallel "
+            "(default: %(default)s)."
+        ),
+        metavar="N",
+        type=lambda value: convert_number_in_range(
+            value=value,
+            min_value=BATCH_UPDATE_MIN,
+            max_value=BATCH_UPDATE_MAX,
+            as_int=True,
+            as_str=False,
+        ),
+    )
+
     args = parser.parse_args()
     log_debug_object(
         title="Parsed command-line arguments",
@@ -135,21 +181,22 @@ def parse_args() -> ArgsNamespace:
     return args
 
 
-def main() -> None:
+async def main() -> None:
     parsed_args = parse_args()
     try:
-        channels = load_channels(
+        channels = await load_channels(
             path_channels=parsed_args.channels,
         )
 
-        with Client(
+        async with AsyncClient(
             timeout=Timeout(
                 timeout=parsed_args.time_out,
             ),
         ) as client:
-            update_info(
+            await update_info(
                 client=client,
                 channels=channels,
+                batch_size=parsed_args.batch_update,
             )
             print_channel_info(
                 channels=channels,
@@ -159,13 +206,17 @@ def main() -> None:
                 channels=channels,
                 apply_filter=True,
             ):
-                fetch_channel_configs(
+                await fetch_channel_configs(
                     client=client,
                     channel_name=name,
                     channel_info=channels[name],
+                    batch_size=parsed_args.batch_extract,
                     path_configs=parsed_args.configs_raw,
                 )
-    except KeyboardInterrupt:
+    except (
+        CancelledError,
+        KeyboardInterrupt,
+    ):
         logger.info(
             msg=MESSAGE_ERROR_PROGRAM_EXIT,
         )
@@ -174,11 +225,13 @@ def main() -> None:
             msg=MESSAGE_ERROR_UNEXPECTED_FAILURE,
         )
     finally:
-        save_channels(
+        await save_channels(
             channels=channels,
             path_channels=parsed_args.channels,
         )
 
 
 if __name__ == "__main__":
-    main()
+    run(
+        main=main(),
+    )
