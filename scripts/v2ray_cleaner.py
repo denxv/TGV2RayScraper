@@ -171,6 +171,7 @@ def parse_args() -> ArgsNamespace:
 async def main() -> None:
     try:
         parsed_args = parse_args()
+
         log_debug_object(
             title="Compiled URL regex patterns by V2Ray protocol",
             obj=PATTERNS_V2RAY_URLS_BY_PROTOCOL,

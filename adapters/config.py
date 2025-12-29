@@ -15,6 +15,7 @@ from tqdm.asyncio import (
 from core.constants.common import (
     BATCH_EXTRACT_DEFAULT,
     BATCH_ID,
+    DEFAULT_COUNT,
     DEFAULT_CURRENT_ID,
     DEFAULT_FILE_CONFIGS_CLEAN,
     DEFAULT_FILE_CONFIGS_RAW,
@@ -28,10 +29,11 @@ from core.constants.patterns import (
     PATTERN_V2RAY_PROTOCOLS_URL,
 )
 from core.constants.templates import (
-    TEMPLATE_CHANNEL_CONFIGS_FOUND,
+    TEMPLATE_CONFIG_EXTRACT_COMPLETED,
     TEMPLATE_CONFIG_EXTRACT_STARTED,
     TEMPLATE_CONFIG_LOAD_COMPLETED,
     TEMPLATE_CONFIG_LOAD_STARTED,
+    TEMPLATE_CONFIG_LOG_EXTRACT,
     TEMPLATE_CONFIG_SAVE_COMPLETED,
     TEMPLATE_CONFIG_SAVE_STARTED,
     TEMPLATE_ERROR_FAILED_FETCH_ID,
@@ -46,6 +48,7 @@ from core.typing import (
     BatchSize,
     ChannelInfo,
     ChannelName,
+    ChannelsDict,
     FileMode,
     FilePath,
     PostID,
@@ -53,6 +56,9 @@ from core.typing import (
     V2RayConfigs,
     V2RayConfigsRaw,
     V2RayRawLines,
+)
+from domain.channel import (
+    get_sorted_keys,
 )
 from domain.config import (
     line_to_configs,
@@ -117,14 +123,14 @@ async def _fetch_and_parse_configs(
         return current_id, configs
 
 
-async def fetch_and_write_configs(
+async def _fetch_and_write_configs(
     client: AsyncHTTPClient,
     channel_name: ChannelName,
     channel_info: ChannelInfo,
     batch_size: BatchSize = BATCH_EXTRACT_DEFAULT,
     path_configs: FilePath = DEFAULT_FILE_CONFIGS_RAW,
-) -> None:
-    v2ray_count = 0
+) -> int:
+    configs_count = 0
     list_channel_id = list(
         range(
             channel_info.get(
@@ -138,12 +144,10 @@ async def fetch_and_write_configs(
             BATCH_ID,
         ),
     )
-    batch_range = range(0, len(list_channel_id), batch_size)
-
-    logger.info(
-        msg=TEMPLATE_CONFIG_EXTRACT_STARTED.format(
-            name=channel_name,
-        ),
+    batch_range = range(
+        0,
+        len(list_channel_id),
+        batch_size,
     )
 
     for channel_id in tqdm(
@@ -164,18 +168,26 @@ async def fetch_and_write_configs(
             ]
         ))
 
+        collected_configs: V2RayRawLines = []
+
         for current_id, configs in results:
             channel_info["current_id"] = current_id
 
-            if len(configs) > 0:
-                v2ray_count += len(configs)
-                channel_info["count"] += len(configs)
+            if not configs:
+                continue
 
-                await write_configs(
-                    configs=configs,
-                    path_configs=path_configs,
-                    mode="a",
-                )
+            count = len(configs)
+            configs_count += count
+            channel_info["count"] += count
+
+            collected_configs.extend(configs)
+
+        if collected_configs:
+            await write_configs(
+                configs=collected_configs,
+                path_configs=path_configs,
+                mode="a",
+            )
 
     channel_info["current_id"] = max(
         channel_info.get(
@@ -186,8 +198,51 @@ async def fetch_and_write_configs(
     )
 
     logger.info(
-        msg=TEMPLATE_CHANNEL_CONFIGS_FOUND.format(
-            count=v2ray_count,
+        msg=TEMPLATE_CONFIG_LOG_EXTRACT.format(
+            name=channel_name,
+            total=channel_info.get(
+                "count",
+                DEFAULT_COUNT,
+            ),
+            found=configs_count,
+        ),
+    )
+
+    return configs_count
+
+
+async def fetch_and_write_configs(
+    client: AsyncHTTPClient,
+    channels: ChannelsDict,
+    batch_size: BatchSize = BATCH_EXTRACT_DEFAULT,
+    path_configs: FilePath = DEFAULT_FILE_CONFIGS_RAW,
+) -> None:
+    channels_to_extract = get_sorted_keys(
+        channels=channels,
+        apply_filter=True,
+    )
+    total_configs = 0
+    channels_count = len(channels_to_extract)
+
+    logger.info(
+        msg=TEMPLATE_CONFIG_EXTRACT_STARTED.format(
+            count=channels_count,
+        ),
+    )
+
+    for name in channels_to_extract:
+        total_configs += await _fetch_and_write_configs(
+            client=client,
+            channel_name=name,
+            channel_info=channels[name],
+            batch_size=batch_size,
+            path_configs=path_configs,
+        )
+
+    logger.info(
+        msg=TEMPLATE_CONFIG_EXTRACT_COMPLETED.format(
+            configs_count=total_configs,
+            channels_count=channels_count,
         ),
     )
 

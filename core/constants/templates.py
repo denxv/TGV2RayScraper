@@ -9,7 +9,6 @@ __all__ = [
     "TEMPLATE_CHANNEL_ASSIGNMENT_OFFSET_APPLIED",
     "TEMPLATE_CHANNEL_ASSIGNMENT_OFFSET_SKIPPED",
     "TEMPLATE_CHANNEL_ASSIGNMENT_SKIPPED",
-    "TEMPLATE_CHANNEL_CONFIGS_FOUND",
     "TEMPLATE_CHANNEL_COUNT_DIFFERENCE",
     "TEMPLATE_CHANNEL_LEFT_TO_CHECK",
     "TEMPLATE_CHANNEL_LOG_STATUS",
@@ -21,11 +20,13 @@ __all__ = [
     "TEMPLATE_CHANNEL_UPDATE_INFO_STARTED",
     "TEMPLATE_CONFIG_DEDUPLICATION_COMPLETED",
     "TEMPLATE_CONFIG_DEDUPLICATION_STARTED",
+    "TEMPLATE_CONFIG_EXTRACT_COMPLETED",
     "TEMPLATE_CONFIG_EXTRACT_STARTED",
     "TEMPLATE_CONFIG_FILTER_COMPLETED",
     "TEMPLATE_CONFIG_FILTER_STARTED",
     "TEMPLATE_CONFIG_LOAD_COMPLETED",
     "TEMPLATE_CONFIG_LOAD_STARTED",
+    "TEMPLATE_CONFIG_LOG_EXTRACT",
     "TEMPLATE_CONFIG_NORMALIZE_COMPLETED",
     "TEMPLATE_CONFIG_NORMALIZE_STARTED",
     "TEMPLATE_CONFIG_SAVE_COMPLETED",
@@ -95,93 +96,101 @@ TEMPLATE_CHANNEL_ASSIGNMENT_OFFSET_SKIPPED = (
 TEMPLATE_CHANNEL_ASSIGNMENT_SKIPPED = (
     "Skipping assignment because check_only={check_only}."
 )
-TEMPLATE_CHANNEL_CONFIGS_FOUND = (
-    "Found: {count} configs."
-)
 TEMPLATE_CHANNEL_COUNT_DIFFERENCE = (
-    "Old count: {old_size}"
+    "Old count: {old_size:,}"
     " | "
-    "New count: {new_size}"
+    "New count: {new_size:,}"
     " | "
-    "({diff:+})"
+    "({diff:+,})"
 )
 TEMPLATE_CHANNEL_LEFT_TO_CHECK = (
-    "Channels left to check: {count}."
+    "Channels left to check: {count:,}."
 )
 TEMPLATE_CHANNEL_LOG_STATUS = (
     "| <SS> | "
     f"{{name:<{TEXT_LENGTH_NAME}}}"
     " | "
-    f"{{current_id:>{TEXT_LENGTH_NUMBER}}}"
+    f"{{current_id:>{TEXT_LENGTH_NUMBER},}}"
     " / "
-    f"{{last_id:<{TEXT_LENGTH_NUMBER}}}"
+    f"{{last_id:<{TEXT_LENGTH_NUMBER},}}"
     " | "
-    "(+{diff:,})"
+    "({diff:+,})"
 )
 TEMPLATE_CHANNEL_LOG_UPDATE = (
     "| <UU> | "
     f"{{name:<{TEXT_LENGTH_NAME}}}"
     " | "
-    f"{{last_id:>{TEXT_LENGTH_NUMBER}}}"
+    f"{{last_id:>{TEXT_LENGTH_NUMBER},}}"
     " -> "
-    f"{{last_post_id:<{TEXT_LENGTH_NUMBER}}}"
+    f"{{last_post_id:<{TEXT_LENGTH_NUMBER},}}"
     " |"
 )
 TEMPLATE_CHANNEL_MISSING_ADD_COMPLETED = (
     "Channel '{name}' missing, adding to list."
 )
 TEMPLATE_CHANNEL_SAVE_COMPLETED = (
-    "Saved {count} channels in '{path}'."
+    "Saved {count:,} channels in '{path}'."
 )
 TEMPLATE_CHANNEL_TOTAL_AVAILABLE = (
-    "Total channels are available for extracting configs: {count}."
+    "Total channels are available for extracting configs: {count:,}."
 )
 TEMPLATE_CHANNEL_TOTAL_MESSAGES = (
     "Total messages on channels: {count:,}."
 )
 TEMPLATE_CHANNEL_UPDATE_INFO_STARTED = (
-    "Updating channel information for {count} channels..."
+    "Updating channel information for {count:,} channels..."
 )
 TEMPLATE_CONFIG_DEDUPLICATION_COMPLETED = (
     "Duplicate removal completed:"
     " "
-    "{remain} configs remain, {removed} removed."
+    "{remain:,} configs remain, {removed:,} removed."
 )
 TEMPLATE_CONFIG_DEDUPLICATION_STARTED = (
-    "Removing duplicates from {count} configs using keys: {fields}..."
+    "Removing duplicates from {count:,} configs using keys: {fields}..."
+)
+TEMPLATE_CONFIG_EXTRACT_COMPLETED = (
+    "Extracted {configs_count:,} configs from {channels_count:,} channels."
 )
 TEMPLATE_CONFIG_EXTRACT_STARTED = (
-    "Extracting configs from channel '{name}'..."
+    "Extracting configs from {count:,} channels..."
 )
 TEMPLATE_CONFIG_FILTER_COMPLETED = (
-    "Filtered: {count} configs kept, {removed} removed by condition."
+    "Filtered: {count:,} configs kept, {removed:,} removed by condition."
 )
 TEMPLATE_CONFIG_FILTER_STARTED = (
-    "Filtering {count} configs by condition: `{condition}`..."
+    "Filtering {count:,} configs by condition: `{condition}`..."
 )
 TEMPLATE_CONFIG_LOAD_COMPLETED = (
-    "Loaded {count} configs from '{path}'."
+    "Loaded {count:,} configs from '{path}'."
 )
 TEMPLATE_CONFIG_LOAD_STARTED = (
     "Loading configs from '{path}'..."
 )
+TEMPLATE_CONFIG_LOG_EXTRACT = (
+    "| <EE> | "
+    f"{{name:<{TEXT_LENGTH_NAME}}}"
+    " | "
+    f"{{total:>{TEXT_LENGTH_NUMBER},}}"
+    " | "
+    "({found:+,})"
+)
 TEMPLATE_CONFIG_NORMALIZE_COMPLETED = (
-    "Configs normalized: {count} (removed: {removed})."
+    "Configs normalized: {count:,} (removed: {removed:,})."
 )
 TEMPLATE_CONFIG_NORMALIZE_STARTED = (
-    "Normalizing {count} configs..."
+    "Normalizing {count:,} configs..."
 )
 TEMPLATE_CONFIG_SAVE_COMPLETED = (
-    "Saved {count} configs in '{path}'."
+    "Saved {count:,} configs in '{path}'."
 )
 TEMPLATE_CONFIG_SAVE_STARTED = (
-    "Saving {count} configs to '{path}'..."
+    "Saving {count:,} configs to '{path}'..."
 )
 TEMPLATE_CONFIG_SORT_COMPLETED = (
-    "Sorting completed: {count} configs sorted."
+    "Sorting completed: {count:,} configs sorted."
 )
 TEMPLATE_CONFIG_SORT_STARTED = (
-    "Sorting {count} configs by fields: {fields} (reverse={reverse})..."
+    "Sorting {count:,} configs by fields: {fields} (reverse={reverse})..."
 )
 TEMPLATE_ERROR_CONFIG_MISSING_REQUIRED_FIELDS = (
     "{protocol} config is missing required fields: {fields}"
@@ -241,7 +250,7 @@ TEMPLATE_ERROR_PARENT_DIRECTORY_NOT_EXIST = (
     "Parent directory does not exist: '{parent}'."
 )
 TEMPLATE_ERROR_RESPONSE_EMPTY = (
-    "Received empty response for ID {current_id}"
+    "Received empty response for ID {current_id:,}"
     " "
     "(channel_name={channel_name}, status={status})."
 )

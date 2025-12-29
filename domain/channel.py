@@ -51,6 +51,9 @@ from core.typing import (
     ChannelsDict,
     PostID,
 )
+from core.utils import (
+    repeat_char_line,
+)
 from domain.predicates import (
     is_channel_available,
     is_channel_fully_scanned,
@@ -340,6 +343,12 @@ def normalize_channel_names(
 
 
 def print_channel_info(channels: ChannelsDict) -> None:
+    separator_line = repeat_char_line(
+        char="-",
+    )
+    logger.info(
+        msg=separator_line,
+    )
     logger.info(
         msg=MESSAGE_CHANNEL_SHOW_INFO,
     )
@@ -375,6 +384,9 @@ def print_channel_info(channels: ChannelsDict) -> None:
         msg=TEMPLATE_CHANNEL_TOTAL_MESSAGES.format(
             count=total_channels_post,
         ),
+    )
+    logger.info(
+        msg=separator_line,
     )
 
 

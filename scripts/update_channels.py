@@ -160,6 +160,7 @@ def parse_args() -> ArgsNamespace:
 async def main() -> None:
     try:
         parsed_args = parse_args()
+
         current_channels, list_channel_names = await load_channels_and_urls(
             path_channels=parsed_args.channels_file,
             path_urls=parsed_args.urls_file,

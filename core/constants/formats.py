@@ -35,7 +35,7 @@ FORMAT_LOG_TIME_MICROSECONDS = (
     "%H:%M:%S.%f"
 )
 FORMAT_PROGRESS_BAR = (
-    " | "
+    "| <EE> | "
     f"{{desc:<{TEXT_LENGTH_NAME}}}"
     " | "
     "{percentage:5.1f}%"

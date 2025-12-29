@@ -55,7 +55,6 @@ from core.utils import (
     validate_file_path,
 )
 from domain.channel import (
-    get_sorted_keys,
     print_channel_info,
 )
 
@@ -183,6 +182,7 @@ def parse_args() -> ArgsNamespace:
 
 async def main() -> None:
     parsed_args = parse_args()
+
     try:
         channels = await load_channels(
             path_channels=parsed_args.channels,
@@ -201,18 +201,12 @@ async def main() -> None:
             print_channel_info(
                 channels=channels,
             )
-
-            for name in get_sorted_keys(
+            await fetch_and_write_configs(
+                client=client,
                 channels=channels,
-                apply_filter=True,
-            ):
-                await fetch_and_write_configs(
-                    client=client,
-                    channel_name=name,
-                    channel_info=channels[name],
-                    batch_size=parsed_args.batch_extract,
-                    path_configs=parsed_args.configs_raw,
-                )
+                batch_size=parsed_args.batch_extract,
+                path_configs=parsed_args.configs_raw,
+            )
     except (
         CancelledError,
         KeyboardInterrupt,

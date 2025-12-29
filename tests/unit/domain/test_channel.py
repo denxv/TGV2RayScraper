@@ -18,6 +18,9 @@ from core.typing import (
     ChannelsDict,
     PostID,
 )
+from core.utils import (
+    repeat_char_line,
+)
 from domain.channel import (
     assign_current_id_to_channels,
     delete_channels,
@@ -356,7 +359,11 @@ def test_print_channel_info_various(
     channels: ChannelsDict,
 ) -> None:
     total_diff = 0
+    separator_line = repeat_char_line(
+        char="-",
+    )
     expected_calls = [
+        separator_line,
         MESSAGE_CHANNEL_SHOW_INFO,
     ]
 
@@ -387,6 +394,9 @@ def test_print_channel_info_various(
         TEMPLATE_CHANNEL_TOTAL_MESSAGES.format(
             count=total_diff,
         ),
+    )
+    expected_calls.append(
+        separator_line,
     )
 
     print_channel_info(
