@@ -8,11 +8,9 @@ https://t.me/s/ae_proxy
 https://t.me/s/aklisvpn
 https://t.me/s/alfa_v2ray_ng
 https://t.me/s/alfred_config
-https://t.me/s/amirw_shop_q
 https://t.me/s/angus_vpn
 https://t.me/s/anotherme_night
 https://t.me/s/antifilterjadid
-https://t.me/s/antimeli
 https://t.me/s/apexqr
 https://t.me/s/apple_x1
 https://t.me/s/archive_android
@@ -412,7 +410,6 @@ https://t.me/s/vaynora
 https://t.me/s/vip_fragment_v2ray
 https://t.me/s/vipv2rayngnp
 https://t.me/s/vistav2ray
-https://t.me/s/vlees_v2rayng
 https://t.me/s/vless_config
 https://t.me/s/vless_vpns
 https://t.me/s/vlessconfig

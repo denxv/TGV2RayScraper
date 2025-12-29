@@ -59,12 +59,6 @@
         "last_id": -1,
         "state": 0
     },
-    "amirw_shop_q": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "angus_vpn": {
         "count": 0,
         "current_id": 1,
@@ -78,12 +72,6 @@
         "state": 0
     },
     "antifilterjadid": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "antimeli": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -2478,12 +2466,6 @@
         "state": 0
     },
     "vistav2ray": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "vlees_v2rayng": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
