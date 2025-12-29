@@ -184,6 +184,8 @@ The full list of dependencies is available in [`requirements.txt`](requirements.
 
 For development and testing of the project, additional tools are required:
 
+* **freezegun** – time freezing in tests
+
 * **mypy** – type checking
 
 * **pytest** – testing framework
@@ -191,6 +193,8 @@ For development and testing of the project, additional tools are required:
 * **pytest-asyncio** – support for asynchronous tests in `pytest`
 
 * **pytest-cov** – test coverage reporting
+
+* **pytest-mock** – mocking in tests
 
 * **ruff** – static code analysis and linting
 
