@@ -1,16 +1,4 @@
 {
-    "abelimo": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "abiidar_server": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "ablnet7": {
         "count": 0,
         "current_id": 1,
@@ -24,18 +12,6 @@
         "state": 0
     },
     "achavpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "adamak_vpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "ae_proxy": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -77,12 +53,6 @@
         "last_id": -1,
         "state": 0
     },
-    "apexqr": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "archive_android": {
         "count": 0,
         "current_id": 1,
@@ -119,19 +89,7 @@
         "last_id": -1,
         "state": 0
     },
-    "as12rgh": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "asr_proxy": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "asrnovin_ir": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -143,49 +101,13 @@
         "last_id": -1,
         "state": 0
     },
-    "ata_connect": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "atlas_dn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "atvpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "autoaivpn": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
         "state": 0
     },
-    "avaalvpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "azadi_az_inja_migzare": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "azadiiivpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "azadiv2rayy": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -198,12 +120,6 @@
         "state": 0
     },
     "azadnet": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "bad_raqs": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -227,18 +143,6 @@
         "last_id": -1,
         "state": 0
     },
-    "binextify": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "black_vpn1": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "bored_vpn": {
         "count": 0,
         "current_id": 1,
@@ -257,19 +161,7 @@
         "last_id": -1,
         "state": 0
     },
-    "cassiusvpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "chanel_v2ray_2": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "change_ip1": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -329,12 +221,6 @@
         "last_id": -1,
         "state": 0
     },
-    "configscenter": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "configshere": {
         "count": 0,
         "current_id": 1,
@@ -353,18 +239,6 @@
         "last_id": -1,
         "state": 0
     },
-    "configt": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "configv2rayforfree": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "configx2ray": {
         "count": 0,
         "current_id": 1,
@@ -372,12 +246,6 @@
         "state": 0
     },
     "confiig_hub": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "confing_costume": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -431,19 +299,7 @@
         "last_id": -1,
         "state": 0
     },
-    "crgaming7": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "customv2ray": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "d_ayvpn": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -509,31 +365,7 @@
         "last_id": -1,
         "state": 0
     },
-    "do_itforyou": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "donald_vpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "eag1e_yt": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "eaglevps": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "elfv2ray": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -569,18 +401,6 @@
         "last_id": -1,
         "state": 0
     },
-    "erfanpaydartelegram": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "eternal_connect": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "evay_vpn": {
         "count": 0,
         "current_id": 1,
@@ -611,31 +431,13 @@
         "last_id": -1,
         "state": 0
     },
-    "fardadvpn2": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "fast78_channel": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
         "state": 0
     },
-    "fast_vpn_ssh": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "fastfreeconfig": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "fg_link": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -648,12 +450,6 @@
         "state": 0
     },
     "flyv2ray": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "fnet00": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -689,18 +485,6 @@
         "last_id": -1,
         "state": 0
     },
-    "free_netplus": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "free_nettm": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "free_outline_keys": {
         "count": 0,
         "current_id": 1,
@@ -713,25 +497,7 @@
         "last_id": -1,
         "state": 0
     },
-    "free_v2ray0": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "free_vpn02": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "freeconfigsplus": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "freedom_guard_net": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -756,12 +522,6 @@
         "state": 0
     },
     "freev2rng": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "freevlessvpn": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -803,61 +563,13 @@
         "last_id": -1,
         "state": 0
     },
-    "go4sharing": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "goldd_v2ray": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "golestan_vpn": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
         "state": 0
     },
-    "good_v2rayy": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "grizzlyvpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "h110vpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "haamechi_news": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "hacknashid": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "hajimamadvpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "haoshangle": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -887,12 +599,6 @@
         "last_id": -1,
         "state": 0
     },
-    "hoorvpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "hope_net": {
         "count": 0,
         "current_id": 1,
@@ -912,18 +618,6 @@
         "state": 0
     },
     "icv2ray": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "idigitalz": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "ip9vpn": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -959,12 +653,6 @@
         "last_id": -1,
         "state": 0
     },
-    "iranmob_1": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "iranramona": {
         "count": 0,
         "current_id": 1,
@@ -983,25 +671,7 @@
         "last_id": -1,
         "state": 0
     },
-    "iseqaro": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "isvvpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "itsecuritycomputer": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "itsproxy": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -1043,12 +713,6 @@
         "last_id": -1,
         "state": 0
     },
-    "king_network7": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "kingoclubs": {
         "count": 0,
         "current_id": 1,
@@ -1073,12 +737,6 @@
         "last_id": -1,
         "state": 0
     },
-    "learnexploit": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "lightning6": {
         "count": 0,
         "current_id": 1,
@@ -1091,12 +749,6 @@
         "last_id": -1,
         "state": 0
     },
-    "lombo_channel": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "lranonline_new": {
         "count": 0,
         "current_id": 1,
@@ -1104,12 +756,6 @@
         "state": 0
     },
     "lrnbymaa": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "lunavo_vpn": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -1128,12 +774,6 @@
         "state": 0
     },
     "mahanvpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "mahxray": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -1187,25 +827,7 @@
         "last_id": -1,
         "state": 0
     },
-    "melov2ray": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "merlin_vip": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "mind_room2": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "moein_insta": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -1224,12 +846,6 @@
         "state": 0
     },
     "mowjproxy": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "mrdarc": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -1283,12 +899,6 @@
         "last_id": -1,
         "state": 0
     },
-    "netmellianti": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "netv2reyng": {
         "count": 0,
         "current_id": 1,
@@ -1302,18 +912,6 @@
         "state": 0
     },
     "new_mtproxi2": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "newsdarya": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "nofilter_v2rayng": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -1362,12 +960,6 @@
         "state": 0
     },
     "oneclickvpnkeys": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "oonfig": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -1433,12 +1025,6 @@
         "last_id": -1,
         "state": 0
     },
-    "pardazeshvpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "parsashonam": {
         "count": 0,
         "current_id": 1,
@@ -1463,25 +1049,7 @@
         "last_id": -1,
         "state": 0
     },
-    "pgkj666": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "piazshekan": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "pin_proxy": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "pizzaa77": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -1511,43 +1079,7 @@
         "last_id": -1,
         "state": 0
     },
-    "proxy_league": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "proxy_mtproto_vpns_free": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "proxycrone": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "proxydaemi": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "proxyfree": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "proxyporsoat": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "proxysee": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -1607,19 +1139,7 @@
         "last_id": -1,
         "state": 0
     },
-    "roshdcollection": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "rxv2ray": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "safenet_server": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -1638,18 +1158,6 @@
         "state": 0
     },
     "satellitenewspersian": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "saveproxy": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "savteam": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -1680,12 +1188,6 @@
         "state": 0
     },
     "serverstm": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "sezar_sec": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -1727,19 +1229,7 @@
         "last_id": -1,
         "state": 0
     },
-    "shahincrafto": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "sharecentrepro": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "shaxhabb": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -1787,25 +1277,7 @@
         "last_id": -1,
         "state": 0
     },
-    "sobyv2ray": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "sourcevipn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "spikevpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "springhq": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -1859,12 +1331,6 @@
         "last_id": -1,
         "state": 0
     },
-    "teleking_vip": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "telpj": {
         "count": 0,
         "current_id": 1,
@@ -1889,19 +1355,7 @@
         "last_id": -1,
         "state": 0
     },
-    "trap_doki": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "tunder_vpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "uciranir": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -1938,18 +1392,6 @@
         "state": 0
     },
     "v2box": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "v2city": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "v2fox_config": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -1997,18 +1439,6 @@
         "last_id": -1,
         "state": 0
     },
-    "v2ray1ran": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "v2ray1ran2": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "v2ray26": {
         "count": 0,
         "current_id": 1,
@@ -2028,12 +1458,6 @@
         "state": 0
     },
     "v2ray_cartel": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "v2ray_collector": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -2070,12 +1494,6 @@
         "state": 0
     },
     "v2ray_official": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "v2ray_one1": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -2219,12 +1637,6 @@
         "last_id": -1,
         "state": 0
     },
-    "v2rayng_configsvpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "v2rayng_fars": {
         "count": 0,
         "current_id": 1,
@@ -2249,25 +1661,7 @@
         "last_id": -1,
         "state": 0
     },
-    "v2rayng_napesternetv": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "v2rayng_outline_vpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "v2rayngcloud": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "v2rayngim": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -2286,12 +1680,6 @@
         "state": 0
     },
     "v2rayngvpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "v2rayngvpn_1": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -2321,12 +1709,6 @@
         "last_id": -1,
         "state": 0
     },
-    "v2rayroad": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "v2rayrootfree": {
         "count": 0,
         "current_id": 1,
@@ -2340,12 +1722,6 @@
         "state": 0
     },
     "v2rayserverfreenet": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "v2rayvlp": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -2388,18 +1764,6 @@
         "state": 0
     },
     "v2ryng01": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "v2source": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "v2xay": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -2501,12 +1865,6 @@
         "last_id": -1,
         "state": 0
     },
-    "vpn_gaming": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "vpn_ioss": {
         "count": 0,
         "current_id": 1,
@@ -2519,37 +1877,13 @@
         "last_id": -1,
         "state": 0
     },
-    "vpn_king_v2ray": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "vpn_mafia": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
         "state": 0
     },
-    "vpn_nv1": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "vpn_room": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "vpn_shield": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "vpn_solve": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -2591,12 +1925,6 @@
         "last_id": -1,
         "state": 0
     },
-    "vpnprivet": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "vpnsal": {
         "count": 0,
         "current_id": 1,
@@ -2604,12 +1932,6 @@
         "state": 0
     },
     "vpnserverrr": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "vpnshecan": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -2657,25 +1979,7 @@
         "last_id": -1,
         "state": 0
     },
-    "xraybr": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "yamyamproxy": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "yebekhe": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "zdyz2": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -2700,12 +2004,6 @@
         "state": 0
     },
     "zerobaipiao": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "zerov2shop": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
