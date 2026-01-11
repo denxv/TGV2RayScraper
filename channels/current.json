@@ -1007,12 +1007,6 @@
         "last_id": -1,
         "state": 0
     },
-    "outlinev": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "outlinevpn_ru": {
         "count": 0,
         "current_id": 1,
@@ -1716,12 +1710,6 @@
         "state": 0
     },
     "v2rayroz": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "v2rayserverfreenet": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
