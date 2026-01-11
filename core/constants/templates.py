@@ -14,6 +14,9 @@ __all__ = [
     "TEMPLATE_CHANNEL_LOG_STATUS",
     "TEMPLATE_CHANNEL_LOG_UPDATE",
     "TEMPLATE_CHANNEL_MISSING_ADD_COMPLETED",
+    "TEMPLATE_CHANNEL_RESET_SKIPPED",
+    "TEMPLATE_CHANNEL_RESET_SKIPPED_NO_CHANGES",
+    "TEMPLATE_CHANNEL_RESET_TOTAL",
     "TEMPLATE_CHANNEL_SAVE_COMPLETED",
     "TEMPLATE_CHANNEL_TOTAL_AVAILABLE",
     "TEMPLATE_CHANNEL_TOTAL_MESSAGES",
@@ -47,11 +50,13 @@ __all__ = [
     "TEMPLATE_ERROR_INVALID_FIELD",
     "TEMPLATE_ERROR_INVALID_NUMBER",
     "TEMPLATE_ERROR_INVALID_OFFSET",
+    "TEMPLATE_ERROR_INVALID_OVERRIDE_FIELDS",
     "TEMPLATE_ERROR_NUMBER_OUT_OF_RANGE",
     "TEMPLATE_ERROR_PARENT_DIRECTORY_NOT_EXIST",
     "TEMPLATE_ERROR_RESPONSE_EMPTY",
     "TEMPLATE_ERROR_VMESS_JSON_DECODE_FAILED",
     "TEMPLATE_ERROR_VMESS_JSON_PARSE_FAILED",
+    "TEMPLATE_FORMAT_CHANNEL_CHANGE",
     "TEMPLATE_FORMAT_CONFIG_NAME",
     "TEMPLATE_FORMAT_CONFIG_SSR_BODY",
     "TEMPLATE_FORMAT_CONFIG_URL",
@@ -64,12 +69,13 @@ __all__ = [
     "TEMPLATE_FORMAT_STRING_QUOTED_NAME",
     "TEMPLATE_FORMAT_TG_URL",
     "TEMPLATE_FORMAT_TG_URL_AFTER",
+    "TEMPLATE_FORMAT_TITLE_OBJECT_PRETTY",
     "TEMPLATE_MSG_FILE_BACKUP_COMPLETED",
     "TEMPLATE_MSG_SCRIPT_COMPLETED",
     "TEMPLATE_MSG_SCRIPT_STARTED",
-    "TEMPLATE_TITLE_DEBUG_OFFSET",
-    "TEMPLATE_TITLE_DELETING_CHANNEL",
-    "TEMPLATE_TITLE_OBJECT_PRETTY_PRINT",
+    "TEMPLATE_TITLE_CHANNEL_DELETE",
+    "TEMPLATE_TITLE_CHANNEL_INFO",
+    "TEMPLATE_TITLE_CHANNEL_RESET",
 ]
 
 TEMPLATE_CHANNEL_ASSIGNMENT_APPLIED = (
@@ -94,7 +100,7 @@ TEMPLATE_CHANNEL_ASSIGNMENT_OFFSET_SKIPPED = (
     "skipped messages due to diff > offset."
 )
 TEMPLATE_CHANNEL_ASSIGNMENT_SKIPPED = (
-    "Skipping assignment because check_only={check_only}."
+    "Dry run enabled: skipped assignment for {count} channel(s)."
 )
 TEMPLATE_CHANNEL_COUNT_DIFFERENCE = (
     "Old count: {old_size:,}"
@@ -127,6 +133,16 @@ TEMPLATE_CHANNEL_LOG_UPDATE = (
 )
 TEMPLATE_CHANNEL_MISSING_ADD_COMPLETED = (
     "Channel '{name}' missing, adding to list."
+)
+TEMPLATE_CHANNEL_RESET_SKIPPED = (
+    "Dry run enabled: skipped reset for {count} channel(s)."
+)
+TEMPLATE_CHANNEL_RESET_SKIPPED_NO_CHANGES = (
+    "Skipping reset because reset_to_defaults={reset_to_defaults} "
+    "and valid_overrides={valid_overrides}."
+)
+TEMPLATE_CHANNEL_RESET_TOTAL = (
+    "Total channels to reset: {count}."
 )
 TEMPLATE_CHANNEL_SAVE_COMPLETED = (
     "Saved {count:,} channels in '{path}'."
@@ -243,6 +259,9 @@ TEMPLATE_ERROR_INVALID_OFFSET = (
     " - "
     "assignment skipped."
 )
+TEMPLATE_ERROR_INVALID_OVERRIDE_FIELDS = (
+    "Invalid override fields detected: {fields!r}."
+)
 TEMPLATE_ERROR_NUMBER_OUT_OF_RANGE = (
     "Expected {min_value} to {max_value}, got {value}."
 )
@@ -259,6 +278,11 @@ TEMPLATE_ERROR_VMESS_JSON_DECODE_FAILED = (
 )
 TEMPLATE_ERROR_VMESS_JSON_PARSE_FAILED = (
     "VMESS JSON could not be parsed from base64: '{base64}'"
+)
+TEMPLATE_FORMAT_CHANNEL_CHANGE = (
+    "{before}"
+    " -> "
+    "{after}"
 )
 TEMPLATE_FORMAT_CONFIG_NAME = (
     "{protocol}"
@@ -324,6 +348,11 @@ TEMPLATE_FORMAT_STRING_COLORED_LEVEL = (
 TEMPLATE_FORMAT_STRING_QUOTED_NAME = (
     "'{name}'"
 )
+TEMPLATE_FORMAT_TITLE_OBJECT_PRETTY = (
+    "{title}:"
+    "\n"
+    "{formatted}"
+)
 TEMPLATE_FORMAT_TG_URL = (
     "https://t.me/s/{name}"
 )
@@ -339,14 +368,12 @@ TEMPLATE_MSG_SCRIPT_COMPLETED = (
 TEMPLATE_MSG_SCRIPT_STARTED = (
     "Starting script '{name}'..."
 )
-TEMPLATE_TITLE_DEBUG_OFFSET = (
-    "Debug info for channel '{name}' (check_only={check_only})"
+TEMPLATE_TITLE_CHANNEL_DELETE = (
+    "Channel '{name}' will be deleted with the following information"
 )
-TEMPLATE_TITLE_DELETING_CHANNEL = (
-    "Deleting channel '{name}' with the following information"
+TEMPLATE_TITLE_CHANNEL_INFO = (
+    "Channel '{name}' with the following information"
 )
-TEMPLATE_TITLE_OBJECT_PRETTY_PRINT = (
-    "{title}:"
-    "\n"
-    "{formatted}"
+TEMPLATE_TITLE_CHANNEL_RESET = (
+    "Channel '{name}' was reset with the following changes"
 )

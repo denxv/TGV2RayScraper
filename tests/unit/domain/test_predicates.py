@@ -3,7 +3,7 @@ import pytest
 from core.typing import (
     ChannelInfo,
     ConditionStr,
-    V2RayConfig,
+    Record,
 )
 from domain.predicates import (
     is_channel_available,
@@ -85,15 +85,18 @@ def test_is_new_channel(
     MAKE_PREDICATE_CASES,
 )
 def test_make_predicate(
-    condition: ConditionStr,
-    config: V2RayConfig,
+    condition: ConditionStr | None,
+    record: Record,
     *,
     expected: bool,
 ) -> None:
     predicate = make_predicate(
         condition=condition,
     )
-    result = predicate(config)
+    result = (
+        predicate(record)
+        if predicate is not None else expected
+    )
 
     assert result is expected
 

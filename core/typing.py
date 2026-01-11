@@ -42,7 +42,6 @@ __all__ = [
     "ConditionStr",
     "ConfigField",
     "ConfigFields",
-    "ConfigPredicate",
     "DefaultPostID",
     "FileMode",
     "FilePath",
@@ -57,6 +56,8 @@ __all__ = [
     "PostID",
     "PostIDAndRawLines",
     "PostIndex",
+    "Record",
+    "RecordPredicate",
     "RegexPattern",
     "RegexTarget",
     "ScalarValue",
@@ -109,8 +110,8 @@ PostID = int
 PostIndex = int
 
 ChannelName = str
-ChannelsDict = dict[ChannelName, ChannelInfo]
 ChannelNames = list[ChannelName]
+ChannelsDict = dict[ChannelName, ChannelInfo]
 ChannelsAndNames = tuple[ChannelsDict, ChannelNames]
 
 CLIFlags = Sequence[CLIFlag]
@@ -118,6 +119,9 @@ CLIParams = list[CLIParam]
 
 ConfigField = str
 ConfigFields = list[ConfigField]
+
+ComplexValue = int | str | None | dict[str, str] | list[str] | tuple[str]
+ScalarValue = int | str | None
 
 AbsPath = str
 FileMode = Literal["a", "w"]
@@ -127,16 +131,15 @@ FilePaths = list[FilePath]
 SortKey = tuple[int, int | str | None]
 SortKeys = tuple[SortKey, ...]
 
-ComplexValue = int | str | None | dict[str, str] | list[str] | tuple[str]
-ScalarValue = int | str | None
-
-V2RayConfigRaw = dict[str, str]
-V2RayConfigsRaw = list[V2RayConfigRaw]
-V2RayConfigRawIterator = Iterator[V2RayConfigRaw]
-
 V2RayConfig = dict[str, int | str | dict[str, str]]
 V2RayConfigs = list[V2RayConfig]
-ConfigPredicate = Callable[[V2RayConfig], bool]
+
+V2RayConfigRaw = dict[str, str]
+V2RayConfigRawIterator = Iterator[V2RayConfigRaw]
+V2RayConfigsRaw = list[V2RayConfigRaw]
 
 V2RayRawLines = list[str]
 PostIDAndRawLines = tuple[PostID, V2RayRawLines]
+
+Record = ChannelInfo | V2RayConfig
+RecordPredicate = Callable[[Record], bool]

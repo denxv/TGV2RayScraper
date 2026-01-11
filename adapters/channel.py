@@ -100,7 +100,6 @@ async def _extract_post_id(
 
         post_url = post_ids[index]
         post_id = post_url.split("/")[-1]
-
     except Exception as e:
         logger.debug(
             msg=TEMPLATE_ERROR_FAILED_EXTRACT_POST_ID.format(
@@ -144,10 +143,10 @@ async def get_last_post_id(
 
 
 async def load_channels(
-    path_channels: FilePath = DEFAULT_FILE_CHANNELS,
+    channels_path: FilePath = DEFAULT_FILE_CHANNELS,
 ) -> ChannelsDict:
     async with aiopen(
-        file=path_channels,
+        file=channels_path,
         encoding="utf-8",
     ) as file:
         try:
@@ -167,15 +166,15 @@ async def load_channels(
     tracking=False,
 )
 async def load_channels_and_urls(  # type: ignore[misc]
-    path_channels: FilePath = DEFAULT_FILE_CHANNELS,
-    path_urls: FilePath = DEFAULT_FILE_URLS,
+    channels_path: FilePath = DEFAULT_FILE_CHANNELS,
+    urls_path: FilePath = DEFAULT_FILE_URLS,
 ) -> ChannelsAndNames:
     current_channels = await load_channels(
-        path_channels=path_channels,
+        channels_path=channels_path,
     )
 
     async with aiopen(
-        file=path_urls,
+        file=urls_path,
         encoding="utf-8",
     ) as file:
         urls_str = await file.read()
@@ -191,14 +190,14 @@ async def load_channels_and_urls(  # type: ignore[misc]
 
 async def save_channels(
     channels: ChannelsDict,
-    path_channels: FilePath = DEFAULT_FILE_CHANNELS,
+    channels_path: FilePath = DEFAULT_FILE_CHANNELS,
 ) -> None:
     normalized_channels = normalize_channel_names(
         channels=channels,
     )
 
     async with aiopen(
-        file=path_channels,
+        file=channels_path,
         mode="w",
         encoding="utf-8",
     ) as file:
@@ -214,7 +213,7 @@ async def save_channels(
     logger.info(
         msg=TEMPLATE_CHANNEL_SAVE_COMPLETED.format(
             count=len(normalized_channels),
-            path=path_channels,
+            path=channels_path,
         ),
     )
 
@@ -226,16 +225,16 @@ async def save_channels(
 )
 async def save_channels_and_urls(  # type: ignore[misc]
     channels: ChannelsDict,
-    path_channels: FilePath = DEFAULT_FILE_CHANNELS,
-    path_urls: FilePath = DEFAULT_FILE_URLS,
+    channels_path: FilePath = DEFAULT_FILE_CHANNELS,
+    urls_path: FilePath = DEFAULT_FILE_URLS,
     *,
     make_backups: bool = True,
 ) -> None:
     if make_backups:
         make_backup(
             files=[
-                path_channels,
-                path_urls,
+                channels_path,
+                urls_path,
             ],
         )
 
@@ -244,7 +243,7 @@ async def save_channels_and_urls(  # type: ignore[misc]
     )
 
     async with aiopen(
-        file=path_urls,
+        file=urls_path,
         mode="w",
         encoding="utf-8",
     ) as file:
@@ -255,5 +254,5 @@ async def save_channels_and_urls(  # type: ignore[misc]
 
     await save_channels(
         channels=normalized_channels,
-        path_channels=path_channels,
+        channels_path=channels_path,
     )

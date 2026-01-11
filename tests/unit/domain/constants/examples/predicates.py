@@ -148,7 +148,7 @@ IS_NEW_CHANNEL_EXAMPLES: tuple[
 
 MAKE_PREDICATE_EXAMPLES: tuple[
     tuple[
-        str,
+        str | None,
         dict[str, object],
         bool,
         str,
@@ -244,6 +244,12 @@ MAKE_PREDICATE_EXAMPLES: tuple[
         },
         False,
         "tags_gt_3",
+    ),
+    (
+        None,
+        {},
+        True,
+        "type_none",
     ),
 )
 

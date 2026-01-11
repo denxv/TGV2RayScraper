@@ -2,6 +2,7 @@ from argparse import (
     Namespace,
 )
 from unittest.mock import (
+    ANY,
     Mock,
     call,
 )
@@ -17,6 +18,7 @@ from core.typing import (
     ChannelNames,
     ChannelsDict,
     PostID,
+    RecordPredicate,
 )
 from core.utils import (
     repeat_char_line,
@@ -32,9 +34,13 @@ from domain.channel import (
     normalize_channel_names,
     print_channel_info,
     process_channels,
+    reset_channels,
     sort_channel_names,
     update_last_id_and_state,
     update_with_new_channels,
+)
+from domain.predicates import (
+    should_set_current_id,
 )
 from tests.unit.domain.constants.common import (
     DEFAULT_CHANNEL_VALUES,
@@ -49,15 +55,22 @@ from tests.unit.domain.constants.common import (
     TEMPLATE_CHANNEL_LOG_STATUS,
     TEMPLATE_CHANNEL_LOG_UPDATE,
     TEMPLATE_CHANNEL_MISSING_ADD_COMPLETED,
+    TEMPLATE_CHANNEL_RESET_SKIPPED,
+    TEMPLATE_CHANNEL_RESET_SKIPPED_NO_CHANGES,
+    TEMPLATE_CHANNEL_RESET_TOTAL,
     TEMPLATE_CHANNEL_TOTAL_AVAILABLE,
     TEMPLATE_CHANNEL_TOTAL_MESSAGES,
     TEMPLATE_ERROR_INVALID_OFFSET,
+    TEMPLATE_ERROR_INVALID_OVERRIDE_FIELDS,
+    TEMPLATE_FORMAT_CHANNEL_CHANGE,
     TEMPLATE_FORMAT_STRING_QUOTED_NAME,
-    TEMPLATE_TITLE_DEBUG_OFFSET,
-    TEMPLATE_TITLE_DELETING_CHANNEL,
+    TEMPLATE_TITLE_CHANNEL_DELETE,
+    TEMPLATE_TITLE_CHANNEL_INFO,
+    TEMPLATE_TITLE_CHANNEL_RESET,
 )
 from tests.unit.domain.constants.fixtures.channel import (
     CHANNEL_INFO_BY_NAMES,
+    CHANNELS_SAMPLE,
 )
 from tests.unit.domain.constants.test_cases.channel import (
     ASSIGN_CURRENT_ID_TO_CHANNELS_INVALID_OFFSET_ARGS,
@@ -82,6 +95,8 @@ from tests.unit.domain.constants.test_cases.channel import (
     PRINT_CHANNEL_INFO_VARIOUS_CASES,
     PROCESS_CHANNELS_CALLS_ARGS,
     PROCESS_CHANNELS_CALLS_CASES,
+    RESET_CHANNELS_ARGS,
+    RESET_CHANNELS_CASES,
     SORT_CHANNEL_NAMES_ARGS,
     SORT_CHANNEL_NAMES_CASES,
     UPDATE_LAST_ID_AND_STATE_ARGS,
@@ -130,21 +145,29 @@ def test_assign_current_id_to_channels_various(
     channels: ChannelsDict,
     message_offset: int,
     *,
-    check_only: bool,
+    dry_run: bool,
     expected_current_ids: dict[str, int],
 ) -> None:
     updated_channels = assign_current_id_to_channels(
         channels=channels,
         message_offset=message_offset,
-        check_only=check_only,
+        dry_run=dry_run,
     )
 
     for name, expected_id in expected_current_ids.items():
         assert updated_channels[name]["current_id"] == expected_id
 
-    for name, info in channels.items():
+    channel_names_for_update = [
+        name
+        for name in channels
+        if should_set_current_id(
+            channel_info=channels[name],
+        )
+    ]
+
+    for name in channel_names_for_update:
         diff = diff_channel_id(
-            channel_info=info,
+            channel_info=channels[name],
         )
 
         if diff <= message_offset:
@@ -158,13 +181,12 @@ def test_assign_current_id_to_channels_various(
             offset=message_offset,
         )
 
-        if check_only:
+        if dry_run:
             mock_log_debug_object.assert_called_with(
-                title=TEMPLATE_TITLE_DEBUG_OFFSET.format(
+                title=TEMPLATE_TITLE_CHANNEL_INFO.format(
                     name=name,
-                    check_only=check_only,
                 ),
-                obj=info,
+                obj=channels[name],
             )
             mock_logger.warning.assert_any_call(
                 msg=_expected_msg,
@@ -184,10 +206,10 @@ def test_assign_current_id_to_channels_various(
                 ),
             )
 
-    if check_only:
-        mock_logger.debug.assert_any_call(
+    if dry_run:
+        mock_logger.info.assert_any_call(
             msg=TEMPLATE_CHANNEL_ASSIGNMENT_SKIPPED.format(
-                check_only=check_only,
+                count=len(channel_names_for_update),
             ),
         )
 
@@ -212,7 +234,7 @@ def test_delete_channels(
     mock_log_debug_object.assert_has_calls(
         calls=[
             call(
-                title=TEMPLATE_TITLE_DELETING_CHANNEL.format(
+                title=TEMPLATE_TITLE_CHANNEL_DELETE.format(
                     name=name,
                 ),
                 obj=channels[name],
@@ -420,8 +442,9 @@ def test_process_channels_calls(
     mocker: MockerFixture,
     message_offset: int,
     *,
-    check_only: bool,
+    dry_run: bool,
     delete_channels_flag: bool,
+    reset_all: bool,
 ) -> None:
     channels = CHANNEL_INFO_BY_NAMES([
         "channel_available",
@@ -429,19 +452,25 @@ def test_process_channels_calls(
         "channel_unavailable",
     ])
 
-    mock_delete = mocker.patch(
-        "domain.channel.delete_channels",
-        wraps=delete_channels,
-    )
     mock_assign = mocker.patch(
         "domain.channel.assign_current_id_to_channels",
         wraps=assign_current_id_to_channels,
     )
+    mock_delete = mocker.patch(
+        "domain.channel.delete_channels",
+        wraps=delete_channels,
+    )
+    mock_reset = mocker.patch(
+        "domain.channel.reset_channels",
+        wraps=reset_channels,
+    )
 
     args = Namespace(
+        channel_filter=None,
+        dry_run=dry_run,
         delete_channels=delete_channels_flag,
         message_offset=message_offset,
-        check_only=check_only,
+        reset_all=reset_all,
     )
 
     result = process_channels(
@@ -449,7 +478,7 @@ def test_process_channels_calls(
         args=args,
     )
 
-    if delete_channels_flag or message_offset:
+    if delete_channels_flag or message_offset or reset_all:
         assert result is not channels
     else:
         assert result is channels
@@ -466,12 +495,142 @@ def test_process_channels_calls(
 
     if message_offset:
         mock_assign.assert_called_once_with(
-            channels=channels,
+            channels=ANY,
             message_offset=message_offset,
-            check_only=check_only,
+            dry_run=dry_run,
         )
     else:
         mock_assign.assert_not_called()
+
+    channel_overrides = {
+        key: value
+        for key in DEFAULT_CHANNEL_VALUES
+        if (value := getattr(args, f"reset_{key}", None)) is not None
+    }
+
+    if channel_overrides or reset_all:
+        mock_reset.assert_called_once_with(
+            channels=ANY,
+            channel_overrides=channel_overrides,
+            channel_predicate=ANY,
+            dry_run=dry_run,
+            reset_to_defaults=reset_all,
+        )
+    else:
+        mock_reset.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    RESET_CHANNELS_ARGS,
+    RESET_CHANNELS_CASES,
+)
+def test_reset_channels(
+    mock_log_debug_object: Mock,
+    mock_logger: Mock,
+    channel_overrides: ChannelInfo | None,
+    channel_predicate: RecordPredicate | None,
+    *,
+    dry_run: bool,
+    reset_to_defaults: bool,
+) -> None:
+    channels = CHANNELS_SAMPLE
+
+    result = reset_channels(
+        channels=channels,
+        channel_overrides=channel_overrides,
+        channel_predicate=channel_predicate,
+        dry_run=dry_run,
+        reset_to_defaults=reset_to_defaults,
+    )
+
+    overrides = channel_overrides or {}
+
+    valid_overrides = {
+        key: value
+        for key, value in overrides.items()
+        if value is not None
+    }
+
+    if not reset_to_defaults and not valid_overrides:
+        mock_logger.debug.assert_called_with(
+            msg=TEMPLATE_CHANNEL_RESET_SKIPPED_NO_CHANGES.format(
+                reset_to_defaults=reset_to_defaults,
+                valid_overrides=valid_overrides,
+            ),
+        )
+        return
+
+    channel_selector = (
+        channel_predicate
+        or should_set_current_id
+    )
+    channel_names_to_reset = [
+        name
+        for name in channels
+        if channel_selector(
+            channels[name],
+        )
+    ]
+
+    if dry_run:
+        mock_logger.info.assert_called_with(
+            msg=TEMPLATE_CHANNEL_RESET_SKIPPED.format(
+                count=len(channel_names_to_reset),
+            ),
+        )
+        return
+
+    mock_logger.info.assert_called_with(
+        msg=TEMPLATE_CHANNEL_RESET_TOTAL.format(
+            count=len(channel_names_to_reset),
+        ),
+    )
+
+    mock_log_debug_object.assert_has_calls(
+        calls=[
+            call(
+                title=TEMPLATE_TITLE_CHANNEL_RESET.format(
+                    name=name,
+                ),
+                obj={
+                    key: TEMPLATE_FORMAT_CHANNEL_CHANGE.format(
+                        before=channels[name].get(key),
+                        after=result[name][key],  # type: ignore[literal-required]
+                    )
+                    for key in result[name]
+                    if channels[name].get(key) != result[name][key]  # type: ignore[literal-required]
+                },
+            )
+            for name in channel_names_to_reset
+        ],
+        any_order=False,
+    )
+
+
+def test_reset_channels_invalid_override_key() -> None:
+    with pytest.raises(
+        ValueError,
+        match=r".*invalid_field.*",
+    ) as exc_info:
+        reset_channels(
+            channels=CHANNEL_INFO_BY_NAMES([
+                "channel_available",
+                "channel_new",
+                "channel_unavailable",
+            ]),
+            channel_overrides={
+                "count": 0,
+                "invalid_field": 0,
+            },
+            dry_run=True,
+            reset_to_defaults=False,
+        )
+
+    assert TEMPLATE_ERROR_INVALID_OVERRIDE_FIELDS.format(
+        fields={
+            "invalid_field",
+        },
+    ) == str(exc_info.value)
 
 
 @pytest.mark.parametrize(

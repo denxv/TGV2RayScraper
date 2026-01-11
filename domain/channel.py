@@ -29,12 +29,18 @@ from core.constants.templates import (
     TEMPLATE_CHANNEL_LOG_STATUS,
     TEMPLATE_CHANNEL_LOG_UPDATE,
     TEMPLATE_CHANNEL_MISSING_ADD_COMPLETED,
+    TEMPLATE_CHANNEL_RESET_SKIPPED,
+    TEMPLATE_CHANNEL_RESET_SKIPPED_NO_CHANGES,
+    TEMPLATE_CHANNEL_RESET_TOTAL,
     TEMPLATE_CHANNEL_TOTAL_AVAILABLE,
     TEMPLATE_CHANNEL_TOTAL_MESSAGES,
     TEMPLATE_ERROR_INVALID_OFFSET,
+    TEMPLATE_ERROR_INVALID_OVERRIDE_FIELDS,
+    TEMPLATE_FORMAT_CHANNEL_CHANGE,
     TEMPLATE_FORMAT_STRING_QUOTED_NAME,
-    TEMPLATE_TITLE_DEBUG_OFFSET,
-    TEMPLATE_TITLE_DELETING_CHANNEL,
+    TEMPLATE_TITLE_CHANNEL_DELETE,
+    TEMPLATE_TITLE_CHANNEL_INFO,
+    TEMPLATE_TITLE_CHANNEL_RESET,
 )
 from core.decorators import (
     status,
@@ -50,6 +56,7 @@ from core.typing import (
     ChannelNames,
     ChannelsDict,
     PostID,
+    RecordPredicate,
 )
 from core.utils import (
     repeat_char_line,
@@ -57,6 +64,7 @@ from core.utils import (
 from domain.predicates import (
     is_channel_available,
     is_channel_fully_scanned,
+    make_predicate,
     should_delete_channel,
     should_set_current_id,
     should_update_channel,
@@ -73,6 +81,7 @@ __all__ = [
     "normalize_channel_names",
     "print_channel_info",
     "process_channels",
+    "reset_channels",
     "sort_channel_names",
     "update_last_id_and_state",
     "update_with_new_channels",
@@ -83,7 +92,7 @@ def assign_current_id_to_channels(
     channels: ChannelsDict,
     message_offset: int = MESSAGE_OFFSET_DEFAULT,
     *,
-    check_only: bool = False,
+    dry_run: bool = False,
 ) -> ChannelsDict:
     updated_channels = deepcopy(
         x=channels,
@@ -124,11 +133,10 @@ def assign_current_id_to_channels(
             offset=message_offset,
         )
 
-        if check_only:
+        if dry_run:
             log_debug_object(
-                title=TEMPLATE_TITLE_DEBUG_OFFSET.format(
+                title=TEMPLATE_TITLE_CHANNEL_INFO.format(
                     name=name,
-                    check_only=check_only,
                 ),
                 obj=updated_channels[name],
             )
@@ -142,10 +150,10 @@ def assign_current_id_to_channels(
                 ),
             )
 
-    if check_only:
-        logger.debug(
+    if dry_run:
+        logger.info(
             msg=TEMPLATE_CHANNEL_ASSIGNMENT_SKIPPED.format(
-                check_only=check_only,
+                count=len(channel_names_for_update),
             ),
         )
         return updated_channels
@@ -196,7 +204,7 @@ def delete_channels(
             channel_info=normalized_info,
         ):
             log_debug_object(
-                title=TEMPLATE_TITLE_DELETING_CHANNEL.format(
+                title=TEMPLATE_TITLE_CHANNEL_DELETE.format(
                     name=name,
                 ),
                 obj=info,
@@ -407,10 +415,118 @@ def process_channels(
         channels = assign_current_id_to_channels(
             channels=channels,
             message_offset=args.message_offset,
-            check_only=args.check_only,
+            dry_run=args.dry_run,
+        )
+
+    channel_overrides: ChannelInfo = {  # type: ignore[assignment]
+        key: value
+        for key in DEFAULT_CHANNEL_VALUES
+        if (value := getattr(args, f"reset_{key}", None)) is not None
+    }
+
+    if channel_overrides or args.reset_all:
+        channels = reset_channels(
+            channels=channels,
+            channel_overrides=channel_overrides,
+            channel_predicate=make_predicate(
+                condition=args.channel_filter,
+            ),
+            dry_run=args.dry_run,
+            reset_to_defaults=args.reset_all,
         )
 
     return channels
+
+
+def reset_channels(
+    channels: ChannelsDict,
+    channel_overrides: ChannelInfo | None = None,
+    channel_predicate: RecordPredicate | None = None,
+    *,
+    dry_run: bool = True,
+    reset_to_defaults: bool = False,
+) -> ChannelsDict:
+    overrides: ChannelInfo = channel_overrides or {}
+
+    if invalid_fields := set(overrides) - set(DEFAULT_CHANNEL_VALUES):
+        raise ValueError(
+            TEMPLATE_ERROR_INVALID_OVERRIDE_FIELDS.format(
+                fields=invalid_fields,
+            ),
+        )
+
+    updated_channels = deepcopy(
+        x=channels,
+    )
+    valid_overrides: ChannelInfo = {  # type: ignore[assignment]
+        key: value
+        for key, value in overrides.items()
+        if value is not None
+    }
+
+    if not reset_to_defaults and not valid_overrides:
+        logger.debug(
+            msg=TEMPLATE_CHANNEL_RESET_SKIPPED_NO_CHANGES.format(
+                reset_to_defaults=reset_to_defaults,
+                valid_overrides=valid_overrides,
+            ),
+        )
+        return updated_channels
+
+    channel_selector = (
+        channel_predicate
+        or should_set_current_id
+    )
+    channel_names_to_reset = [
+        name
+        for name in updated_channels
+        if channel_selector(
+            updated_channels[name],
+        )
+    ]
+
+    if dry_run:
+        logger.info(
+            msg=TEMPLATE_CHANNEL_RESET_SKIPPED.format(
+                count=len(channel_names_to_reset),
+            ),
+        )
+        return updated_channels
+
+    logger.info(
+        msg=TEMPLATE_CHANNEL_RESET_TOTAL.format(
+            count=len(channel_names_to_reset),
+        ),
+    )
+
+    reset_base = (
+        DEFAULT_CHANNEL_VALUES
+        if reset_to_defaults else {}
+    )
+
+    for name in channel_names_to_reset:
+        channel_info = updated_channels[name]
+        before = channel_info.copy()
+
+        channel_info.update(
+            reset_base | valid_overrides,
+        )
+
+        log_debug_object(
+            title=TEMPLATE_TITLE_CHANNEL_RESET.format(
+                name=name,
+            ),
+            obj={
+                key: TEMPLATE_FORMAT_CHANNEL_CHANGE.format(
+                    before=before.get(key),
+                    after=channel_info[key],  # type: ignore[literal-required]
+                )
+                for key in channel_info
+                if before.get(key) != channel_info[key]  # type: ignore[literal-required]
+            },
+        )
+
+    return updated_channels
 
 
 def sort_channel_names(

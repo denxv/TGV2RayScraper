@@ -44,6 +44,7 @@ __all__ = [
     "NORMALIZE_CHANNEL_NAMES_EXAMPLES",
     "PRINT_CHANNEL_INFO_VARIOUS_EXAMPLES",
     "PROCESS_CHANNELS_CALLS_EXAMPLES",
+    "RESET_CHANNELS_EXAMPLES",
     "SORT_CHANNEL_NAMES_EXAMPLES",
     "UPDATE_LAST_ID_AND_STATE_EXAMPLES",
     "UPDATE_WITH_NEW_CHANNELS_EXAMPLES",
@@ -93,7 +94,7 @@ ASSIGN_CURRENT_ID_TO_CHANNELS_VARIOUS_EXAMPLES: tuple[
             "channel_new",
             "channel_unavailable",
         ]),
-        "mixed_check_only",
+        "mixed_dry_run",
     ),
     (
         CHANNEL_INFO_BY_NAME(
@@ -684,6 +685,7 @@ PROCESS_CHANNELS_CALLS_EXAMPLES: tuple[
         int,
         bool,
         bool,
+        bool,
         str,
     ],
     ...,
@@ -691,20 +693,103 @@ PROCESS_CHANNELS_CALLS_EXAMPLES: tuple[
     (
         MESSAGE_OFFSET,
         False,
+        False,
         True,
-        "delete_and_update",
+        "assign_and_reset",
     ),
     (
-        MESSAGE_OFFSET - MESSAGE_OFFSET,
+        MESSAGE_OFFSET,
         False,
-        False,
-        "skip_delete_no_offset",
+        True,
+        True,
+        "assign_delete_reset",
     ),
     (
         MESSAGE_OFFSET,
         False,
         False,
-        "skip_delete_update_offset",
+        False,
+        "assign_only",
+    ),
+    (
+        MESSAGE_OFFSET - MESSAGE_OFFSET,
+        False,
+        True,
+        True,
+        "delete_and_reset",
+    ),
+    (
+        MESSAGE_OFFSET,
+        False,
+        True,
+        False,
+        "delete_and_update",
+    ),
+    (
+        MESSAGE_OFFSET - MESSAGE_OFFSET,
+        False,
+        True,
+        False,
+        "delete_only",
+    ),
+    (
+        MESSAGE_OFFSET,
+        True,
+        True,
+        True,
+        "dry_run_mode",
+    ),
+    (
+        MESSAGE_OFFSET - MESSAGE_OFFSET,
+        False,
+        False,
+        True,
+        "reset_all_only",
+    ),
+)
+
+RESET_CHANNELS_EXAMPLES: tuple[
+    tuple[
+        dict[str, object] | None,
+        object | None,
+        str,
+    ],
+    ...,
+] = (
+    (
+        {},
+        lambda channel: channel["current_id"] == channel["last_id"],
+        "empty_overrides_and_predicate",
+    ),
+    (
+        {},
+        None,
+        "empty_overrides_no_predicate",
+    ),
+    (
+        None,
+        None,
+        "no_overrides_no_predicate",
+    ),
+    (
+        {
+            "current_id": NUM1 + NUM2 + NUM3,
+        },
+        lambda channel: channel["count"] > 0,
+        "overrides_and_predicate",
+    ),
+    (
+        {
+            "count": NUM1 + NUM2 + NUM3,
+            "state": -NUM1,
+        },
+        None,
+        "overrides_only",
+    ),
+    (
+        None,
+        lambda channel: channel["state"] == 0,
+        "predicate_only",
     ),
 )
 

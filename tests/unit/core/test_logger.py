@@ -35,7 +35,7 @@ from tests.unit.core.constants.common import (
     TEMPLATE_ERROR_FAILED_SERIALIZATION,
     TEMPLATE_FORMAT_FILE_LOG_PATH,
     TEMPLATE_FORMAT_STRING_COLORED_LEVEL,
-    TEMPLATE_TITLE_OBJECT_PRETTY_PRINT,
+    TEMPLATE_FORMAT_TITLE_OBJECT_PRETTY,
 )
 from tests.unit.core.constants.test_cases.logger import (
     COLOR_LEVEL_FILTER_ARGS,
@@ -192,7 +192,7 @@ def test_log_debug_object_various(
     )
 
     mock_logger.debug.assert_called_once_with(
-        msg=TEMPLATE_TITLE_OBJECT_PRETTY_PRINT.format(
+        msg=TEMPLATE_FORMAT_TITLE_OBJECT_PRETTY.format(
             title=title,
             formatted=dumps(
                 obj=vars(obj) if isinstance(obj, Namespace) else obj,

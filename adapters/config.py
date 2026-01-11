@@ -128,7 +128,7 @@ async def _fetch_and_write_configs(
     channel_name: ChannelName,
     channel_info: ChannelInfo,
     batch_size: BatchSize = BATCH_EXTRACT_DEFAULT,
-    path_configs: FilePath = DEFAULT_FILE_CONFIGS_RAW,
+    configs_path: FilePath = DEFAULT_FILE_CONFIGS_RAW,
 ) -> int:
     configs_count = 0
     list_channel_id = list(
@@ -185,7 +185,7 @@ async def _fetch_and_write_configs(
         if collected_configs:
             await write_configs(
                 configs=collected_configs,
-                path_configs=path_configs,
+                configs_path=configs_path,
                 mode="a",
             )
 
@@ -215,7 +215,7 @@ async def fetch_and_write_configs(
     client: AsyncHTTPClient,
     channels: ChannelsDict,
     batch_size: BatchSize = BATCH_EXTRACT_DEFAULT,
-    path_configs: FilePath = DEFAULT_FILE_CONFIGS_RAW,
+    configs_path: FilePath = DEFAULT_FILE_CONFIGS_RAW,
 ) -> None:
     channels_to_extract = get_sorted_keys(
         channels=channels,
@@ -236,7 +236,7 @@ async def fetch_and_write_configs(
             channel_name=name,
             channel_info=channels[name],
             batch_size=batch_size,
-            path_configs=path_configs,
+            configs_path=configs_path,
         )
 
     logger.info(
@@ -248,16 +248,16 @@ async def fetch_and_write_configs(
 
 
 async def load_configs(
-    path_configs_raw: FilePath = DEFAULT_FILE_CONFIGS_RAW,
+    configs_raw_path: FilePath = DEFAULT_FILE_CONFIGS_RAW,
 ) -> V2RayConfigsRaw:
     logger.info(
         msg=TEMPLATE_CONFIG_LOAD_STARTED.format(
-            path=path_configs_raw,
+            path=configs_raw_path,
         ),
     )
 
     async with aiopen(
-        file=path_configs_raw,
+        file=configs_raw_path,
         encoding="utf-8",
     ) as file:
         configs: V2RayConfigsRaw = []
@@ -271,7 +271,7 @@ async def load_configs(
     logger.info(
         msg=TEMPLATE_CONFIG_LOAD_COMPLETED.format(
             count=len(configs),
-            path=path_configs_raw,
+            path=configs_raw_path,
         ),
     )
 
@@ -280,18 +280,18 @@ async def load_configs(
 
 async def save_configs(
     configs: V2RayConfigs,
-    path_configs_clean: FilePath = DEFAULT_FILE_CONFIGS_CLEAN,
+    configs_clean_path: FilePath = DEFAULT_FILE_CONFIGS_CLEAN,
     mode: FileMode = "w",
 ) -> None:
     logger.info(
         msg=TEMPLATE_CONFIG_SAVE_STARTED.format(
             count=len(configs),
-            path=path_configs_clean,
+            path=configs_clean_path,
         ),
     )
 
     async with aiopen(
-        file=path_configs_clean,
+        file=configs_clean_path,
         mode=mode,
         encoding="utf-8",
     ) as file:
@@ -303,18 +303,18 @@ async def save_configs(
     logger.info(
         msg=TEMPLATE_CONFIG_SAVE_COMPLETED.format(
             count=len(configs),
-            path=path_configs_clean,
+            path=configs_clean_path,
         ),
     )
 
 
 async def write_configs(
     configs: V2RayRawLines,
-    path_configs: FilePath = DEFAULT_FILE_CONFIGS_RAW,
+    configs_path: FilePath = DEFAULT_FILE_CONFIGS_RAW,
     mode: FileMode = "w",
 ) -> None:
     async with aiopen(
-        file=path_configs,
+        file=configs_path,
         mode=mode,
         encoding="utf-8",
     ) as file:

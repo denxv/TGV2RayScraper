@@ -10,6 +10,23 @@ from tests.unit.domain.constants.examples.predicates import (
     SHOULD_UPDATE_CHANNEL_EXAMPLES,
 )
 
+__all__ = [
+    "IS_CHANNEL_AVAILABLE_ARGS",
+    "IS_CHANNEL_AVAILABLE_CASES",
+    "IS_CHANNEL_FULLY_SCANNED_ARGS",
+    "IS_CHANNEL_FULLY_SCANNED_CASES",
+    "IS_NEW_CHANNEL_ARGS",
+    "IS_NEW_CHANNEL_CASES",
+    "MAKE_PREDICATE_ARGS",
+    "MAKE_PREDICATE_CASES",
+    "SHOULD_DELETE_CHANNEL_ARGS",
+    "SHOULD_DELETE_CHANNEL_CASES",
+    "SHOULD_SET_CURRENT_ID_ARGS",
+    "SHOULD_SET_CURRENT_ID_CASES",
+    "SHOULD_UPDATE_CHANNEL_ARGS",
+    "SHOULD_UPDATE_CHANNEL_CASES",
+]
+
 IS_CHANNEL_AVAILABLE_ARGS = (
     "channel_info",
     "expected",
@@ -63,19 +80,19 @@ IS_NEW_CHANNEL_CASES = tuple(
 
 MAKE_PREDICATE_ARGS = (
     "condition",
-    "config",
+    "record",
     "expected",
 )
 MAKE_PREDICATE_CASES = tuple(
     pytest.param(
         condition,
-        config,
+        record,
         expected,
         id=case_id,
     )
     for (
         condition,
-        config,
+        record,
         expected,
         case_id,
     ) in MAKE_PREDICATE_EXAMPLES

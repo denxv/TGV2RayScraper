@@ -35,7 +35,7 @@ from core.constants.templates import (
     TEMPLATE_ERROR_FAILED_SERIALIZATION,
     TEMPLATE_FORMAT_FILE_LOG_PATH,
     TEMPLATE_FORMAT_STRING_COLORED_LEVEL,
-    TEMPLATE_TITLE_OBJECT_PRETTY_PRINT,
+    TEMPLATE_FORMAT_TITLE_OBJECT_PRETTY,
 )
 
 __all__ = [
@@ -200,7 +200,7 @@ def log_debug_object(
         )
 
         logger.debug(
-            msg=TEMPLATE_TITLE_OBJECT_PRETTY_PRINT.format(
+            msg=TEMPLATE_FORMAT_TITLE_OBJECT_PRETTY.format(
                 title=title,
                 formatted=serialized_obj,
             ),

@@ -170,9 +170,9 @@ The project requires the following Python libraries (works with Python ≥ 3.10)
 
 * **aiofiles** – asynchronous file handling
 
-* **asteval** — safe evaluation of Python expressions (used for filtering configurations)
+* **asteval** - safe evaluation of Python expressions (used for filtering configurations)
 
-* **httpx** — modern HTTP client with support for both synchronous and asynchronous requests
+* **httpx** - modern HTTP client with support for both synchronous and asynchronous requests
 
 * **lxml** – parsing and processing HTML/XML
 
@@ -202,203 +202,203 @@ All dev-dependencies are listed in [`requirements-dev.txt`](requirements-dev.txt
 
 ## Project Structure
 
-* **adapters/** — adapters for asynchronous data operations
+* **adapters/** - adapters for asynchronous data operations
 
-  * `channel.py` — asynchronous operations with channels
+  * `channel.py` - asynchronous operations with channels
 
-  * `config.py` — asynchronous processing of configurations
+  * `config.py` - asynchronous processing of configurations
 
-  * `scraper.py` — asynchronous channel data scraper
+  * `scraper.py` - asynchronous channel data scraper
 
-* **channels/** — folder for storing channel and URL list files
+* **channels/** - folder for storing channel and URL list files
 
-  * `current.json` — main file with Telegram channel information
+  * `current.json` - main file with Telegram channel information
 
-  * `urls.txt` — main file with Telegram channel links
+  * `urls.txt` - main file with Telegram channel links
 
   * backups of these files are also stored (e.g., `current-backup-<timestamp>.json`, `urls-backup-<timestamp>.txt`)
 
-* **configs/** — folder for storing V2Ray configurations
+* **configs/** - folder for storing V2Ray configurations
 
-  * `v2ray-clean.txt` — cleaned configurations
+  * `v2ray-clean.txt` - cleaned configurations
 
-  * `v2ray-raw.txt` — raw configurations
+  * `v2ray-raw.txt` - raw configurations
 
-* **core/** — core utilities and constants
+* **core/** - core utilities and constants
 
-  * **constants/** — common constants, formats, messages, regex patterns, and string templates
+  * **constants/** - common constants, formats, messages, regex patterns, and string templates
 
-    * `common.py` — core constants, default paths, script settings, channel/message parameters, timeouts, colors, flags
+    * `common.py` - core constants, default paths, script settings, channel/message parameters, timeouts, colors, flags
 
-    * `formats.py` — date, time, log, and progress bar formats
+    * `formats.py` - date, time, log, and progress bar formats
 
-    * `messages.py` — text messages for channels and errors
+    * `messages.py` - text messages for channels and errors
 
-    * `patterns.py` — regular expressions for URLs, configs, and identifiers
+    * `patterns.py` - regular expressions for URLs, configs, and identifiers
 
-    * `templates.py` — templates for logs, channels, configs, errors, files, and URLs
+    * `templates.py` - templates for logs, channels, configs, errors, files, and URLs
 
-  * `decorators.py` — decorators (e.g., for logging)
+  * `decorators.py` - decorators (e.g., for logging)
 
-  * `logger.py` — logging utility with colored console output and microsecond timestamps
+  * `logger.py` - logging utility with colored console output and microsecond timestamps
 
-  * `typing.py` — custom type aliases for the project (channels, V2Ray configs, CLI, sessions, etc.)
+  * `typing.py` - custom type aliases for the project (channels, V2Ray configs, CLI, sessions, etc.)
 
-  * `utils.py` — utility and helper functions
+  * `utils.py` - utility and helper functions
 
-* **docs/** — project documentation in multiple languages
+* **docs/** - project documentation in multiple languages
 
-  * `ru/` — Russian documentation
+  * `ru/` - Russian documentation
 
-    * `README.md` — user guide in Russian
+    * `README.md` - user guide in Russian
 
-    * `LICENSE` — project license in Russian
+    * `LICENSE` - project license in Russian
 
-* **domain/** — business logic and domain-specific functions
+* **domain/** - business logic and domain-specific functions
 
-  * `channel.py` — operations with channels, sorting, filtering
+  * `channel.py` - operations with channels, sorting, filtering
 
-  * `config.py` — processing and normalization of configurations
+  * `config.py` - processing and normalization of configurations
 
-  * `predicates.py` — filtering logic and predicates
+  * `predicates.py` - filtering logic and predicates
 
-* **logs/** — folder for script logs
+* **logs/** - folder for script logs
 
   * log files with timestamps (e.g., `2020-10-10.log`)
 
-* **scripts/** — helper scripts for performing project tasks
+* **scripts/** - helper scripts for performing project tasks
 
-  * `scraper.py` — script collects data from Telegram channels asynchronously
+  * `scraper.py` - script collects data from Telegram channels asynchronously
 
-  * `update_channels.py` — script to update channels (removing inactive channels and adding new ones)
+  * `update_channels.py` - script to update channels (removing inactive channels and adding new ones)
 
-  * `v2ray_cleaner.py` — script cleans, normalizes, and processes obtained V2Ray configurations
+  * `v2ray_cleaner.py` - script cleans, normalizes, and processes obtained V2Ray configurations
 
-* **tests/** — directory with all project tests, verifying correctness, stability, and module functionality
+* **tests/** - directory with all project tests, verifying correctness, stability, and module functionality
 
-  * **e2e/** — end-to-end tests, verifying full system behavior under different usage scenarios (**not implemented**)
+  * **e2e/** - end-to-end tests, verifying full system behavior under different usage scenarios (**not implemented**)
 
-    * `test_async_scraper.py` — checks the asynchronous scraper with real data
+    * `test_async_scraper.py` - checks the asynchronous scraper with real data
 
-    * `test_update_channels.py` — tests the process of updating channel information
+    * `test_update_channels.py` - tests the process of updating channel information
 
-    * `test_v2ray_cleaner.py` — verifies correct cleaning of V2Ray configurations
+    * `test_v2ray_cleaner.py` - verifies correct cleaning of V2Ray configurations
 
-  * **fixtures/** — helper files and test data used across different tests (**not implemented**)
+  * **fixtures/** - helper files and test data used across different tests (**not implemented**)
 
-    * **channels/** — test data and lists for channel processing checks
+    * **channels/** - test data and lists for channel processing checks
 
-      * `sample_current.json` — contains current channels for testing functions
+      * `sample_current.json` - contains current channels for testing functions
 
-      * `sample_urls.txt` — list of URLs for testing data loading
+      * `sample_urls.txt` - list of URLs for testing data loading
 
-    * **configs/** — test configuration files for processing checks
+    * **configs/** - test configuration files for processing checks
 
-      * `sample_v2ray_clean.txt` — contains cleaned configs for tests
+      * `sample_v2ray_clean.txt` - contains cleaned configs for tests
 
-      * `sample_v2ray_raw.txt` — contains raw, original configs for tests
+      * `sample_v2ray_raw.txt` - contains raw, original configs for tests
 
-  * **integration/** — integration tests, checking interaction between multiple modules (**not implemented**)
+  * **integration/** - integration tests, checking interaction between multiple modules (**not implemented**)
 
-    * **async_/** — asynchronous integration scenarios to verify data flows
+    * **async_/** - asynchronous integration scenarios to verify data flows
 
-      * `test_async_channels_flow.py` — verifies correct processing of channels asynchronously
+      * `test_async_channels_flow.py` - verifies correct processing of channels asynchronously
 
-      * `test_async_configs_flow.py` — verifies correct processing of configs asynchronously
+      * `test_async_configs_flow.py` - verifies correct processing of configs asynchronously
 
-    * **sync/** — synchronous integration scenarios to verify data flows
+    * **sync/** - synchronous integration scenarios to verify data flows
 
-      * `test_sync_channels_flow.py` — verifies correct processing of channels synchronously
+      * `test_sync_channels_flow.py` - verifies correct processing of channels synchronously
 
-      * `test_sync_configs_flow.py` — verifies correct processing of configs synchronously
+      * `test_sync_configs_flow.py` - verifies correct processing of configs synchronously
 
-  * **unit/** — unit tests, verifying individual functions and classes of the project
+  * **unit/** - unit tests, verifying individual functions and classes of the project
 
-    * **adapters/** — adapter tests for data handling (**not implemented**)
+    * **adapters/** - adapter tests for data handling (**not implemented**)
 
-      * `test_async_channel.py` — checks processing and validation of channels asynchronously
+      * `test_async_channel.py` - checks processing and validation of channels asynchronously
 
-      * `test_async_config.py` — checks processing and validation of configs asynchronously
+      * `test_async_config.py` - checks processing and validation of configs asynchronously
 
-      * `test_async_scraper.py` — checks scraper locally asynchronously
+      * `test_async_scraper.py` - checks scraper locally asynchronously
 
-    * **core/** — tests for core utilities and constants
+    * **core/** - tests for core utilities and constants
 
-      * **constants/** — constants and test data used for function verification
+      * **constants/** - constants and test data used for function verification
 
-        * **examples/** — test data for function verification
+        * **examples/** - test data for function verification
 
-          * `decorators.py` — test data for verifying decorator functionality
+          * `decorators.py` - test data for verifying decorator functionality
 
-          * `logger.py` — test data for verifying logging and message output
+          * `logger.py` - test data for verifying logging and message output
 
-          * `utils.py` — test data for verifying helper functions and utilities
+          * `utils.py` - test data for verifying helper functions and utilities
 
-        * **test_cases/** — pre-prepared test cases for parameterization
+        * **test_cases/** - pre-prepared test cases for parameterization
 
-          * `decorators.py` — test cases for verifying decorators
+          * `decorators.py` - test cases for verifying decorators
 
-          * `logger.py` — test cases for verifying logging
+          * `logger.py` - test cases for verifying logging
 
-          * `utils.py` — test cases for verifying helper functions
+          * `utils.py` - test cases for verifying helper functions
 
-        * `common.py` — local constants for core tests
+        * `common.py` - local constants for core tests
 
-      * `test_decorators.py` — verifies correctness of custom decorators
+      * `test_decorators.py` - verifies correctness of custom decorators
 
-      * `test_logger.py` — verifies logging functionality and message formatting
+      * `test_logger.py` - verifies logging functionality and message formatting
 
-      * `test_utils.py` — verifies helper utilities and functions
+      * `test_utils.py` - verifies helper utilities and functions
 
-    * **domain/** — tests verifying the project's domain logic
+    * **domain/** - tests verifying the project's domain logic
 
-      * **constants/** — domain constants, fixtures, and pre-prepared cases
+      * **constants/** - domain constants, fixtures, and pre-prepared cases
 
-        * **examples/** — test data for domain model verification
+        * **examples/** - test data for domain model verification
 
-          * `channel.py` — examples of channels for logic verification
+          * `channel.py` - examples of channels for logic verification
 
-          * `config.py` — examples of configs for verification (**in progress**)
+          * `config.py` - examples of configs for verification (**in progress**)
 
-          * `predicates.py` — examples of predicates for filter verification
+          * `predicates.py` - examples of predicates for filter verification
 
-        * **fixtures/** — ready-to-use objects for tests
+        * **fixtures/** - ready-to-use objects for tests
 
-          * `channel.py` — ready channel objects for tests
+          * `channel.py` - ready channel objects for tests
 
-          * `config.py` — ready config objects for tests (**in progress**)
+          * `config.py` - ready config objects for tests (**in progress**)
 
-        * **test_cases/** — ready test scenarios for parameterization
+        * **test_cases/** - ready test scenarios for parameterization
 
-          * `channel.py` — test cases for channel logic verification
+          * `channel.py` - test cases for channel logic verification
 
-          * `config.py` — test cases for config logic verification (**in progress**)
+          * `config.py` - test cases for config logic verification (**in progress**)
 
-          * `predicates.py` — test cases for predicate verification
+          * `predicates.py` - test cases for predicate verification
 
-        * `common.py` — local constants for domain logic tests
+        * `common.py` - local constants for domain logic tests
 
-      * `test_channel.py` — verifies correctness of channel logic
+      * `test_channel.py` - verifies correctness of channel logic
 
-      * `test_config.py` — verifies correctness of config logic (**in progress**)
+      * `test_config.py` - verifies correctness of config logic (**in progress**)
 
-      * `test_predicates.py` — verifies correctness of predicates
+      * `test_predicates.py` - verifies correctness of predicates
 
-  * `conftest.py` — global pytest configuration, including fixtures and hooks for all tests
+  * `conftest.py` - global pytest configuration, including fixtures and hooks for all tests
 
-* **LICENSE** — project license (default in English)
+* **LICENSE** - project license (default in English)
 
-* **main.py** — main script to run all project operations, including updating channels, collecting data, and processing configurations
+* **main.py** - main script to run all project operations, including updating channels, collecting data, and processing configurations
 
-* **pyproject.toml** — configuration file for project metadata, dependencies, and development tools (e.g., `mypy`, `ruff`, `pytest`), centralizing build and tooling settings
+* **pyproject.toml** - configuration file for project metadata, dependencies, and development tools (e.g., `mypy`, `ruff`, `pytest`), centralizing build and tooling settings
 
-* **README.md** — main project documentation (default in English)
+* **README.md** - main project documentation (default in English)
 
-* **requirements-dev.txt** — list of development dependencies (testing, type checking, linters — `pytest`, `mypy`, `ruff`, etc.)
+* **requirements-dev.txt** - list of development dependencies (testing, type checking, linters - `pytest`, `mypy`, `ruff`, etc.)
 
-* **requirements.txt** — list of all required libraries for running the project
+* **requirements.txt** - list of all required libraries for running the project
 
-* **uv.lock** — dependency lock file, recording exact package versions for a reproducible environment
+* **uv.lock** - dependency lock file, recording exact package versions for a reproducible environment
 
 ## Structure of Channel JSON File
 
@@ -437,37 +437,37 @@ The file `channels/current.json` contains information about Telegram channels. E
 
 ### Detailed Description of Fields
 
-* `count` — the number of V2Ray configurations found in the channel.
+* `count` - the number of V2Ray configurations found in the channel.
 
-  * `0` — default value, the channel has not been processed yet or no configurations have been found.
+  * `0` - default value, the channel has not been processed yet or no configurations have been found.
 
-  * `> 0` — the number of configurations found in an active channel.
+  * `> 0` - the number of configurations found in an active channel.
 
     > The `count` value can grow indefinitely as new configurations appear in the channel.
 
-* `current_id` — the ID of the current message from which scanning begins.
+* `current_id` - the ID of the current message from which scanning begins.
 
-  * `1` — default value, scanning starts from the very beginning of the channel (old messages).
+  * `1` - default value, scanning starts from the very beginning of the channel (old messages).
 
-  * `< 0` — take the last `N` messages (new messages).
+  * `< 0` - take the last `N` messages (new messages).
 
     > Example: if `last_id = 500` and `current_id = -100`, scanning goes from message `≥ 400` to the last message `≤ 500`.
 
-* `last_id` — the ID of the last message in the channel.
+* `last_id` - the ID of the last message in the channel.
 
-  * `-1` — default value, the channel is temporarily or permanently unavailable.
+  * `-1` - default value, the channel is temporarily or permanently unavailable.
 
-  * `> 0` — the ID of the last available message.
+  * `> 0` - the ID of the last available message.
 
     > Updated on each scan run.
 
-* `state` — the channel status (active/undefined/inactive).
+* `state` - the channel status (active/undefined/inactive).
 
-  * `1` — active channel when `last_id != -1`.
+  * `1` - active channel when `last_id != -1`.
 
-  * `0` — default value, status is not yet determined.
+  * `0` - default value, status is not yet determined.
 
-  * `-1` — inactive channel when `last_id == -1`.
+  * `-1` - inactive channel when `last_id == -1`.
 
     > If the channel is unavailable (`last_id == -1`), the `state` value decreases by 1 on each run, indicating the number of failed attempts to access the channel.
 
@@ -562,45 +562,73 @@ You can use the `-h` flag to see all available options:
 python -m scripts.update_channels -h
 ```
 
-**Options include:**
+**Options**
 
-* `--no-dry-run` — Disable dry run and actually assign `current_id` (check-only mode is enabled by default).
+* **Global options**
 
-* `-B, --no-backup` — Skip creating backup files for channel and Telegram URL lists before saving (backups are created by default).
+  * `--no-backup` - Skip creating backup copies of the channel list and Telegram URL files before saving (backups are created by default).
 
-* `-C, --channels FILE` — Path to the input JSON file containing the list of channels (default: `channels/current.json`).
+  * `--no-dry-run` - Disable check-only mode and actually apply changes, including assigning `current_id` (`dry-run` is enabled by default).
 
-* `-D, --delete-channels` — Delete channels that are unavailable or meet specific conditions (default: disabled).
+* **Input files**
 
-* `-M, --message-offset N` — Number of recent messages to include when assigning `current_id`.
+  * `-C, --channels PATH` - Path to the JSON file containing the list of channels (default: `channels/current.json`).
 
-* `-U, --urls FILE` — Path to a text file containing new channel URLs (default: `channels/urls.txt`).
+  * `-U, --urls PATH` - Path to the text file with new channel URLs (default: `channels/urls.txt`).
 
-**The script performs the following:**
+* **Channel selection**
+
+  * `-F, --channel-filter CONDITION` - Filter channels using a Python-like expression (for example: `count < 100 and current_id == last_id or state == -1`).
+
+    > Used to select the channels to which reset operations (`--reset-*`) are applied.
+
+* **Channel actions**
+
+  * `-D, --delete-channels` - Delete unavailable channels or channels that meet deletion conditions (disabled by default).
+
+  * `-M, --message-offset N` - Number of recent messages taken into account when assigning `current_id`.
+
+* **Channel reset options**
+
+  * `--reset-all` - Reset all channel fields to their default values (can be combined with `--reset-<field>` and `--channel-filter`).
+
+  * `--reset-count [N]` - Reset `count` to the specified value or to the default value (`0`).
+
+  * `--reset-current-id [N]` - Reset `current_id` to the specified value or to the default value (`1`).
+
+  * `--reset-last-id [N]` - Reset `last_id` to the specified value or to the default value (`-1`).
+
+  * `--reset-state [N]` - Reset `state` to the specified value or to the default value (`0`).
+
+**The script performs the following actions:**
 
 * Loads the current list of channels from `channels/current.json`.
 
-* Merges with new URLs from `channels/urls.txt`.
+* Merges existing channels with new URLs from `channels/urls.txt`.
 
-* By default, performs a dry run without making changes (`--no-dry-run` disables it).
+* Runs in dry-run mode by default without making any changes (can be disabled with `--no-dry-run`).
 
-* Allows assigning `current_id` to channels taking message offset into account (`--message-offset`).
+* Creates backup copies of the channel list and URL files if needed (backup can be disabled with `--no-backup`).
 
-* Supports deletion of unavailable or flagged channels (`--delete-channels`).
+* Selects channels based on the specified filter (`--channel-filter`), if provided.
 
-* Creates backup copies of both files with a timestamp (can be disabled using the `--no-backup` option).
+* Deletes unavailable or flagged channels when the `--delete-channels` option is used.
 
-* Saves the updated list back to `current.json` and `urls.txt`.
+* Resets channel field values to their defaults or to explicitly specified values (`--reset-*`).
 
-* Logs detailed warnings and debug information for each channel.
+* Assigns or updates the `current_id` field, taking the specified message offset into account (`--message-offset`).
+
+* Saves the updated data back to `channels/current.json` and `channels/urls.txt`.
+
+* Logs detailed debug information and warnings for each processed channel.
 
 **Example usage:**
 
 ```bash
-python -m scripts.update_channels -C channels.json --urls urls.txt -B -D -M 50 --no-dry-run
+python -m scripts.update_channels -C channels/current.json -U channels/urls.txt -F "count < 100" --no-dry-run --reset-all
 ```
 
-> You can add `uv run` before the `python` command to run it through `uv`.
+> You can add `uv run` before the `python` command to run it via `uv`.
 
 ---
 
@@ -628,22 +656,28 @@ You can use the `-h` flag to see all available options:
 python -m scripts.scraper -h
 ```
 
-**Options include:**
+**Options**
 
-* `-C, --channels FILE` — Path to the input JSON file containing the list of channels (default: `channels/current.json`).
+* **Input / Output files**
 
-* `-E, --batch-extract N` — Number of messages processed in parallel to extract V2Ray configs (default: 20).
+  * `-C, --channels PATH` - Path to the input JSON file containing the list of channels (default: `channels/current.json`).
 
-* `-R, --configs-raw FILE` — Path to the output file for saving scraped V2Ray configs (default: `configs/v2ray-raw.txt`).
+  * `-R, --configs-raw PATH` - Path to the output file for saving extracted V2Ray configurations (default: `configs/v2ray-raw.txt`).
 
-* `-T, --time-out SECONDS` — HTTP client timeout in seconds for requests used while updating channel info and extracting V2Ray configurations (default: 30.0).
+* **Processing / Parallelism**
 
-* `-U, --batch-update N` — Maximum number of channels updated in parallel (default: 100).
+  * `-E, --batch-extract N` - Number of messages processed in parallel when extracting V2Ray configurations (default: `20`).
+
+  * `-U, --batch-update N` - Maximum number of channels updated in parallel (default: `100`).
+
+* **Network / Timeout**
+
+  * `-T, --time-out SECONDS` - HTTP client timeout in seconds for requests used while updating channel info and extracting V2Ray configurations (default: `30.0`).
 
 **Example usage:**
 
 ```bash
-python -m scripts.scraper -E 20 -U 100 --time-out 30.0 -C channels/current.json -R configs/v2ray-raw.txt
+python -m scripts.scraper -C channels/current.json -R configs/v2ray-raw.txt -E 20 -U 100 --time-out 30.0
 ```
 
 > You can add `uv run` before the `python` command to run it through `uv`.
@@ -672,38 +706,47 @@ You can also run with `-h` to see all available options:
 python -m scripts.v2ray_cleaner -h
 ```
 
-**Options include:**
+**Options**
 
-* `-D, --duplicate [FIELDS]` — Remove duplicate entries by specified comma-separated fields. If used without value (e.g., `-D`), the default fields are `protocol,host,port`. If omitted, duplicates are not removed.
+* **Input / Output files**
 
-* `-F, --filter CONDITION` — Filter entries using a Python-like condition. Example: `"host == '1.1.1.1' and port > 1000"`. Only matching entries are kept.
+  * `-I, --configs-raw PATH` - Path to the input file with raw V2Ray configs (default: `configs/v2ray-raw.txt`).
 
-* `-I, --configs-raw FILE` — Path to the input file with raw V2Ray configs (default: `configs/v2ray-raw.txt`).
+  * `-O, --configs-clean PATH` - Path to the output file for cleaned and processed configs (default: `configs/v2ray-clean.txt`).
 
-* `-N, --no-normalize` — Disable normalization (enabled by default).
+* **Processing options**
 
-* `-O, --configs-clean FILE` — Path to the output file for cleaned and processed configs (default: `configs/v2ray-clean.txt`).
+  * `-N, --no-normalize` - Disable data normalization (enabled by default).
 
-* `-R, --reverse` — Sort entries in descending order (only applies with `--sort`).
+* **Filtering and deduplication**
 
-* `-S, --sort [FIELDS]` — Sort entries by comma-separated fields. If used without value (e.g., `-S`), the default fields are `host,port`. If omitted, entries are not sorted.
+  * `-D, --duplicate [FIELDS]` - Remove duplicates by specified fields (default: `protocol, host, port`).
+
+  * `-F, --config-filter CONDITION` - Keep only entries matching a Python-like condition (e.g., `"host == '1.1.1.1' and port > 1000"`).
+
+  * `-R, --reverse` - Sort in descending order (applies only with `--sort`).
+
+  * `-S, --sort [FIELDS]` - Sort entries by comma-separated fields (default: `protocol`).
 
 **The script performs the following:**
 
-* Reads raw configs from `configs/v2ray-raw.txt`.
+* Reads raw V2Ray configurations from `configs/v2ray-raw.txt`.
 
-* Applies regex-based filters and normalization.
+* Applies filters based on Python-like conditions (`--config-filter`) and optional normalization (disabled with `--no-normalize`).
 
-* Removes duplicates (if `--duplicate` is used).
+* Removes duplicates by the specified fields if the `--duplicate` option is used.
 
-* Sorts entries (if `--sort` is used).
+* Sorts entries by the specified fields (`--sort`) and can reverse the order (`--reverse`).
 
-* Saves cleaned and processed configs to `configs/v2ray-clean.txt`.
+* Saves the cleaned and processed configurations to `configs/v2ray-clean.txt`.
+
+* Supports flexible selection of fields for filtering, sorting, and deduplication, allowing extraction of only the desired configurations.
 
 **Example usage:**
 
 ```bash
-python -m scripts.v2ray_cleaner -I configs/v2ray-raw.txt -O configs/v2ray-clean.txt --filter "re_search(r'speedtest|google', host)" -D "host, port" -S "protocol, host, port" --reverse
+python -m scripts.v2ray_cleaner -I configs/v2ray-raw.txt -O configs/v2ray-clean.txt -F "re_search(r'speedtest|google', host)" --reverse -D "host, port" -S "protocol, host, port"
+
 ```
 
 > You can add `uv run` before the `python` command to run it through `uv`.
@@ -730,7 +773,7 @@ python main.py --help-scripts
 
 **Options include:**
 
-* `-H, --help-scripts` — Display help information for all internal pipeline scripts.
+* `-H, --help-scripts` - Display help information for all internal pipeline scripts.
 
 **The script performs the following:**
 

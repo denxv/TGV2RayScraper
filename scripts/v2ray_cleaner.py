@@ -51,8 +51,8 @@ def parse_args() -> ArgsNamespace:
         ),
         epilog=(
             "Example: PYTHONPATH=. python scripts/%(prog)s "
-            "-I configs-raw.txt -O configs-clean.txt "
-            "--filter \"re_search(r'speedtest|google', host)\" "
+            "-I configs/v2ray-raw.txt -O configs/v2ray-clean.txt "
+            "-F \"re_search(r'speedtest|google', host)\" --reverse "
             '-D "host, port" -S "protocol, host, port"'
         ),
         formatter_class=lambda prog: HelpFormatter(
@@ -61,10 +61,64 @@ def parse_args() -> ArgsNamespace:
             width=DEFAULT_HELP_WIDTH,
         ),
     )
-
     parser.add_argument(
+        "-h", "--help",
+        action="help",
+        help=SUPPRESS,
+    )
+
+    group_files = parser.add_argument_group(
+        "Input / Output files",
+    )
+    group_files.add_argument(
+        "-I", "--configs-raw",
+        default=abs_path(
+            path=DEFAULT_PATH_CONFIGS_RAW,
+        ),
+        dest="configs_raw_path",
+        help=(
+            "Path to the input file with raw V2Ray configs "
+            "(default: %(default)s)."
+        ),
+        metavar="PATH",
+        type=lambda path: validate_file_path(
+            path=path,
+            must_be_file=True,
+        ),
+    )
+    group_files.add_argument(
+        "-O", "--configs-clean",
+        default=abs_path(
+            path=DEFAULT_PATH_CONFIGS_CLEAN,
+        ),
+        dest="configs_clean_path",
+        help=(
+            "Path to the output file for cleaned and processed configs "
+            "(default: %(default)s)."
+        ),
+        metavar="PATH",
+        type=lambda path: validate_file_path(
+            path=path,
+            must_be_file=False,
+        ),
+    )
+
+    group_process = parser.add_argument_group(
+        "Processing options",
+    )
+    group_process.add_argument(
+        "-N", "--no-normalize",
+        action="store_false",
+        dest="normalize",
+        help="Disable normalization (default: enabled).",
+    )
+
+    group_filter = parser.add_argument_group(
+        "Filtering / Deduplication",
+    )
+    group_filter.add_argument(
         "-D", "--duplicate",
-        const="protocol,host,port",
+        const="protocol, host, port",
         dest="duplicate",
         help=(
             "Remove duplicate entries by specified comma-separated fields. "
@@ -76,16 +130,9 @@ def parse_args() -> ArgsNamespace:
         nargs="?",
         type=parse_valid_fields,
     )
-
-    parser.add_argument(
-        "-h", "--help",
-        action="help",
-        help=SUPPRESS,
-    )
-
-    parser.add_argument(
-        "-F", "--filter",
-        dest="filter",
+    group_filter.add_argument(
+        "-F", "--config-filter",
+        dest="config_filter",
         help=(
             "Filter entries using a Python-like condition. "
             "Example: \"host == '1.1.1.1' and port > 1000\". "
@@ -95,56 +142,13 @@ def parse_args() -> ArgsNamespace:
         metavar="CONDITION",
         type=str,
     )
-
-    parser.add_argument(
-        "-I", "--configs-raw",
-        default=abs_path(
-            path=DEFAULT_PATH_CONFIGS_RAW,
-        ),
-        dest="configs_raw",
-        help=(
-            "Path to the input file with raw V2Ray configs "
-            "(default: %(default)s)."
-        ),
-        metavar="FILE",
-        type=lambda path: validate_file_path(
-            path=path,
-            must_be_file=True,
-        ),
-    )
-
-    parser.add_argument(
-        "-N", "--no-normalize",
-        action="store_false",
-        dest="normalize",
-        help="Disable normalization (enabled by default).",
-    )
-
-    parser.add_argument(
-        "-O", "--configs-clean",
-        default=abs_path(
-            path=DEFAULT_PATH_CONFIGS_CLEAN,
-        ),
-        dest="configs_clean",
-        help=(
-            "Path to the output file for cleaned and processed configs "
-            "(default: %(default)s)."
-        ),
-        metavar="FILE",
-        type=lambda path: validate_file_path(
-            path=path,
-            must_be_file=False,
-        ),
-    )
-
-    parser.add_argument(
+    group_filter.add_argument(
         "-R", "--reverse",
         action="store_true",
         dest="reverse",
         help="Sort in descending order (only applies with --sort).",
     )
-
-    parser.add_argument(
+    group_filter.add_argument(
         "-S", "--sort",
         const="protocol",
         dest="sort",
@@ -160,6 +164,7 @@ def parse_args() -> ArgsNamespace:
     )
 
     args = parser.parse_args()
+
     log_debug_object(
         title="Parsed command-line arguments",
         obj=args,
@@ -178,7 +183,7 @@ async def main() -> None:
         )
 
         configs_raw = await load_configs(
-            path_configs_raw=parsed_args.configs_raw,
+            configs_raw_path=parsed_args.configs_raw_path,
         )
 
         configs_clean = process_configs(
@@ -188,7 +193,7 @@ async def main() -> None:
 
         await save_configs(
             configs=configs_clean,
-            path_configs_clean=parsed_args.configs_clean,
+            configs_clean_path=parsed_args.configs_clean_path,
         )
     except (
         CancelledError,

@@ -99,39 +99,6 @@ CHANNEL_REMOVE_THRESHOLD = 0
 CHANNEL_STATE_AVAILABLE = 1
 CHANNEL_STATE_UNAVAILABLE = -1
 
-CLI_SCRIPTS_CONFIG = {
-    "update_channels": {
-        "flags": [
-            "--channels",
-            "--delete-channels",
-            "--message-offset",
-            "--no-backup",
-            "--no-dry-run",
-            "--urls",
-        ],
-    },
-    "scraper": {
-        "flags": [
-            "--batch-extract",
-            "--batch-update",
-            "--channels",
-            "--configs-raw",
-            "--time-out",
-        ],
-    },
-    "v2ray_cleaner": {
-        "flags": [
-            "--configs-clean",
-            "--configs-raw",
-            "--duplicate",
-            "--filter",
-            "--no-normalize",
-            "--reverse",
-            "--sort",
-        ],
-    },
-}
-
 COLORS = {
     "DEBUG": "\033[37m",
     "INFO": "\033[32m",
@@ -153,8 +120,47 @@ DEFAULT_CHANNEL_VALUES: ChannelInfo = {
     "state": DEFAULT_STATE,
 }
 
-DEFAULT_HELP_INDENT = 30
-DEFAULT_HELP_WIDTH = 120
+CLI_SCRIPTS_CONFIG = {
+    "update_channels": {
+        "flags": sorted([
+            *(
+                f"--reset-{field.replace('_', '-')}"
+                for field in DEFAULT_CHANNEL_VALUES
+            ),
+            "--channel-filter",
+            "--channels",
+            "--delete-channels",
+            "--message-offset",
+            "--no-backup",
+            "--no-dry-run",
+            "--reset-all",
+            "--urls",
+        ]),
+    },
+    "scraper": {
+        "flags": [
+            "--batch-extract",
+            "--batch-update",
+            "--channels",
+            "--configs-raw",
+            "--time-out",
+        ],
+    },
+    "v2ray_cleaner": {
+        "flags": [
+            "--config-filter",
+            "--configs-clean",
+            "--configs-raw",
+            "--duplicate",
+            "--no-normalize",
+            "--reverse",
+            "--sort",
+        ],
+    },
+}
+
+DEFAULT_HELP_INDENT = 40
+DEFAULT_HELP_WIDTH = 150
 
 DEFAULT_FILE_CHANNELS = "current.json"
 DEFAULT_FILE_CONFIGS_CLEAN = "v2ray-clean.txt"
@@ -180,8 +186,8 @@ DEFAULT_PATH_URLS = ABS_PATH(
     f"../../channels/{DEFAULT_FILE_URLS}",
 )
 
-DEFAULT_VALUE_MAX = 100
-DEFAULT_VALUE_MIN = 1
+DEFAULT_VALUE_MAX = float("inf")
+DEFAULT_VALUE_MIN = float("-inf")
 
 HTTP_TIMEOUT_DEFAULT = 30.0
 HTTP_TIMEOUT_MAX = 100.0

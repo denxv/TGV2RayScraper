@@ -12,6 +12,7 @@ from adapters.channel import (
     save_channels_and_urls,
 )
 from core.constants.common import (
+    DEFAULT_CHANNEL_VALUES,
     DEFAULT_HELP_INDENT,
     DEFAULT_HELP_WIDTH,
     DEFAULT_PATH_CHANNELS,
@@ -46,12 +47,15 @@ def parse_args() -> ArgsNamespace:
     parser = ArgumentParser(
         add_help=False,
         description=(
-            "Backup, merge new channels from URLs, "
-            "and update Telegram channel data."
+            "Backup channels, merge new URLs, "
+            "filter channels, reset fields, "
+            "delete unavailable channels, "
+            "and update 'current_id'."
         ),
         epilog=(
             "Example: PYTHONPATH=. python scripts/%(prog)s "
-            "-C channels.json --urls urls.txt -B -D -M 50 --no-dry-run"
+            "-C channels/current.json -U channels/urls.txt "
+            '-F "count < 100" --no-dry-run --reset-all'
         ),
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
@@ -59,46 +63,92 @@ def parse_args() -> ArgsNamespace:
             width=DEFAULT_HELP_WIDTH,
         ),
     )
-
     parser.add_argument(
-        "--no-dry-run",
-        action="store_false",
-        dest="check_only",
-        help=(
-            "Disable check-only mode and actually assign 'current_id' "
-            "(default: enabled)."
-        ),
+        "-h", "--help",
+        action="help",
+        help=SUPPRESS,
     )
 
-    parser.add_argument(
-        "-B", "--no-backup",
+    group_global = parser.add_argument_group(
+        "Global options",
+    )
+    group_global.add_argument(
+        "--no-backup",
         action="store_false",
-        dest="make_backups",
+        dest="backup",
         help=(
             "Skip creating backup files for channel and "
             "Telegram URL lists before saving "
             "(default: enabled)."
         ),
     )
+    group_global.add_argument(
+        "--no-dry-run",
+        action="store_false",
+        dest="dry_run",
+        help=(
+            "Disable check-only mode and actually assign 'current_id' "
+            "(default: enabled)."
+        ),
+    )
 
-    parser.add_argument(
+    group_files = parser.add_argument_group(
+        "Input files",
+    )
+    group_files.add_argument(
         "-C", "--channels",
         default=abs_path(
             path=DEFAULT_PATH_CHANNELS,
         ),
-        dest="channels_file",
+        dest="channels_path",
         help=(
             "Path to the input JSON file containing the list of channels "
             "(default: %(default)s)."
         ),
-        metavar="FILE",
+        metavar="PATH",
+        type=lambda path: validate_file_path(
+            path=path,
+            must_be_file=True,
+        ),
+    )
+    group_files.add_argument(
+        "-U", "--urls",
+        default=abs_path(
+            path=DEFAULT_PATH_URLS,
+        ),
+        dest="urls_path",
+        help=(
+            "Path to a text file containing new channel URLs "
+            "(default: %(default)s)."
+        ),
+        metavar="PATH",
         type=lambda path: validate_file_path(
             path=path,
             must_be_file=True,
         ),
     )
 
-    parser.add_argument(
+    group_selection = parser.add_argument_group(
+        "Channel selection options",
+    )
+    group_selection.add_argument(
+        "-F", "--channel-filter",
+        dest="channel_filter",
+        help=(
+            "Filter channels using a Python-like condition. Example: "
+            '"count < 100 and current_id == last_id or state == -1". '
+            "Only channels matching the condition will be selected. "
+            "If omitted, all existing channels "
+            "except new ones will be selected."
+        ),
+        metavar="CONDITION",
+        type=str,
+    )
+
+    group_actions = parser.add_argument_group(
+        "Channel actions",
+    )
+    group_actions.add_argument(
         "-D", "--delete-channels",
         action="store_true",
         dest="delete_channels",
@@ -107,14 +157,7 @@ def parse_args() -> ArgsNamespace:
             "meet specific conditions (default: disabled)."
         ),
     )
-
-    parser.add_argument(
-        "-h", "--help",
-        action="help",
-        help=SUPPRESS,
-    )
-
-    parser.add_argument(
+    group_actions.add_argument(
         "-M", "--message-offset",
         dest="message_offset",
         help=(
@@ -131,24 +174,37 @@ def parse_args() -> ArgsNamespace:
         ),
     )
 
-    parser.add_argument(
-        "-U", "--urls",
-        default=abs_path(
-            path=DEFAULT_PATH_URLS,
-        ),
-        dest="urls_file",
+    group_reset = parser.add_argument_group(
+        "Channel reset options",
+    )
+    group_reset.add_argument(
+        "--reset-all",
+        action="store_true",
+        dest="reset_all",
         help=(
-            "Path to a text file containing new channel URLs "
-            "(default: %(default)s)."
-        ),
-        metavar="FILE",
-        type=lambda path: validate_file_path(
-            path=path,
-            must_be_file=True,
+            "Reset all channel values to their defaults. "
+            "Can be used together with --reset-<field> "
+            "to set specific values, and/or with --channel-filter "
+            "to select which channels are affected (default: disabled)."
         ),
     )
+    for field, default in DEFAULT_CHANNEL_VALUES.items():
+        group_reset.add_argument(
+            f"--reset-{field.replace('_', '-')}",
+            const=default,
+            dest=f"reset_{field}",
+            help=(
+                f"Reset '{field}' to the specified value. "
+                "If no value is provided, the default value is used "
+                "(default: %(const)s)."
+            ),
+            metavar="N",
+            nargs="?",
+            type=type(default),
+        )
 
     args = parser.parse_args()
+
     log_debug_object(
         title="Parsed command-line arguments",
         obj=args,
@@ -162,8 +218,8 @@ async def main() -> None:
         parsed_args = parse_args()
 
         current_channels, list_channel_names = await load_channels_and_urls(
-            path_channels=parsed_args.channels_file,
-            path_urls=parsed_args.urls_file,
+            channels_path=parsed_args.channels_path,
+            urls_path=parsed_args.urls_path,
         )
 
         current_channels = update_with_new_channels(
@@ -177,9 +233,9 @@ async def main() -> None:
 
         await save_channels_and_urls(
             channels=current_channels,
-            path_channels=parsed_args.channels_file,
-            path_urls=parsed_args.urls_file,
-            make_backups=parsed_args.make_backups,
+            channels_path=parsed_args.channels_path,
+            urls_path=parsed_args.urls_path,
+            make_backups=parsed_args.backup,
         )
     except (
         CancelledError,

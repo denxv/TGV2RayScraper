@@ -12,10 +12,44 @@ from tests.unit.domain.constants.examples.channel import (
     NORMALIZE_CHANNEL_NAMES_EXAMPLES,
     PRINT_CHANNEL_INFO_VARIOUS_EXAMPLES,
     PROCESS_CHANNELS_CALLS_EXAMPLES,
+    RESET_CHANNELS_EXAMPLES,
     SORT_CHANNEL_NAMES_EXAMPLES,
     UPDATE_LAST_ID_AND_STATE_EXAMPLES,
     UPDATE_WITH_NEW_CHANNELS_EXAMPLES,
 )
+
+__all__ = [
+    "ASSIGN_CURRENT_ID_TO_CHANNELS_INVALID_OFFSET_ARGS",
+    "ASSIGN_CURRENT_ID_TO_CHANNELS_INVALID_OFFSET_CASES",
+    "ASSIGN_CURRENT_ID_TO_CHANNELS_VARIOUS_ARGS",
+    "ASSIGN_CURRENT_ID_TO_CHANNELS_VARIOUS_CASES",
+    "DELETE_CHANNELS_ARGS",
+    "DELETE_CHANNELS_CASES",
+    "DIFF_CHANNEL_ID_ARGS",
+    "DIFF_CHANNEL_ID_CASES",
+    "FORMAT_CHANNEL_STATUS_ARGS",
+    "FORMAT_CHANNEL_STATUS_CASES",
+    "GET_FILTERED_KEYS_ARGS",
+    "GET_FILTERED_KEYS_CASES",
+    "GET_NORMALIZED_CURRENT_ID_ARGS",
+    "GET_NORMALIZED_CURRENT_ID_CASES",
+    "GET_SORTED_KEYS_ARGS",
+    "GET_SORTED_KEYS_CASES",
+    "NORMALIZE_CHANNEL_NAMES_ARGS",
+    "NORMALIZE_CHANNEL_NAMES_CASES",
+    "PRINT_CHANNEL_INFO_VARIOUS_ARGS",
+    "PRINT_CHANNEL_INFO_VARIOUS_CASES",
+    "PROCESS_CHANNELS_CALLS_ARGS",
+    "PROCESS_CHANNELS_CALLS_CASES",
+    "RESET_CHANNELS_ARGS",
+    "RESET_CHANNELS_CASES",
+    "SORT_CHANNEL_NAMES_ARGS",
+    "SORT_CHANNEL_NAMES_CASES",
+    "UPDATE_LAST_ID_AND_STATE_ARGS",
+    "UPDATE_LAST_ID_AND_STATE_CASES",
+    "UPDATE_WITH_NEW_CHANNELS_ARGS",
+    "UPDATE_WITH_NEW_CHANNELS_CASES",
+]
 
 ASSIGN_CURRENT_ID_TO_CHANNELS_INVALID_OFFSET_ARGS = (
     "invalid_offset",
@@ -34,21 +68,21 @@ ASSIGN_CURRENT_ID_TO_CHANNELS_INVALID_OFFSET_CASES = tuple(
 ASSIGN_CURRENT_ID_TO_CHANNELS_VARIOUS_ARGS = (
     "channels",
     "message_offset",
-    "check_only",
+    "dry_run",
     "expected_current_ids",
 )
 ASSIGN_CURRENT_ID_TO_CHANNELS_VARIOUS_CASES = tuple(
     pytest.param(
         channels,
         message_offset,
-        check_only,
+        dry_run,
         expected_current_ids,
         id=case_id,
     )
     for (
         channels,
         message_offset,
-        check_only,
+        dry_run,
         expected_current_ids,
         case_id,
     ) in ASSIGN_CURRENT_ID_TO_CHANNELS_VARIOUS_EXAMPLES
@@ -198,22 +232,58 @@ PRINT_CHANNEL_INFO_VARIOUS_CASES = tuple(
 
 PROCESS_CHANNELS_CALLS_ARGS = (
     "message_offset",
-    "check_only",
+    "dry_run",
     "delete_channels_flag",
+    "reset_all",
 )
 PROCESS_CHANNELS_CALLS_CASES = tuple(
     pytest.param(
         message_offset,
-        check_only,
+        dry_run,
         delete_channels_flag,
+        reset_all,
         id=case_id,
     )
     for (
         message_offset,
-        check_only,
+        dry_run,
         delete_channels_flag,
+        reset_all,
         case_id,
     ) in PROCESS_CHANNELS_CALLS_EXAMPLES
+)
+
+RESET_CHANNELS_ARGS = (
+    "channel_overrides",
+    "channel_predicate",
+    "dry_run",
+    "reset_to_defaults",
+)
+RESET_CHANNELS_CASES = tuple(
+    pytest.param(
+        channel_overrides,
+        channel_predicate,
+        dry_run,
+        reset_to_defaults,
+        id=(
+            f"{case_id}_"
+            f"{'dry' if dry_run else 'no_dry'}_"
+            f"{'reset_defaults' if reset_to_defaults else 'no_reset'}"
+        ),
+    )
+    for (
+        channel_overrides,
+        channel_predicate,
+        case_id,
+    ) in RESET_CHANNELS_EXAMPLES
+    for dry_run in (
+        True,
+        False,
+    )
+    for reset_to_defaults in (
+        False,
+        True,
+    )
 )
 
 SORT_CHANNEL_NAMES_ARGS = (
@@ -236,14 +306,14 @@ SORT_CHANNEL_NAMES_CASES = tuple(
         names,
         case_id,
     ) in SORT_CHANNEL_NAMES_EXAMPLES
-    for ignore_case in [
+    for ignore_case in (
         True,
         False,
-    ]
-    for reverse in [
+    )
+    for reverse in (
         False,
         True,
-    ]
+    )
 )
 
 UPDATE_LAST_ID_AND_STATE_ARGS = (

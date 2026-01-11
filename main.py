@@ -15,6 +15,7 @@ from core.constants.common import (
     BATCH_UPDATE_MAX,
     BATCH_UPDATE_MIN,
     CLI_SCRIPTS_CONFIG,
+    DEFAULT_CHANNEL_VALUES,
     DEFAULT_HELP_INDENT,
     DEFAULT_HELP_WIDTH,
     HTTP_TIMEOUT_MAX,
@@ -92,12 +93,24 @@ def parse_args() -> ArgsNamespace:
     )
 
     parser.add_argument(
+        "--channel-filter",
+        help=SUPPRESS,
+        type=str,
+    )
+
+    parser.add_argument(
         "--channels",
         help=SUPPRESS,
         type=lambda path: validate_file_path(
             path=path,
             must_be_file=True,
         ),
+    )
+
+    parser.add_argument(
+        "--config-filter",
+        help=SUPPRESS,
+        type=str,
     )
 
     parser.add_argument(
@@ -131,12 +144,6 @@ def parse_args() -> ArgsNamespace:
         help=SUPPRESS,
         nargs="?",
         type=normalize_valid_fields,
-    )
-
-    parser.add_argument(
-        "--filter",
-        help=SUPPRESS,
-        type=str,
     )
 
     parser.add_argument(
@@ -183,6 +190,24 @@ def parse_args() -> ArgsNamespace:
         const="",
         help=SUPPRESS,
     )
+
+    parser.add_argument(
+        "--reset-all",
+        action="store_const",
+        const="",
+        help=SUPPRESS,
+    )
+
+    for field in DEFAULT_CHANNEL_VALUES:
+        parser.add_argument(
+            f"--reset-{field.replace('_', '-')}",
+            help=SUPPRESS,
+            type=lambda value: convert_number_in_range(
+                value=value,
+                as_int=True,
+                as_str=True,
+            ),
+        )
 
     parser.add_argument(
         "--reverse",

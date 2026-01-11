@@ -15,8 +15,8 @@ from core.constants.common import (
 from core.typing import (
     ChannelInfo,
     ConditionStr,
-    ConfigPredicate,
-    V2RayConfig,
+    Record,
+    RecordPredicate,
 )
 from core.utils import (
     re_fullmatch,
@@ -82,8 +82,11 @@ def is_new_channel(
 
 
 def make_predicate(
-    condition: ConditionStr,
-) -> ConfigPredicate:
+    condition: ConditionStr | None,
+) -> RecordPredicate | None:
+    if condition is None:
+        return None
+
     aeval = Interpreter()
 
     symtable = {
@@ -95,11 +98,11 @@ def make_predicate(
     }
 
     def predicate(
-        config: V2RayConfig,
+        record: Record,
     ) -> bool:
         aeval.symtable.clear()
         aeval.symtable.update(symtable)
-        aeval.symtable.update(config)
+        aeval.symtable.update(record)
 
         try:
             result = aeval(

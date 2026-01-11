@@ -527,10 +527,10 @@ def process_configs(
             configs=configs,
         )
 
-    if args.filter:
+    if args.config_filter:
         _configs = filter_by_condition(
             configs=_configs,
-            condition=args.filter,
+            condition=args.config_filter,
         )
 
     if args.duplicate:
