@@ -1,6 +1,6 @@
 # TGV2RayScraper
 
-TGV2RayScraper is a Python project designed for collecting data from Telegram channels, extracting and processing V2Ray configurations, including cleaning, normalizing, and deduplicating them. The project maintains up-to-date information about channels and includes tools for managing their lists. It provides both synchronous and asynchronous tools for data collection and V2Ray configuration processing.
+TGV2RayScraper is a Python project designed for collecting data from Telegram channels, extracting and processing V2Ray configurations, including cleaning, normalizing, and deduplicating them. The project maintains up-to-date information about channels and includes tools for managing their lists. It provides asynchronous tools for data collection and synchronous tools for processing V2Ray configurations.
 
 > The project runs on Python version 3.10 or higher.
 
@@ -170,7 +170,7 @@ The project requires the following Python libraries (works with Python ≥ 3.10)
 
 * **aiofiles** – asynchronous file handling
 
-* **asteval** - safe evaluation of Python expressions (used for filtering configurations)
+* **asteval** - safe evaluation of Python expressions (used for filtering channels and configurations)
 
 * **httpx** - modern HTTP client with support for both synchronous and asynchronous requests
 
@@ -674,6 +674,20 @@ python -m scripts.scraper -h
 
   * `-T, --time-out SECONDS` - HTTP client timeout in seconds for requests used while updating channel info and extracting V2Ray configurations (default: `30.0`).
 
+**The script performs the following actions:**
+
+* Loads the current list of channels from the file `channels/current.json`.
+
+* Extracts V2Ray configurations in parallel, with the number of simultaneous requests set by `--batch-extract`.
+
+* Updates channels in parallel, with the number of channels updated at the same time set by `--batch-update`.
+
+* Uses an HTTP client with the `--time-out` for updating channels and extracting configurations.
+
+* Saves the extracted V2Ray configurations to the file `configs/v2ray-raw.txt`.
+
+* Logs detailed information about the extraction and update process, including errors and warnings for each channel.
+
 **Example usage:**
 
 ```bash
@@ -730,23 +744,24 @@ python -m scripts.v2ray_cleaner -h
 
 **The script performs the following:**
 
-* Reads raw V2Ray configurations from `configs/v2ray-raw.txt`.
+* Reads raw V2Ray configurations from the file `configs/v2ray-raw.txt`.
 
-* Applies filters based on Python-like conditions (`--config-filter`) and optional normalization (disabled with `--no-normalize`).
+* Applies filters based on Python-like conditions using the `--config-filter` parameter and optional normalization, which can be disabled with `--no-normalize`.
 
-* Removes duplicates by the specified fields if the `--duplicate` option is used.
+* Removes duplicates by specified fields when using the `--duplicate` option.
 
-* Sorts entries by the specified fields (`--sort`) and can reverse the order (`--reverse`).
+* Sorts entries by specified fields with `--sort` and can reverse the order with `--reverse`.
 
-* Saves the cleaned and processed configurations to `configs/v2ray-clean.txt`.
+* Saves the cleaned and processed configurations to the file `configs/v2ray-clean.txt`.
 
-* Supports flexible selection of fields for filtering, sorting, and deduplication, allowing extraction of only the desired configurations.
+* Supports flexible selection of fields for filtering, sorting, and duplicate removal, allowing extraction of only the desired configurations.
+
+* Logs detailed information about the processing, including errors and warnings for each configuration.
 
 **Example usage:**
 
 ```bash
 python -m scripts.v2ray_cleaner -I configs/v2ray-raw.txt -O configs/v2ray-clean.txt -F "re_search(r'speedtest|google', host)" --reverse -D "host, port" -S "protocol, host, port"
-
 ```
 
 > You can add `uv run` before the `python` command to run it through `uv`.
