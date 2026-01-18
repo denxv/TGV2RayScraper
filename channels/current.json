@@ -491,12 +491,6 @@
         "last_id": -1,
         "state": 0
     },
-    "free_servers1": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "free_vpn02": {
         "count": 0,
         "current_id": 1,
@@ -1980,12 +1974,6 @@
         "state": 0
     },
     "zedmodeonvpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "zenixvpn_channel": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
