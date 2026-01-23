@@ -575,12 +575,6 @@
         "last_id": -1,
         "state": 0
     },
-    "heyatserver": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "hibyevpnn": {
         "count": 0,
         "current_id": 1,
@@ -798,12 +792,6 @@
         "state": 0
     },
     "maznet": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "mdvpnsec": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
