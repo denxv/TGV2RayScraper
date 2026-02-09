@@ -10,14 +10,10 @@ from pathlib import (
 )
 
 from core.typing import (
-    AbsPath,
-    Callable,
     ChannelInfo,
-    FilePath,
 )
 
 __all__ = [
-    "ABS_PATH",
     "BASE64_BLOCK_SIZE",
     "BATCH_EXTRACT_DEFAULT",
     "BATCH_EXTRACT_MAX",
@@ -36,20 +32,19 @@ __all__ = [
     "DEFAULT_CHANNEL_VALUES",
     "DEFAULT_COUNT",
     "DEFAULT_CURRENT_ID",
-    "DEFAULT_FILE_CHANNELS",
-    "DEFAULT_FILE_CONFIGS_CLEAN",
-    "DEFAULT_FILE_CONFIGS_RAW",
-    "DEFAULT_FILE_URLS",
     "DEFAULT_HELP_INDENT",
     "DEFAULT_HELP_WIDTH",
     "DEFAULT_JSON_INDENT",
     "DEFAULT_LAST_ID",
     "DEFAULT_LOGGER_NAME",
-    "DEFAULT_LOG_DIR",
     "DEFAULT_LOG_LINE_LENGTH",
     "DEFAULT_PATH_CHANNELS",
     "DEFAULT_PATH_CONFIGS_CLEAN",
+    "DEFAULT_PATH_CONFIGS_EXPORT",
+    "DEFAULT_PATH_CONFIGS_IMPORT",
     "DEFAULT_PATH_CONFIGS_RAW",
+    "DEFAULT_PATH_LOGS",
+    "DEFAULT_PATH_PROJECT",
     "DEFAULT_PATH_URLS",
     "DEFAULT_STATE",
     "DEFAULT_VALUE_MAX",
@@ -73,13 +68,6 @@ __all__ = [
     "XPATH_POST_IDS",
     "XPATH_TG_MESSAGES_TEXT",
 ]
-
-ABS_PATH: Callable[  # noqa: E731
-    [FilePath],
-    AbsPath,
-] = lambda path: str(
-    (Path(__file__).parent / path).resolve(),
-)
 
 BASE64_BLOCK_SIZE = 4
 
@@ -152,6 +140,8 @@ CLI_SCRIPTS_CONFIG = {
             "--configs-clean",
             "--configs-raw",
             "--duplicate",
+            "--export",
+            "--import",
             "--no-normalize",
             "--reverse",
             "--sort",
@@ -161,29 +151,32 @@ CLI_SCRIPTS_CONFIG = {
 
 DEFAULT_HELP_INDENT = 40
 DEFAULT_HELP_WIDTH = 150
-
-DEFAULT_FILE_CHANNELS = "current.json"
-DEFAULT_FILE_CONFIGS_CLEAN = "v2ray-clean.txt"
-DEFAULT_FILE_CONFIGS_RAW = "v2ray-raw.txt"
-DEFAULT_FILE_URLS = "urls.txt"
-
 DEFAULT_JSON_INDENT = 4
-
 DEFAULT_LOG_LINE_LENGTH = 100
-DEFAULT_LOG_DIR = ABS_PATH("../../logs")
 DEFAULT_LOGGER_NAME = "TGV2RayScraper"
 
-DEFAULT_PATH_CHANNELS = ABS_PATH(
-    f"../../channels/{DEFAULT_FILE_CHANNELS}",
+DEFAULT_PATH_PROJECT = (Path(__file__).parent / "../../").resolve()
+
+DEFAULT_PATH_CHANNELS = (
+    DEFAULT_PATH_PROJECT / "channels/current.json"
 )
-DEFAULT_PATH_CONFIGS_CLEAN = ABS_PATH(
-    f"../../configs/{DEFAULT_FILE_CONFIGS_CLEAN}",
+DEFAULT_PATH_CONFIGS_CLEAN = (
+    DEFAULT_PATH_PROJECT / "configs/v2ray-clean.txt"
 )
-DEFAULT_PATH_CONFIGS_RAW = ABS_PATH(
-    f"../../configs/{DEFAULT_FILE_CONFIGS_RAW}",
+DEFAULT_PATH_CONFIGS_EXPORT = (
+    DEFAULT_PATH_PROJECT / "configs/v2ray.json"
 )
-DEFAULT_PATH_URLS = ABS_PATH(
-    f"../../channels/{DEFAULT_FILE_URLS}",
+DEFAULT_PATH_CONFIGS_IMPORT = (
+    DEFAULT_PATH_PROJECT / "configs/v2ray.json"
+)
+DEFAULT_PATH_CONFIGS_RAW = (
+    DEFAULT_PATH_PROJECT / "configs/v2ray-raw.txt"
+)
+DEFAULT_PATH_LOGS = (
+    DEFAULT_PATH_PROJECT / "logs"
+)
+DEFAULT_PATH_URLS = (
+    DEFAULT_PATH_PROJECT / "channels/urls.txt"
 )
 
 DEFAULT_VALUE_MAX = float("inf")

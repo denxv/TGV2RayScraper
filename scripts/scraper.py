@@ -52,6 +52,7 @@ from core.typing import (
 from core.utils import (
     abs_path,
     convert_number_in_range,
+    rel_path,
     validate_file_path,
 )
 from domain.channel import (
@@ -93,7 +94,7 @@ def parse_args() -> ArgsNamespace:
         dest="channels_path",
         help=(
             "Path to the input JSON file containing the list of channels "
-            "(default: %(default)s)."
+            f"(default: {rel_path(DEFAULT_PATH_CHANNELS)})."
         ),
         metavar="PATH",
         type=lambda path: validate_file_path(
@@ -108,8 +109,8 @@ def parse_args() -> ArgsNamespace:
         ),
         dest="configs_raw_path",
         help=(
-            "Path to the output file for saving scraped V2Ray configs "
-            "(default: %(default)s)."
+            "Path to the output TXT file for saving scraped V2Ray configs "
+            f"(default: {rel_path(DEFAULT_PATH_CONFIGS_RAW)})."
         ),
         metavar="PATH",
         type=lambda path: validate_file_path(

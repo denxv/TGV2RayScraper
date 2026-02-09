@@ -1,6 +1,11 @@
 from asyncio import (
     gather,
 )
+from json import (
+    JSONDecodeError,
+    dumps,
+    loads,
+)
 
 from aiofiles import (
     open as aiopen,
@@ -17,9 +22,12 @@ from core.constants.common import (
     BATCH_ID,
     DEFAULT_COUNT,
     DEFAULT_CURRENT_ID,
-    DEFAULT_FILE_CONFIGS_CLEAN,
-    DEFAULT_FILE_CONFIGS_RAW,
+    DEFAULT_JSON_INDENT,
     DEFAULT_LAST_ID,
+    DEFAULT_PATH_CONFIGS_CLEAN,
+    DEFAULT_PATH_CONFIGS_EXPORT,
+    DEFAULT_PATH_CONFIGS_IMPORT,
+    DEFAULT_PATH_CONFIGS_RAW,
     XPATH_TG_MESSAGES_TEXT,
 )
 from core.constants.formats import (
@@ -29,13 +37,18 @@ from core.constants.patterns import (
     PATTERN_V2RAY_PROTOCOLS_URL,
 )
 from core.constants.templates import (
+    TEMPLATE_CONFIG_EXPORT_COMPLETED,
+    TEMPLATE_CONFIG_EXPORT_STARTED,
     TEMPLATE_CONFIG_EXTRACT_COMPLETED,
     TEMPLATE_CONFIG_EXTRACT_STARTED,
+    TEMPLATE_CONFIG_IMPORT_COMPLETED,
+    TEMPLATE_CONFIG_IMPORT_STARTED,
     TEMPLATE_CONFIG_LOAD_COMPLETED,
     TEMPLATE_CONFIG_LOAD_STARTED,
     TEMPLATE_CONFIG_LOG_EXTRACT,
     TEMPLATE_CONFIG_SAVE_COMPLETED,
     TEMPLATE_CONFIG_SAVE_STARTED,
+    TEMPLATE_ERROR_CONFIG_IMPORT_FAILED,
     TEMPLATE_ERROR_FAILED_FETCH_ID,
     TEMPLATE_ERROR_RESPONSE_EMPTY,
     TEMPLATE_FORMAT_TG_URL_AFTER,
@@ -62,10 +75,13 @@ from domain.channel import (
 )
 from domain.config import (
     line_to_configs,
+    normalize_configs,
 )
 
 __all__ = [
+    "export_configs",
     "fetch_and_write_configs",
+    "import_configs",
     "load_configs",
     "save_configs",
     "write_configs",
@@ -128,7 +144,7 @@ async def _fetch_and_write_configs(
     channel_name: ChannelName,
     channel_info: ChannelInfo,
     batch_size: BatchSize = BATCH_EXTRACT_DEFAULT,
-    configs_path: FilePath = DEFAULT_FILE_CONFIGS_RAW,
+    configs_path: FilePath = DEFAULT_PATH_CONFIGS_RAW,
 ) -> int:
     configs_count = 0
     list_channel_id = list(
@@ -211,11 +227,44 @@ async def _fetch_and_write_configs(
     return configs_count
 
 
+async def export_configs(
+    configs: V2RayConfigs,
+    export_path: FilePath = DEFAULT_PATH_CONFIGS_EXPORT,
+) -> None:
+    logger.info(
+        msg=TEMPLATE_CONFIG_EXPORT_STARTED.format(
+            count=len(configs),
+            path=export_path,
+        ),
+    )
+
+    async with aiopen(
+        file=export_path,
+        mode="w",
+        encoding="utf-8",
+    ) as file:
+        await file.write(
+            dumps(
+                obj=configs,
+                ensure_ascii=False,
+                indent=DEFAULT_JSON_INDENT,
+                sort_keys=True,
+            ),
+        )
+
+    logger.info(
+        msg=TEMPLATE_CONFIG_EXPORT_COMPLETED.format(
+            count=len(configs),
+            path=export_path,
+        ),
+    )
+
+
 async def fetch_and_write_configs(
     client: AsyncHTTPClient,
     channels: ChannelsDict,
     batch_size: BatchSize = BATCH_EXTRACT_DEFAULT,
-    configs_path: FilePath = DEFAULT_FILE_CONFIGS_RAW,
+    configs_path: FilePath = DEFAULT_PATH_CONFIGS_RAW,
 ) -> None:
     channels_to_extract = get_sorted_keys(
         channels=channels,
@@ -247,17 +296,66 @@ async def fetch_and_write_configs(
     )
 
 
-async def load_configs(
-    configs_raw_path: FilePath = DEFAULT_FILE_CONFIGS_RAW,
-) -> V2RayConfigsRaw:
+async def import_configs(
+    import_path: FilePath = DEFAULT_PATH_CONFIGS_IMPORT,
+) -> V2RayConfigs:
     logger.info(
-        msg=TEMPLATE_CONFIG_LOAD_STARTED.format(
-            path=configs_raw_path,
+        msg=TEMPLATE_CONFIG_IMPORT_STARTED.format(
+            path=import_path,
         ),
     )
 
     async with aiopen(
-        file=configs_raw_path,
+        file=import_path,
+        encoding="utf-8",
+    ) as file:
+        try:
+            configs_json_str = await file.read()
+            configs: V2RayConfigs = loads(
+                s=configs_json_str,
+            )
+        except JSONDecodeError:
+            logger.error(
+                msg=TEMPLATE_ERROR_CONFIG_IMPORT_FAILED.format(
+                    path=import_path,
+                ),
+            )
+            return []
+        else:
+            logger.info(
+                msg=TEMPLATE_CONFIG_IMPORT_COMPLETED.format(
+                    count=len(configs),
+                    path=import_path,
+                ),
+            )
+            return configs
+
+
+async def load_configs(
+    configs_path: FilePath = DEFAULT_PATH_CONFIGS_RAW,
+    import_path: FilePath | None = None,
+    *,
+    normalize: bool = True,
+) -> V2RayConfigs | V2RayConfigsRaw:
+    if (
+        import_path is not None
+        and (imported_configs := await import_configs(import_path))
+    ):
+        return (
+            normalize_configs(
+                configs=imported_configs,  # type: ignore[arg-type]
+            )
+            if normalize else imported_configs
+        )
+
+    logger.info(
+        msg=TEMPLATE_CONFIG_LOAD_STARTED.format(
+            path=configs_path,
+        ),
+    )
+
+    async with aiopen(
+        file=configs_path,
         encoding="utf-8",
     ) as file:
         configs: V2RayConfigsRaw = []
@@ -271,46 +369,57 @@ async def load_configs(
     logger.info(
         msg=TEMPLATE_CONFIG_LOAD_COMPLETED.format(
             count=len(configs),
-            path=configs_raw_path,
+            path=configs_path,
         ),
     )
 
-    return configs
+    return (
+        normalize_configs(
+            configs=configs,
+        )
+        if normalize else configs
+    )
 
 
 async def save_configs(
     configs: V2RayConfigs,
-    configs_clean_path: FilePath = DEFAULT_FILE_CONFIGS_CLEAN,
+    configs_path: FilePath = DEFAULT_PATH_CONFIGS_CLEAN,
+    export_path: FilePath | None = None,
     mode: FileMode = "w",
 ) -> None:
     logger.info(
         msg=TEMPLATE_CONFIG_SAVE_STARTED.format(
             count=len(configs),
-            path=configs_clean_path,
+            path=configs_path,
         ),
     )
 
-    async with aiopen(
-        file=configs_clean_path,
-        mode=mode,
-        encoding="utf-8",
-    ) as file:
-        await file.writelines(
-            f"{config.get('url', '')}\n"
+    await write_configs(
+        configs=[
+            str(config.get("url", ""))
             for config in configs
-        )
+        ],
+        configs_path=configs_path,
+        mode=mode,
+    )
 
     logger.info(
         msg=TEMPLATE_CONFIG_SAVE_COMPLETED.format(
             count=len(configs),
-            path=configs_clean_path,
+            path=configs_path,
         ),
     )
+
+    if export_path is not None:
+        await export_configs(
+            configs=configs,
+            export_path=export_path,
+        )
 
 
 async def write_configs(
     configs: V2RayRawLines,
-    configs_path: FilePath = DEFAULT_FILE_CONFIGS_RAW,
+    configs_path: FilePath = DEFAULT_PATH_CONFIGS_RAW,
     mode: FileMode = "w",
 ) -> None:
     async with aiopen(

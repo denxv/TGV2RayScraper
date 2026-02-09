@@ -21,8 +21,8 @@ from core.constants.common import (
     COLORS,
     DEBUG,
     DEFAULT_JSON_INDENT,
-    DEFAULT_LOG_DIR,
     DEFAULT_LOGGER_NAME,
+    DEFAULT_PATH_LOGS,
     INFO,
 )
 from core.constants.formats import (
@@ -153,7 +153,7 @@ def create_logger(
 
     file_handler = FileHandler(
         filename=TEMPLATE_FORMAT_FILE_LOG_PATH.format(
-            dir=DEFAULT_LOG_DIR,
+            dir=DEFAULT_PATH_LOGS,
             name=datetime.now().astimezone().strftime(
                 FORMAT_LOG_FILENAME_DATE,
             ),

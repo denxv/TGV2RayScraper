@@ -17,6 +17,7 @@ from tests.unit.core.constants.examples.utils import (
     NORMALIZE_VALID_FIELDS_VALID_EXAMPLES,
     PARSE_VALID_FIELDS_INVALID_EXAMPLES,
     RE_FULLMATCH_AND_SEARCH_EXAMPLES,
+    REL_PATH_EXAMPLES,
     REPEAT_CHAR_LINE_EXAMPLES,
     VALIDATE_FILE_PATH_SUCCESS_EXAMPLES,
 )
@@ -52,6 +53,8 @@ __all__ = [
     "NORMALIZE_VALID_FIELDS_VALID_CASES",
     "PARSE_VALID_FIELDS_INVALID_ARGS",
     "PARSE_VALID_FIELDS_INVALID_CASES",
+    "REL_PATH_ARGS",
+    "REL_PATH_CASES",
     "REPEAT_CHAR_LINE_ARGS",
     "REPEAT_CHAR_LINE_CASES",
     "RE_FULLMATCH_AND_SEARCH_EXTENDED_ARGS",
@@ -357,6 +360,20 @@ RE_FULLMATCH_AND_SEARCH_EXTENDED_CASES = tuple(
         expected_search,
         case_id,
     ) in RE_FULLMATCH_AND_SEARCH_EXAMPLES
+)
+
+REL_PATH_ARGS = (
+    "input_path",
+)
+REL_PATH_CASES = tuple(
+    pytest.param(
+        input_path,
+        id=case_id,
+    )
+    for (
+        input_path,
+        case_id,
+    ) in REL_PATH_EXAMPLES
 )
 
 REPEAT_CHAR_LINE_ARGS = (

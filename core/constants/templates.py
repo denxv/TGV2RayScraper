@@ -23,10 +23,14 @@ __all__ = [
     "TEMPLATE_CHANNEL_UPDATE_INFO_STARTED",
     "TEMPLATE_CONFIG_DEDUPLICATION_COMPLETED",
     "TEMPLATE_CONFIG_DEDUPLICATION_STARTED",
+    "TEMPLATE_CONFIG_EXPORT_COMPLETED",
+    "TEMPLATE_CONFIG_EXPORT_STARTED",
     "TEMPLATE_CONFIG_EXTRACT_COMPLETED",
     "TEMPLATE_CONFIG_EXTRACT_STARTED",
     "TEMPLATE_CONFIG_FILTER_COMPLETED",
     "TEMPLATE_CONFIG_FILTER_STARTED",
+    "TEMPLATE_CONFIG_IMPORT_COMPLETED",
+    "TEMPLATE_CONFIG_IMPORT_STARTED",
     "TEMPLATE_CONFIG_LOAD_COMPLETED",
     "TEMPLATE_CONFIG_LOAD_STARTED",
     "TEMPLATE_CONFIG_LOG_EXTRACT",
@@ -36,6 +40,7 @@ __all__ = [
     "TEMPLATE_CONFIG_SAVE_STARTED",
     "TEMPLATE_CONFIG_SORT_COMPLETED",
     "TEMPLATE_CONFIG_SORT_STARTED",
+    "TEMPLATE_ERROR_CONFIG_IMPORT_FAILED",
     "TEMPLATE_ERROR_CONFIG_MISSING_REQUIRED_FIELDS",
     "TEMPLATE_ERROR_CONFIG_UNEXPECTED_FAILURE",
     "TEMPLATE_ERROR_CONFIG_URL_PARSE_FAILED",
@@ -164,6 +169,12 @@ TEMPLATE_CONFIG_DEDUPLICATION_COMPLETED = (
 TEMPLATE_CONFIG_DEDUPLICATION_STARTED = (
     "Removing duplicates from {count:,} configs using keys: {fields}..."
 )
+TEMPLATE_CONFIG_EXPORT_COMPLETED = (
+    "Exported {count:,} configs to '{path}'."
+)
+TEMPLATE_CONFIG_EXPORT_STARTED = (
+    "Exporting {count:,} configs to '{path}'..."
+)
 TEMPLATE_CONFIG_EXTRACT_COMPLETED = (
     "Extracted {configs_count:,} configs from {channels_count:,} channels."
 )
@@ -175,6 +186,12 @@ TEMPLATE_CONFIG_FILTER_COMPLETED = (
 )
 TEMPLATE_CONFIG_FILTER_STARTED = (
     "Filtering {count:,} configs by condition: `{condition}`..."
+)
+TEMPLATE_CONFIG_IMPORT_COMPLETED = (
+    "Imported {count:,} configs from '{path}'."
+)
+TEMPLATE_CONFIG_IMPORT_STARTED = (
+    "Importing configs from '{path}'..."
 )
 TEMPLATE_CONFIG_LOAD_COMPLETED = (
     "Loaded {count:,} configs from '{path}'."
@@ -207,6 +224,9 @@ TEMPLATE_CONFIG_SORT_COMPLETED = (
 )
 TEMPLATE_CONFIG_SORT_STARTED = (
     "Sorting {count:,} configs by fields: {fields} (reverse={reverse})..."
+)
+TEMPLATE_ERROR_CONFIG_IMPORT_FAILED = (
+    "Failed to import configs from '{path}': invalid or empty JSON file."
 )
 TEMPLATE_ERROR_CONFIG_MISSING_REQUIRED_FIELDS = (
     "{protocol} config is missing required fields: {fields}"

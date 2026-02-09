@@ -14,6 +14,7 @@ from pathlib import (
 
 from tests.unit.core.constants.common import (
     DEFAULT_LOG_LINE_LENGTH,
+    DEFAULT_PATH_PROJECT,
 )
 
 __all__ = [
@@ -32,6 +33,7 @@ __all__ = [
     "NORMALIZE_SCALAR_EXAMPLES",
     "NORMALIZE_VALID_FIELDS_VALID_EXAMPLES",
     "PARSE_VALID_FIELDS_INVALID_EXAMPLES",
+    "REL_PATH_EXAMPLES",
     "REPEAT_CHAR_LINE_EXAMPLES",
     "RE_FULLMATCH_AND_SEARCH_EXAMPLES",
     "VALIDATE_FILE_PATH_SUCCESS_EXAMPLES",
@@ -943,6 +945,67 @@ RE_FULLMATCH_AND_SEARCH_EXAMPLES: tuple[
         False,
         True,
         "underscore_var_with_digits",
+    ),
+)
+
+REL_PATH_EXAMPLES: tuple[
+    tuple[
+        str,
+        str,
+    ],
+    ...,
+] = (
+    (
+        "/etc/default",
+        "absolute_outside_etc_default",
+    ),
+    (
+        str(Path.home().resolve()),
+        "absolute_outside_home",
+    ),
+    (
+        str(Path("/usr/local/bin").resolve()),
+        "absolute_outside_usr_local_bin",
+    ),
+    (
+        str(DEFAULT_PATH_PROJECT / "channels/current.json"),
+        "absolute_inside_channels",
+    ),
+    (
+        str(DEFAULT_PATH_PROJECT / "configs/v2ray-clean.txt"),
+        "absolute_inside_configs",
+    ),
+    (
+        str(DEFAULT_PATH_PROJECT / "logs/"),
+        "absolute_inside_logs",
+    ),
+    (
+        "../backup/",
+        "relative_backup",
+    ),
+    (
+        "channels/current.json",
+        "relative_channels",
+    ),
+    (
+        "configs/v2ray-clean.txt",
+        "relative_configs",
+    ),
+    (
+        "./configs/../configs/v2ray-clean.txt",
+        "relative_mixed",
+    ),
+    (
+        "../../other_dir/file.txt",
+        "relative_outside_other_dir",
+    ),
+    (
+        "../some_folder/file.txt",
+        "relative_outside_some_folder",
+    ),
+    (
+        ".",
+        "root_itself",
     ),
 )
 

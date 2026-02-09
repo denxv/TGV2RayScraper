@@ -566,15 +566,15 @@ python -m scripts.update_channels -h
 
 * **Global options**
 
-  * `--no-backup` - Skip creating backup copies of the channel list and Telegram URL files before saving (backups are created by default).
+  * `--no-backup` - Skip creating backup files for channel and Telegram URL lists. By default, backup is created.
 
-  * `--no-dry-run` - Disable check-only mode and actually apply changes, including assigning `current_id` (`dry-run` is enabled by default).
+  * `--no-dry-run` - Disable check-only mode and actually assign `current_id`. By default, `dry-run` mode is enabled.
 
 * **Input files**
 
   * `-C, --channels PATH` - Path to the JSON file containing the list of channels (default: `channels/current.json`).
 
-  * `-U, --urls PATH` - Path to the text file with new channel URLs (default: `channels/urls.txt`).
+  * `-U, --urls PATH` - Path to the input TXT file containing new channel URLs (default: `channels/urls.txt`).
 
 * **Channel selection**
 
@@ -584,7 +584,7 @@ python -m scripts.update_channels -h
 
 * **Channel actions**
 
-  * `-D, --delete-channels` - Delete unavailable channels or channels that meet deletion conditions (disabled by default).
+  * `-D, --delete-channels` - Delete channels that are unavailable or meet specific conditions. By default, deletion is disabled.
 
   * `-M, --message-offset N` - Number of recent messages taken into account when assigning `current_id`.
 
@@ -662,7 +662,7 @@ python -m scripts.scraper -h
 
   * `-C, --channels PATH` - Path to the input JSON file containing the list of channels (default: `channels/current.json`).
 
-  * `-R, --configs-raw PATH` - Path to the output file for saving extracted V2Ray configurations (default: `configs/v2ray-raw.txt`).
+  * `-R, --configs-raw PATH` - Path to the output TXT file for saving scraped V2Ray configs (default: `configs/v2ray-raw.txt`).
 
 * **Processing / Parallelism**
 
@@ -722,17 +722,23 @@ python -m scripts.v2ray_cleaner -h
 
 **Options**
 
-* **Input / Output files**
+* **Input files**
 
-  * `-I, --configs-raw PATH` - Path to the input file with raw V2Ray configs (default: `configs/v2ray-raw.txt`).
+  * `-I, --configs-raw PATH` - Path to the input TXT file with raw V2Ray configs for parsing (default: `configs/v2ray-raw.txt`).
 
-  * `-O, --configs-clean PATH` - Path to the output file for cleaned and processed configs (default: `configs/v2ray-clean.txt`).
+  * `--import [PATH]` - Path to the input JSON file with already parsed configs. If empty or invalid, raw configs will be parsed instead (default: `configs/v2ray.json`).
 
-* **Processing options**
+* **Output files**
 
-  * `-N, --no-normalize` - Disable data normalization (enabled by default).
+  * `-O, --configs-clean PATH` - Path to the output TXT file for cleaned and processed configs (default: `configs/v2ray-clean.txt`).
 
-* **Filtering and deduplication**
+  * `--export [PATH]` - Path to the output JSON file for exporting parsed configs for later reuse without re-parsing raw input (default: `configs/v2ray.json`).
+
+* **Normalization options**
+
+  * `-N, --no-normalize` - Disable normalization of configs. By default, normalization is enabled.
+
+* **Filter / Sort**
 
   * `-D, --duplicate [FIELDS]` - Remove duplicates by specified fields (default: `protocol, host, port`).
 
@@ -744,24 +750,28 @@ python -m scripts.v2ray_cleaner -h
 
 **The script performs the following:**
 
-* Reads raw V2Ray configurations from the file `configs/v2ray-raw.txt`.
+* Reads raw V2Ray configurations from the file `configs/v2ray-raw.txt` and parses them for further processing.
 
-* Applies filters based on Python-like conditions using the `--config-filter` parameter and optional normalization, which can be disabled with `--no-normalize`.
+* Imports already parsed configurations from a JSON file using the `--import` option. If the specified file is empty or invalid, raw configs are parsed instead.
 
-* Removes duplicates by specified fields when using the `--duplicate` option.
+* Applies filters based on Python-like conditions using the `--config-filter` parameter and performs optional normalization, which can be disabled with `--no-normalize`.
 
-* Sorts entries by specified fields with `--sort` and can reverse the order with `--reverse`.
+* Removes duplicate entries based on specified fields when using the `--duplicate` option.
+
+* Sorts entries by the specified fields using `--sort` and can reverse the order with `--reverse` if needed.
 
 * Saves the cleaned and processed configurations to the file `configs/v2ray-clean.txt`.
 
-* Supports flexible selection of fields for filtering, sorting, and duplicate removal, allowing extraction of only the desired configurations.
+* Exports parsed configurations to a JSON file using the `--export` option for later reuse without re-parsing the raw input.
+
+* Supports flexible selection of fields for filtering, sorting, and removing duplicates, allowing extraction of only the required configurations.
 
 * Logs detailed information about the processing, including errors and warnings for each configuration.
 
 **Example usage:**
 
 ```bash
-python -m scripts.v2ray_cleaner -I configs/v2ray-raw.txt -O configs/v2ray-clean.txt -F "re_search(r'speedtest|google', host)" --reverse -D "host, port" -S "protocol, host, port"
+python -m scripts.v2ray_cleaner -I configs/v2ray-raw.txt -O configs/v2ray-clean.txt -F "re_search(r'speedtest|google', host)" --reverse -D "host, port" -S "protocol, host, port" --import configs/v2ray.json --export
 ```
 
 > You can add `uv run` before the `python` command to run it through `uv`.

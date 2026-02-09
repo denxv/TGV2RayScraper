@@ -68,9 +68,9 @@ from domain.predicates import (
 __all__ = [
     "filter_by_condition",
     "line_to_configs",
-    "normalize",
     "normalize_config",
     "normalize_config_base64",
+    "normalize_configs",
     "normalize_ss_base64",
     "normalize_ssr_base64",
     "normalize_vmess_base64",
@@ -132,51 +132,6 @@ def line_to_configs(
             string=url_match.group("url"),
         )
     )
-
-
-def normalize(
-    configs: V2RayConfigsRaw,
-) -> V2RayConfigs:
-    total_before = len(configs)
-    logger.info(
-        msg=TEMPLATE_CONFIG_NORMALIZE_STARTED.format(
-            count=total_before,
-        ),
-    )
-
-    normalized_configs: V2RayConfigs = []
-
-    for _config in configs:
-        try:
-            normalized_configs.append(
-                normalize_config(
-                    config=_config,
-                ),
-            )
-        except Exception as e:  # noqa: PERF203
-            logger.debug(
-                msg=TEMPLATE_ERROR_CONFIG_UNEXPECTED_FAILURE.format(
-                    config=dumps(
-                        obj=_config,
-                        default=str,
-                        ensure_ascii=False,
-                        indent=DEFAULT_JSON_INDENT,
-                        sort_keys=True,
-                    ),
-                    exc_type=type(e).__name__,
-                    exc_msg=str(e),
-                ),
-            )
-
-    total_after = len(normalized_configs)
-    logger.info(
-        msg=TEMPLATE_CONFIG_NORMALIZE_COMPLETED.format(
-            count=total_after,
-            removed=total_before - total_after,
-        ),
-    )
-
-    return normalized_configs
 
 
 def normalize_config(
@@ -275,6 +230,51 @@ def normalize_config_base64(
         return normalizer(config)
 
     return dict(config)
+
+
+def normalize_configs(
+    configs: V2RayConfigsRaw,
+) -> V2RayConfigs:
+    total_before = len(configs)
+    logger.info(
+        msg=TEMPLATE_CONFIG_NORMALIZE_STARTED.format(
+            count=total_before,
+        ),
+    )
+
+    normalized_configs: V2RayConfigs = []
+
+    for _config in configs:
+        try:
+            normalized_configs.append(
+                normalize_config(
+                    config=_config,
+                ),
+            )
+        except Exception as e:  # noqa: PERF203
+            logger.debug(
+                msg=TEMPLATE_ERROR_CONFIG_UNEXPECTED_FAILURE.format(
+                    config=dumps(
+                        obj=_config,
+                        default=str,
+                        ensure_ascii=False,
+                        indent=DEFAULT_JSON_INDENT,
+                        sort_keys=True,
+                    ),
+                    exc_type=type(e).__name__,
+                    exc_msg=str(e),
+                ),
+            )
+
+    total_after = len(normalized_configs)
+    logger.info(
+        msg=TEMPLATE_CONFIG_NORMALIZE_COMPLETED.format(
+            count=total_after,
+            removed=total_before - total_after,
+        ),
+    )
+
+    return normalized_configs
 
 
 def normalize_ss_base64(
@@ -517,15 +517,10 @@ def normalize_vmess_base64(
 
 
 def process_configs(
-    configs: V2RayConfigsRaw,
+    configs: V2RayConfigs,
     args: ArgsNamespace,
 ) -> V2RayConfigs:
-    _configs: V2RayConfigs = configs  # type: ignore[assignment]
-
-    if args.normalize:
-        _configs = normalize(
-            configs=configs,
-        )
+    _configs: V2RayConfigs = configs
 
     if args.config_filter:
         _configs = filter_by_condition(

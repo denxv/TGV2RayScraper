@@ -28,11 +28,12 @@ from core.utils import (
     parse_valid_fields,
     re_fullmatch,
     re_search,
+    rel_path,
     repeat_char_line,
     validate_file_path,
 )
 from tests.unit.core.constants.common import (
-    ABS_PATH,
+    DEFAULT_PATH_PROJECT,
     FORMAT_BACKUP_DATE,
     TEMPLATE_ERROR_EXPECTED_FILE,
     TEMPLATE_ERROR_FILE_NOT_EXIST,
@@ -73,6 +74,8 @@ from tests.unit.core.constants.test_cases.utils import (
     PARSE_VALID_FIELDS_INVALID_CASES,
     RE_FULLMATCH_AND_SEARCH_EXTENDED_ARGS,
     RE_FULLMATCH_AND_SEARCH_EXTENDED_CASES,
+    REL_PATH_ARGS,
+    REL_PATH_CASES,
     REPEAT_CHAR_LINE_ARGS,
     REPEAT_CHAR_LINE_CASES,
     VALIDATE_FILE_PATH_SUCCESS_ARGS,
@@ -119,7 +122,6 @@ def test_abs_path_absolute(
 
     assert isinstance(result, str)
     assert result == str(absolute_path)
-    assert result == ABS_PATH(absolute_path)
 
 
 @pytest.mark.parametrize(
@@ -133,9 +135,6 @@ def test_abs_path_invalid_type(
         abs_path(
             path=invalid_input,
         )
-
-    with pytest.raises(TypeError):
-        ABS_PATH(invalid_input)
 
 
 @pytest.mark.parametrize(
@@ -158,7 +157,6 @@ def test_abs_path_relative(
 
     assert isinstance(result, str)
     assert result == expected
-    assert result == ABS_PATH(input_path)
 
 
 @pytest.mark.parametrize(
@@ -431,6 +429,34 @@ def test_re_fullmatch_and_search_extended(
 
     assert result_fullmatch is expected_fullmatch
     assert result_search is expected_search
+
+
+@pytest.mark.parametrize(
+    REL_PATH_ARGS,
+    REL_PATH_CASES,
+)
+def test_rel_path(
+    input_path: str,
+) -> None:
+    root = DEFAULT_PATH_PROJECT
+
+    if not Path(input_path).is_absolute():
+        test_path = (root / input_path).resolve()
+    else:
+        test_path = Path(input_path).resolve()
+
+    result = rel_path(
+        path=test_path,
+        root=root,
+    )
+
+    if test_path.is_relative_to(root):
+        expected = str(test_path.relative_to(root.resolve()))
+    else:
+        expected = str(test_path)
+
+    assert isinstance(result, str)
+    assert result == expected
 
 
 @pytest.mark.parametrize(

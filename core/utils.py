@@ -22,6 +22,7 @@ from re import (
 from core.constants.common import (
     BASE64_BLOCK_SIZE,
     DEFAULT_LOG_LINE_LENGTH,
+    DEFAULT_PATH_PROJECT,
     DEFAULT_VALUE_MAX,
     DEFAULT_VALUE_MIN,
 )
@@ -372,6 +373,17 @@ def re_search(
             pattern=pattern,
             string=string,
         ),
+    )
+
+
+def rel_path(
+    path: FilePath,
+    root: FilePath = DEFAULT_PATH_PROJECT,
+) -> str:
+    path, root = Path(path).resolve(), Path(root).resolve()
+    return (
+        str(path.relative_to(root))
+        if path.is_relative_to(root) else str(path)
     )
 
 

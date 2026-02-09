@@ -28,8 +28,8 @@ from tests.unit.core.constants.common import (
     COLORS,
     DEBUG,
     DEFAULT_JSON_INDENT,
-    DEFAULT_LOG_DIR,
     DEFAULT_LOGGER_NAME,
+    DEFAULT_PATH_LOGS,
     FORMAT_LOG_FILENAME_DATE,
     INFO,
     TEMPLATE_ERROR_FAILED_SERIALIZATION,
@@ -144,7 +144,7 @@ def test_create_logger_uses_correct_log_path(
 
     mock_fh_cls.assert_called_once_with(
         filename=TEMPLATE_FORMAT_FILE_LOG_PATH.format(
-            dir=DEFAULT_LOG_DIR,
+            dir=DEFAULT_PATH_LOGS,
             name=frozen_datetime_offset.strftime(
                 FORMAT_LOG_FILENAME_DATE,
             ),

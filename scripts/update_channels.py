@@ -35,6 +35,7 @@ from core.typing import (
 from core.utils import (
     abs_path,
     convert_number_in_range,
+    rel_path,
     validate_file_path,
 )
 from domain.channel import (
@@ -77,9 +78,8 @@ def parse_args() -> ArgsNamespace:
         action="store_false",
         dest="backup",
         help=(
-            "Skip creating backup files for channel and "
-            "Telegram URL lists before saving "
-            "(default: enabled)."
+            "Skip creating backup files for channel and Telegram URL lists. "
+            "By default, backup is created."
         ),
     )
     group_global.add_argument(
@@ -87,8 +87,8 @@ def parse_args() -> ArgsNamespace:
         action="store_false",
         dest="dry_run",
         help=(
-            "Disable check-only mode and actually assign 'current_id' "
-            "(default: enabled)."
+            "Disable check-only mode and actually assign 'current_id'. "
+            "By default, dry-run mode is enabled."
         ),
     )
 
@@ -103,7 +103,7 @@ def parse_args() -> ArgsNamespace:
         dest="channels_path",
         help=(
             "Path to the input JSON file containing the list of channels "
-            "(default: %(default)s)."
+            f"(default: {rel_path(DEFAULT_PATH_CHANNELS)})."
         ),
         metavar="PATH",
         type=lambda path: validate_file_path(
@@ -118,8 +118,8 @@ def parse_args() -> ArgsNamespace:
         ),
         dest="urls_path",
         help=(
-            "Path to a text file containing new channel URLs "
-            "(default: %(default)s)."
+            "Path to the input TXT file containing new channel URLs "
+            f"(default: {rel_path(DEFAULT_PATH_URLS)})."
         ),
         metavar="PATH",
         type=lambda path: validate_file_path(
@@ -154,7 +154,7 @@ def parse_args() -> ArgsNamespace:
         dest="delete_channels",
         help=(
             "Delete channels that are unavailable or "
-            "meet specific conditions (default: disabled)."
+            "meet specific conditions. By default, deletion is disabled."
         ),
     )
     group_actions.add_argument(

@@ -1,11 +1,11 @@
 from core.constants.common import (
-    ABS_PATH,
     COLORS,
     DEBUG,
     DEFAULT_JSON_INDENT,
-    DEFAULT_LOG_DIR,
     DEFAULT_LOG_LINE_LENGTH,
     DEFAULT_LOGGER_NAME,
+    DEFAULT_PATH_LOGS,
+    DEFAULT_PATH_PROJECT,
     INFO,
 )
 from core.constants.formats import (
@@ -27,13 +27,13 @@ from core.constants.templates import (
 )
 
 __all__ = [
-    "ABS_PATH",
     "COLORS",
     "DEBUG",
     "DEFAULT_JSON_INDENT",
     "DEFAULT_LOGGER_NAME",
-    "DEFAULT_LOG_DIR",
     "DEFAULT_LOG_LINE_LENGTH",
+    "DEFAULT_PATH_LOGS",
+    "DEFAULT_PATH_PROJECT",
     "FORMAT_BACKUP_DATE",
     "FORMAT_LOG_FILENAME_DATE",
     "FORMAT_LOG_TIME_MICROSECONDS",

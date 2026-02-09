@@ -13,10 +13,10 @@ from lxml import (
 
 from core.constants.common import (
     DEFAULT_CURRENT_ID,
-    DEFAULT_FILE_CHANNELS,
-    DEFAULT_FILE_URLS,
     DEFAULT_JSON_INDENT,
     DEFAULT_LAST_ID,
+    DEFAULT_PATH_CHANNELS,
+    DEFAULT_PATH_URLS,
     POST_DEFAULT_ID,
     POST_DEFAULT_INDEX,
     POST_FIRST_ID,
@@ -143,7 +143,7 @@ async def get_last_post_id(
 
 
 async def load_channels(
-    channels_path: FilePath = DEFAULT_FILE_CHANNELS,
+    channels_path: FilePath = DEFAULT_PATH_CHANNELS,
 ) -> ChannelsDict:
     async with aiopen(
         file=channels_path,
@@ -166,8 +166,8 @@ async def load_channels(
     tracking=False,
 )
 async def load_channels_and_urls(  # type: ignore[misc]
-    channels_path: FilePath = DEFAULT_FILE_CHANNELS,
-    urls_path: FilePath = DEFAULT_FILE_URLS,
+    channels_path: FilePath = DEFAULT_PATH_CHANNELS,
+    urls_path: FilePath = DEFAULT_PATH_URLS,
 ) -> ChannelsAndNames:
     current_channels = await load_channels(
         channels_path=channels_path,
@@ -190,7 +190,7 @@ async def load_channels_and_urls(  # type: ignore[misc]
 
 async def save_channels(
     channels: ChannelsDict,
-    channels_path: FilePath = DEFAULT_FILE_CHANNELS,
+    channels_path: FilePath = DEFAULT_PATH_CHANNELS,
 ) -> None:
     normalized_channels = normalize_channel_names(
         channels=channels,
@@ -225,8 +225,8 @@ async def save_channels(
 )
 async def save_channels_and_urls(  # type: ignore[misc]
     channels: ChannelsDict,
-    channels_path: FilePath = DEFAULT_FILE_CHANNELS,
-    urls_path: FilePath = DEFAULT_FILE_URLS,
+    channels_path: FilePath = DEFAULT_PATH_CHANNELS,
+    urls_path: FilePath = DEFAULT_PATH_URLS,
     *,
     make_backups: bool = True,
 ) -> None:
