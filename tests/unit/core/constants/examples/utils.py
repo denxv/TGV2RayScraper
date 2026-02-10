@@ -346,6 +346,7 @@ COLLECT_ARGS_COMBINED_EXAMPLES: tuple[
     (
         Namespace(
             config=None,
+            const="",
             dry_run=False,
             output="log.txt",
             retry=0,
@@ -353,6 +354,7 @@ COLLECT_ARGS_COMBINED_EXAMPLES: tuple[
             verbose=True,
         ),
         [
+            "--const",
             "--config",
             "--dry-run",
             "--output",
@@ -361,6 +363,7 @@ COLLECT_ARGS_COMBINED_EXAMPLES: tuple[
             "--verbose",
         ],
         [
+            "--const",
             "--dry-run",
             "--output",
             "log.txt",

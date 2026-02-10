@@ -18,6 +18,8 @@ from core.constants.common import (
     DEFAULT_CHANNEL_VALUES,
     DEFAULT_HELP_INDENT,
     DEFAULT_HELP_WIDTH,
+    DEFAULT_PATH_CONFIGS_EXPORT,
+    DEFAULT_PATH_CONFIGS_IMPORT,
     HTTP_TIMEOUT_MAX,
     HTTP_TIMEOUT_MIN,
     MESSAGE_OFFSET_MAX,
@@ -127,7 +129,7 @@ def parse_args() -> ArgsNamespace:
         help=SUPPRESS,
         type=lambda path: validate_file_path(
             path=path,
-            must_be_file=False,
+            must_be_file=True,
         ),
     )
 
@@ -147,6 +149,17 @@ def parse_args() -> ArgsNamespace:
     )
 
     parser.add_argument(
+        "--export",
+        const=DEFAULT_PATH_CONFIGS_EXPORT,
+        help=SUPPRESS,
+        nargs="?",
+        type=lambda path: validate_file_path(
+            path=path,
+            must_be_file=False,
+        ),
+    )
+
+    parser.add_argument(
         "-h", "--help",
         action="help",
         help=SUPPRESS,
@@ -156,6 +169,17 @@ def parse_args() -> ArgsNamespace:
         "-H", "--help-scripts",
         action="store_true",
         help="Display help information for all internal pipeline scripts.",
+    )
+
+    parser.add_argument(
+        "--import",
+        const=DEFAULT_PATH_CONFIGS_IMPORT,
+        help=SUPPRESS,
+        nargs="?",
+        type=lambda path: validate_file_path(
+            path=path,
+            must_be_file=True,
+        ),
     )
 
     parser.add_argument(

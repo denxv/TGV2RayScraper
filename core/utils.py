@@ -170,7 +170,10 @@ def collect_args(
             name=attr_name,
         )
 
-        if isinstance(value, bool):
+        if (
+            isinstance(value, bool)
+            or (isinstance(value, str) and not value)
+        ):
             params.append(cli_flag)
         else:
             params.extend([
