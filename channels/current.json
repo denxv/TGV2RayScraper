@@ -1601,12 +1601,6 @@
         "last_id": -1,
         "state": 0
     },
-    "v2rayng_channel_vpn": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "v2rayng_fars": {
         "count": 0,
         "current_id": 1,
@@ -1692,12 +1686,6 @@
         "state": 0
     },
     "v2rayvpn2": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "v2rayvpnchannel": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
