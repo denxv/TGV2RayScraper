@@ -617,12 +617,6 @@
         "last_id": -1,
         "state": 0
     },
-    "ip_cf_config": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "ipv2ray": {
         "count": 0,
         "current_id": 1,
@@ -1086,12 +1080,6 @@
         "state": 0
     },
     "qrv2ray": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "radiofarex": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -1614,12 +1602,6 @@
         "state": 0
     },
     "v2rayng_ip": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "v2rayng_matsuri": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
