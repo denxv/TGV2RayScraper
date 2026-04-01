@@ -1733,12 +1733,6 @@
         "last_id": -1,
         "state": 0
     },
-    "vless_config": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "vless_vpns": {
         "count": 0,
         "current_id": 1,
