@@ -1025,12 +1025,6 @@
         "last_id": -1,
         "state": 0
     },
-    "vpnconectd": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "vpnfail_v2ray": {
         "count": 0,
         "current_id": 1,

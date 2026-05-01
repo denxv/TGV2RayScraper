@@ -20,6 +20,7 @@ from core.constants.common import (
     DEFAULT_HELP_WIDTH,
     DEFAULT_PATH_CONFIGS_EXPORT,
     DEFAULT_PATH_CONFIGS_IMPORT,
+    DEFAULT_PROXY_URL,
     HTTP_TIMEOUT_MAX,
     HTTP_TIMEOUT_MIN,
     MESSAGE_OFFSET_MAX,
@@ -49,6 +50,7 @@ from core.utils import (
     normalize_valid_fields,
     repeat_char_line,
     validate_file_path,
+    validate_proxy_url,
 )
 
 
@@ -213,6 +215,14 @@ def parse_args() -> ArgsNamespace:
         action="store_const",
         const="",
         help=SUPPRESS,
+    )
+
+    parser.add_argument(
+        "--proxy",
+        const=DEFAULT_PROXY_URL,
+        help=SUPPRESS,
+        nargs="?",
+        type=validate_proxy_url,
     )
 
     parser.add_argument(

@@ -9,6 +9,8 @@ from asyncio import (
 
 from httpx import (
     AsyncClient,
+    ConnectError,
+    ProxyError,
     Timeout,
 )
 
@@ -33,6 +35,7 @@ from core.constants.common import (
     DEFAULT_HELP_WIDTH,
     DEFAULT_PATH_CHANNELS,
     DEFAULT_PATH_CONFIGS_RAW,
+    DEFAULT_PROXY_URL,
     HTTP_TIMEOUT_DEFAULT,
     HTTP_TIMEOUT_MAX,
     HTTP_TIMEOUT_MIN,
@@ -41,6 +44,10 @@ from core.constants.common import (
 from core.constants.messages import (
     MESSAGE_ERROR_PROGRAM_EXIT,
     MESSAGE_ERROR_UNEXPECTED_FAILURE,
+)
+from core.constants.templates import (
+    TEMPLATE_ERROR_PROXY_AUTH_OR_PROTOCOL,
+    TEMPLATE_ERROR_PROXY_NETWORK,
 )
 from core.logger import (
     log_debug_object,
@@ -54,6 +61,7 @@ from core.utils import (
     convert_number_in_range,
     rel_path,
     validate_file_path,
+    validate_proxy_url,
 )
 from domain.channel import (
     print_channel_info,
@@ -69,7 +77,7 @@ def parse_args() -> ArgsNamespace:
         epilog=(
             "Example: PYTHONPATH=. python scripts/%(prog)s "
             "-C channels/current.json -R configs/v2ray-raw.txt "
-            "-E 20 -U 100 --time-out 30.0"
+            "-E 20 -U 100 --proxy --time-out 30.0"
         ),
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
@@ -158,7 +166,21 @@ def parse_args() -> ArgsNamespace:
     )
 
     group_network = parser.add_argument_group(
-        "Network / Timeout",
+        "Network / Proxy / Timeout",
+    )
+    group_network.add_argument(
+        "-P", "--proxy",
+        const=DEFAULT_PROXY_URL,
+        default=None,
+        dest="proxy_url",
+        help=(
+            "Proxy server URL. Takes precedence over environment variables. "
+            "Otherwise checks HTTPS_PROXY, HTTP_PROXY, and ALL_PROXY. "
+            "Falls back to local proxy if none are set (default: %(const)s)."
+        ),
+        metavar="URL",
+        nargs="?",
+        type=validate_proxy_url,
     )
     group_network.add_argument(
         "-T", "--time-out",
@@ -198,6 +220,7 @@ async def main() -> None:
         )
 
         async with AsyncClient(
+            proxy=parsed_args.proxy_url,
             timeout=Timeout(
                 timeout=parsed_args.time_out,
             ),
@@ -222,6 +245,22 @@ async def main() -> None:
     ):
         logger.info(
             msg=MESSAGE_ERROR_PROGRAM_EXIT,
+        )
+    except ProxyError as e:
+        logger.error(
+            msg=TEMPLATE_ERROR_PROXY_AUTH_OR_PROTOCOL.format(
+                url=parsed_args.proxy_url,
+                exc_type=type(e).__name__,
+                exc_msg=str(e),
+            ),
+        )
+    except ConnectError as e:
+        logger.error(
+            msg=TEMPLATE_ERROR_PROXY_NETWORK.format(
+                url=parsed_args.proxy_url,
+                exc_type=type(e).__name__,
+                exc_msg=str(e),
+            ),
         )
     except Exception:
         logger.exception(

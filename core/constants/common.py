@@ -8,6 +8,9 @@ from logging import (
 from pathlib import (
     Path,
 )
+from urllib.request import (
+    getproxies,
+)
 
 from core.typing import (
     ChannelInfo,
@@ -46,6 +49,7 @@ __all__ = [
     "DEFAULT_PATH_LOGS",
     "DEFAULT_PATH_PROJECT",
     "DEFAULT_PATH_URLS",
+    "DEFAULT_PROXY_URL",
     "DEFAULT_STATE",
     "DEFAULT_VALUE_MAX",
     "DEFAULT_VALUE_MIN",
@@ -56,6 +60,8 @@ __all__ = [
     "MESSAGE_OFFSET_DEFAULT",
     "MESSAGE_OFFSET_MAX",
     "MESSAGE_OFFSET_MIN",
+    "PORT_MAX",
+    "PORT_MIN",
     "POST_DEFAULT_ID",
     "POST_DEFAULT_INDEX",
     "POST_FIRST_ID",
@@ -108,6 +114,15 @@ DEFAULT_CHANNEL_VALUES: ChannelInfo = {
     "state": DEFAULT_STATE,
 }
 
+_ENV_PROXIES = getproxies()
+
+DEFAULT_PROXY_URL = (
+    _ENV_PROXIES.get("https")       # HTTPS_PROXY
+    or _ENV_PROXIES.get("http")     # HTTP_PROXY
+    or _ENV_PROXIES.get("all")      # ALL_PROXY
+    or "socks5://127.0.0.1:10808"   # Fallback: local proxy (v2rayN)
+)
+
 CLI_SCRIPTS_CONFIG = {
     "update_channels": {
         "flags": sorted([
@@ -131,6 +146,7 @@ CLI_SCRIPTS_CONFIG = {
             "--batch-update",
             "--channels",
             "--configs-raw",
+            "--proxy",
             "--time-out",
         ],
     },
@@ -189,6 +205,9 @@ HTTP_TIMEOUT_MIN = 0.1
 MESSAGE_OFFSET_DEFAULT = 50
 MESSAGE_OFFSET_MAX = 1000
 MESSAGE_OFFSET_MIN = 1
+
+PORT_MAX = 65535
+PORT_MIN = 1
 
 POST_DEFAULT_ID = 0
 POST_DEFAULT_INDEX = 0

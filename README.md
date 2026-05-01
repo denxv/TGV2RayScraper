@@ -170,9 +170,9 @@ The project requires the following Python libraries (works with Python ≥ 3.10)
 
 * **aiofiles** – asynchronous file handling
 
-* **asteval** - safe evaluation of Python expressions (used for filtering channels and configurations)
+* **asteval** – safe evaluation of Python expressions (used for filtering channels and configurations)
 
-* **httpx** - modern HTTP client with support for both synchronous and asynchronous requests
+* **httpx[socks]** – modern HTTP client with async support and SOCKS proxy capabilities (includes `socksio` dependency)
 
 * **lxml** – parsing and processing HTML/XML
 
@@ -670,7 +670,13 @@ python -m scripts.scraper -h
 
   * `-U, --batch-update N` - Maximum number of channels updated in parallel (default: `100`).
 
-* **Network / Timeout**
+* **Network / Proxy / Timeout**
+
+  * `-P, --proxy [URL]` - Proxy server URL. Takes precedence over environment variables. Otherwise checks `HTTPS_PROXY` `HTTP_PROXY`, and `ALL_PROXY`. Falls back to local proxy if none are set (default: `socks5://127.0.0.1:10808`).
+
+    * Supported protocols: `http`, `https`, `socks5`, `socks5h`.
+
+    * Format: `protocol://[username:password@]host:port`.
 
   * `-T, --time-out SECONDS` - HTTP client timeout in seconds for requests used while updating channel info and extracting V2Ray configurations (default: `30.0`).
 
@@ -682,6 +688,8 @@ python -m scripts.scraper -h
 
 * Updates channels in parallel, with the number of channels updated at the same time set by `--batch-update`.
 
+* Performs all network requests through the proxy server specified in the `--proxy` parameter.
+
 * Uses an HTTP client with the `--time-out` for updating channels and extracting configurations.
 
 * Saves the extracted V2Ray configurations to the file `configs/v2ray-raw.txt`.
@@ -691,7 +699,7 @@ python -m scripts.scraper -h
 **Example usage:**
 
 ```bash
-python -m scripts.scraper -C channels/current.json -R configs/v2ray-raw.txt -E 20 -U 100 --time-out 30.0
+python -m scripts.scraper -C channels/current.json -R configs/v2ray-raw.txt -E 20 -U 100 --proxy socks5://127.0.0.1:10808 --time-out 30.0
 ```
 
 > You can add `uv run` before the `python` command to run it through `uv`.
@@ -815,7 +823,7 @@ python main.py --help-scripts
 **Example usage:**
 
 ```bash
-python main.py --batch-extract 10 --batch-update 100 --filter "host and port" --duplicate --sort "protocol" --reverse
+python main.py --batch-extract 10 --batch-update 100 --proxy --filter "host and port" --duplicate --sort "protocol" --reverse
 ```
 
 > You can add `uv run` before the `python` command to run it through `uv`.

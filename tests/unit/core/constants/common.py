@@ -6,6 +6,7 @@ from core.constants.common import (
     DEFAULT_LOGGER_NAME,
     DEFAULT_PATH_LOGS,
     DEFAULT_PATH_PROJECT,
+    DEFAULT_PROXY_URL,
     INFO,
 )
 from core.constants.formats import (
@@ -34,6 +35,7 @@ __all__ = [
     "DEFAULT_LOG_LINE_LENGTH",
     "DEFAULT_PATH_LOGS",
     "DEFAULT_PATH_PROJECT",
+    "DEFAULT_PROXY_URL",
     "FORMAT_BACKUP_DATE",
     "FORMAT_LOG_FILENAME_DATE",
     "FORMAT_LOG_TIME_MICROSECONDS",

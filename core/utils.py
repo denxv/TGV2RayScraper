@@ -25,16 +25,20 @@ from core.constants.common import (
     DEFAULT_PATH_PROJECT,
     DEFAULT_VALUE_MAX,
     DEFAULT_VALUE_MIN,
+    PORT_MAX,
+    PORT_MIN,
 )
 from core.constants.formats import (
     FORMAT_BACKUP_DATE,
 )
 from core.constants.messages import (
     MESSAGE_ERROR_NO_FIELDS_PROVIDED,
+    MESSAGE_ERROR_PROXY_EMPTY,
 )
 from core.constants.patterns import (
     PATTERN_CONFIG_FIELD,
     PATTERN_PARAM_SEPARATOR,
+    PATTERN_PROXY_URL,
 )
 from core.constants.templates import (
     TEMPLATE_ERROR_DETECTED_DUPLICATE_FIELD,
@@ -45,6 +49,8 @@ from core.constants.templates import (
     TEMPLATE_ERROR_INVALID_NUMBER,
     TEMPLATE_ERROR_NUMBER_OUT_OF_RANGE,
     TEMPLATE_ERROR_PARENT_DIRECTORY_NOT_EXIST,
+    TEMPLATE_ERROR_PROXY_INVALID_FORMAT,
+    TEMPLATE_ERROR_PROXY_INVALID_PORT,
     TEMPLATE_FORMAT_FILE_BACKUP_NAME,
     TEMPLATE_FORMAT_STRING_BASE64_PADDING,
     TEMPLATE_MSG_FILE_BACKUP_COMPLETED,
@@ -432,3 +438,33 @@ def validate_file_path(
         )
 
     return str(filepath)
+
+
+def validate_proxy_url(value: str) -> str:
+    if not isinstance(value, str):
+        raise ArgumentTypeError(
+            TEMPLATE_ERROR_EXPECTED_STRING.format(
+                type_name=type(value).__name__,
+            ),
+        )
+
+    if not (proxy_url := value.strip()):
+        raise ArgumentTypeError(
+            MESSAGE_ERROR_PROXY_EMPTY,
+        )
+
+    if not (match := PATTERN_PROXY_URL.fullmatch(proxy_url)):
+        raise ArgumentTypeError(
+            TEMPLATE_ERROR_PROXY_INVALID_FORMAT.format(
+                proxy_url=proxy_url,
+            ),
+        )
+
+    if not (PORT_MIN <= (port := int(match.group("port"))) <= PORT_MAX):
+        raise ArgumentTypeError(
+            TEMPLATE_ERROR_PROXY_INVALID_PORT.format(
+                port=port,
+            ),
+        )
+
+    return proxy_url

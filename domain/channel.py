@@ -557,16 +557,21 @@ def update_last_id_and_state(
         "state",
         DEFAULT_STATE,
     )
+    log_message = TEMPLATE_CHANNEL_LOG_UPDATE.format(
+        name=channel_name,
+        last_id=last_id,
+        last_post_id=last_post_id,
+    )
 
     if last_id != last_post_id:
         logger.info(
-            msg=TEMPLATE_CHANNEL_LOG_UPDATE.format(
-                name=channel_name,
-                last_id=last_id,
-                last_post_id=last_post_id,
-            ),
+            msg=log_message,
         )
         channel_info["last_id"] = last_post_id
+    else:
+        logger.debug(
+            msg=log_message,
+        )
 
     if last_post_id != DEFAULT_LAST_ID:
         channel_info["state"] = CHANNEL_STATE_AVAILABLE

@@ -20,6 +20,8 @@ from tests.unit.core.constants.examples.utils import (
     REL_PATH_EXAMPLES,
     REPEAT_CHAR_LINE_EXAMPLES,
     VALIDATE_FILE_PATH_SUCCESS_EXAMPLES,
+    VALIDATE_PROXY_URL_INVALID_EXAMPLES,
+    VALIDATE_PROXY_URL_VALID_EXAMPLES,
 )
 
 __all__ = [
@@ -61,6 +63,10 @@ __all__ = [
     "RE_FULLMATCH_AND_SEARCH_EXTENDED_CASES",
     "VALIDATE_FILE_PATH_SUCCESS_ARGS",
     "VALIDATE_FILE_PATH_SUCCESS_CASES",
+    "VALIDATE_PROXY_URL_INVALID_ARGS",
+    "VALIDATE_PROXY_URL_INVALID_CASES",
+    "VALIDATE_PROXY_URL_VALID_ARGS",
+    "VALIDATE_PROXY_URL_VALID_CASES",
 ]
 
 ABS_PATH_ABSOLUTE_ARGS = (
@@ -326,11 +332,11 @@ PARSE_VALID_FIELDS_INVALID_ARGS = (
 )
 PARSE_VALID_FIELDS_INVALID_CASES = tuple(
     pytest.param(
-        value,
+        invalid_input,
         id=case_id,
     )
     for (
-        value,
+        invalid_input,
         case_id,
     ) in PARSE_VALID_FIELDS_INVALID_EXAMPLES
 )
@@ -344,7 +350,7 @@ RE_FULLMATCH_AND_SEARCH_EXTENDED_ARGS = (
 RE_FULLMATCH_AND_SEARCH_EXTENDED_CASES = tuple(
     pytest.param(
         pattern,
-        value,
+        string,
         expected_fullmatch,
         expected_search,
         id=(
@@ -355,7 +361,7 @@ RE_FULLMATCH_AND_SEARCH_EXTENDED_CASES = tuple(
     )
     for (
         pattern,
-        value,
+        string,
         expected_fullmatch,
         expected_search,
         case_id,
@@ -410,4 +416,35 @@ VALIDATE_FILE_PATH_SUCCESS_CASES = tuple(
         must_be_file,
         case_id,
     ) in VALIDATE_FILE_PATH_SUCCESS_EXAMPLES
+)
+
+VALIDATE_PROXY_URL_INVALID_ARGS = (
+    "invalid_input",
+)
+VALIDATE_PROXY_URL_INVALID_CASES = tuple(
+    pytest.param(
+        invalid_input,
+        id=case_id,
+    )
+    for (
+        invalid_input,
+        case_id,
+    ) in VALIDATE_PROXY_URL_INVALID_EXAMPLES
+)
+
+VALIDATE_PROXY_URL_VALID_ARGS = (
+    "proxy_url",
+    "expected",
+)
+VALIDATE_PROXY_URL_VALID_CASES = tuple(
+    pytest.param(
+        proxy_url,
+        expected,
+        id=case_id,
+    )
+    for (
+        proxy_url,
+        expected,
+        case_id,
+    ) in VALIDATE_PROXY_URL_VALID_EXAMPLES
 )

@@ -15,6 +15,7 @@ from pathlib import (
 from tests.unit.core.constants.common import (
     DEFAULT_LOG_LINE_LENGTH,
     DEFAULT_PATH_PROJECT,
+    DEFAULT_PROXY_URL,
 )
 
 __all__ = [
@@ -37,6 +38,8 @@ __all__ = [
     "REPEAT_CHAR_LINE_EXAMPLES",
     "RE_FULLMATCH_AND_SEARCH_EXAMPLES",
     "VALIDATE_FILE_PATH_SUCCESS_EXAMPLES",
+    "VALIDATE_PROXY_URL_INVALID_EXAMPLES",
+    "VALIDATE_PROXY_URL_VALID_EXAMPLES",
 ]
 
 ABS_PATH_ABSOLUTE_EXAMPLES: tuple[
@@ -1064,5 +1067,240 @@ VALIDATE_FILE_PATH_SUCCESS_EXAMPLES: tuple[
         "new_file.txt",
         False,
         "file_missing_must_be_file_false",
+    ),
+)
+
+VALIDATE_PROXY_URL_INVALID_EXAMPLES: tuple[
+    tuple[
+        object,
+        str,
+    ],
+    ...,
+] = (
+    (
+        "",
+        "empty_string",
+    ),
+    (
+        "http://host#name:8080",
+        "invalid_char_in_host",
+    ),
+    (
+        "http://user name:pass word@127.0.0.1:10808",
+        "malformed_auth_with_spaces",
+    ),
+    (
+        "http://:8080",
+        "missing_host",
+    ),
+    (
+        "http://",
+        "missing_host_and_port",
+    ),
+    (
+        "http://user@localhost:8080",
+        "missing_password",
+    ),
+    (
+        "http://localhost",
+        "missing_port",
+    ),
+    (
+        "http://hostname:",
+        "missing_port_value",
+    ),
+    (
+        "http://:password@host:8080",
+        "missing_username",
+    ),
+    (
+        "http://localhost:-80",
+        "negative_port",
+    ),
+    (
+        "not_a_url",
+        "no_protocol",
+    ),
+    (
+        "http://localhost:8080/extra",
+        "path_not_allowed",
+    ),
+    (
+        "http://localhost:abc",
+        "port_not_numeric",
+    ),
+    (
+        "http://localhost:99999",
+        "port_too_high",
+    ),
+    (
+        "http://localhost:0",
+        "port_zero",
+    ),
+    (
+        "http://localhost:8080?query=1",
+        "query_not_allowed",
+    ),
+    (
+        "http://us er:pass@host:8080",
+        "space_in_username",
+    ),
+    (
+        "http://user:pa ss@host:8080",
+        "space_in_password",
+    ),
+    (
+        "http://host name:8080",
+        "space_in_host",
+    ),
+    (
+        {},
+        "type_dict",
+    ),
+    (
+        123,
+        "type_int",
+    ),
+    (
+        [],
+        "type_list",
+    ),
+    (
+        None,
+        "type_none",
+    ),
+    (
+        object(),
+        "type_object",
+    ),
+    (
+        "http://my_proxy:8080",
+        "underscore_in_host",
+    ),
+    (
+        "ftp://proxy.com:8080",
+        "unsupported_protocol_ftp",
+    ),
+    (
+        "socks4://proxy.com:8080",
+        "unsupported_protocol_socks4",
+    ),
+    (
+        "tcp://proxy.com:8080",
+        "unsupported_protocol_tcp",
+    ),
+    (
+        "   ",
+        "whitespace_only",
+    ),
+)
+
+VALIDATE_PROXY_URL_VALID_EXAMPLES: tuple[
+    tuple[
+        str,
+        str,
+        str,
+    ],
+    ...,
+] = (
+    (
+        DEFAULT_PROXY_URL,
+        DEFAULT_PROXY_URL,
+        "default_proxy_url",
+    ),
+    (
+        "http://proxy.example.com:8080",
+        "http://proxy.example.com:8080",
+        "http_domain_no_auth",
+    ),
+    (
+        "http://admin:s3cret@proxy.local:3128",
+        "http://admin:s3cret@proxy.local:3128",
+        "http_domain_with_auth",
+    ),
+    (
+        "  http://127.0.0.1:8080  ",
+        "http://127.0.0.1:8080",
+        "http_ipv4_both_spaces",
+    ),
+    (
+        "  http://127.0.0.1:8080",
+        "http://127.0.0.1:8080",
+        "http_ipv4_leading_space",
+    ),
+    (
+        "http://127.0.0.1:8888",
+        "http://127.0.0.1:8888",
+        "http_ipv4_no_auth",
+    ),
+    (
+        "http://127.0.0.1:8080  ",
+        "http://127.0.0.1:8080",
+        "http_ipv4_trailing_space",
+    ),
+    (
+        "http://user:pass@127.0.0.1:8888",
+        "http://user:pass@127.0.0.1:8888",
+        "http_ipv4_with_auth",
+    ),
+    (
+        "http://localhost:3128",
+        "http://localhost:3128",
+        "http_localhost_no_auth",
+    ),
+    (
+        "https://user:p@ss:w0rd@secure.com:443",
+        "https://user:p@ss:w0rd@secure.com:443",
+        "https_complex_password",
+    ),
+    (
+        "https://secure-proxy.com:443",
+        "https://secure-proxy.com:443",
+        "https_domain_no_auth",
+    ),
+    (
+        "https://192.168.1.1:8443",
+        "https://192.168.1.1:8443",
+        "https_ipv4_no_auth",
+    ),
+    (
+        "socks5://proxy.com:1080",
+        "socks5://proxy.com:1080",
+        "socks5_domain_no_auth",
+    ),
+    (
+        "socks5://user:pass@proxy.com:1080",
+        "socks5://user:pass@proxy.com:1080",
+        "socks5_domain_with_auth",
+    ),
+    (
+        "socks5://[::1]:1080",
+        "socks5://[::1]:1080",
+        "socks5_ipv6_no_auth",
+    ),
+    (
+        "socks5://user:pass@[::1]:1080",
+        "socks5://user:pass@[::1]:1080",
+        "socks5_ipv6_with_auth",
+    ),
+    (
+        "socks5h://tor-proxy.local:9050",
+        "socks5h://tor-proxy.local:9050",
+        "socks5h_domain_no_auth",
+    ),
+    (
+        "socks5h://alice:wonderland@tor.net:9050",
+        "socks5h://alice:wonderland@tor.net:9050",
+        "socks5h_domain_with_auth",
+    ),
+    (
+        "socks5h://[2001:db8::1]:1080",
+        "socks5h://[2001:db8::1]:1080",
+        "socks5h_ipv6_no_auth",
+    ),
+    (
+        "socks5h://user:pass@[2001:db8::1]:1080",
+        "socks5h://user:pass@[2001:db8::1]:1080",
+        "socks5h_ipv6_with_auth",
     ),
 )

@@ -9,6 +9,7 @@ __all__ = [
     "PATTERNS_V2RAY_URLS_BY_PROTOCOL",
     "PATTERN_CONFIG_FIELD",
     "PATTERN_PARAM_SEPARATOR",
+    "PATTERN_PROXY_URL",
     "PATTERN_TG_CHANNEL_NAME",
     "PATTERN_URL_ANYTLS",
     "PATTERN_URL_HYSTERIA2",
@@ -32,9 +33,33 @@ PATTERN_CONFIG_FIELD = re_compile(
 PATTERN_PARAM_SEPARATOR = re_compile(
     r"\s*,\s*|\s+",
 )
+
+PATTERN_PROXY_URL = re_compile(
+    r"(?P<url>"
+        r"(?P<protocol>"
+            r"https?"
+        r"|"
+            r"socks5h?"
+        r")://"
+        r"(?P<body>"
+            r"(?:"
+                r"(?P<username>[^:@\s]+)"
+                r":(?P<password>\S+)@"
+            r")?"
+            r"(?P<host>"
+                r"\[[0-9a-fA-F:]+\]"
+            r"|"
+                r"[0-9a-zA-Z.-]+"
+            r")"
+            r":(?P<port>\d{1,5})"
+        r")"
+    r")",
+)
+
 PATTERN_TG_CHANNEL_NAME = re_compile(
     r"\bhttps?://t\.me/(?:s/)?([\w]+)",
 )
+
 PATTERN_V2RAY_PROTOCOLS_URL = re_compile(
     r"(?P<url>"
         r"(?P<protocol>"

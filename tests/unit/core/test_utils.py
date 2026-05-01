@@ -31,6 +31,7 @@ from core.utils import (
     rel_path,
     repeat_char_line,
     validate_file_path,
+    validate_proxy_url,
 )
 from tests.unit.core.constants.common import (
     DEFAULT_PATH_PROJECT,
@@ -80,6 +81,10 @@ from tests.unit.core.constants.test_cases.utils import (
     REPEAT_CHAR_LINE_CASES,
     VALIDATE_FILE_PATH_SUCCESS_ARGS,
     VALIDATE_FILE_PATH_SUCCESS_CASES,
+    VALIDATE_PROXY_URL_INVALID_ARGS,
+    VALIDATE_PROXY_URL_INVALID_CASES,
+    VALIDATE_PROXY_URL_VALID_ARGS,
+    VALIDATE_PROXY_URL_VALID_CASES,
 )
 
 
@@ -536,3 +541,32 @@ def test_validate_file_path_success(
         file_path.resolve(),
     )
     assert Path(result).resolve() == file_path.resolve()
+
+
+@pytest.mark.parametrize(
+    VALIDATE_PROXY_URL_INVALID_ARGS,
+    VALIDATE_PROXY_URL_INVALID_CASES,
+)
+def test_validate_proxy_url_invalid(
+    invalid_input: object,
+) -> None:
+    with pytest.raises(ArgumentTypeError):
+        validate_proxy_url(
+            value=invalid_input,
+        )
+
+
+@pytest.mark.parametrize(
+    VALIDATE_PROXY_URL_VALID_ARGS,
+    VALIDATE_PROXY_URL_VALID_CASES,
+)
+def test_validate_proxy_url_valid(
+    proxy_url: str,
+    expected: str,
+) -> None:
+    result = validate_proxy_url(
+        value=proxy_url,
+    )
+
+    assert isinstance(result, str)
+    assert result == expected

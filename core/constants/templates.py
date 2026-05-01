@@ -58,6 +58,10 @@ __all__ = [
     "TEMPLATE_ERROR_INVALID_OVERRIDE_FIELDS",
     "TEMPLATE_ERROR_NUMBER_OUT_OF_RANGE",
     "TEMPLATE_ERROR_PARENT_DIRECTORY_NOT_EXIST",
+    "TEMPLATE_ERROR_PROXY_AUTH_OR_PROTOCOL",
+    "TEMPLATE_ERROR_PROXY_INVALID_FORMAT",
+    "TEMPLATE_ERROR_PROXY_INVALID_PORT",
+    "TEMPLATE_ERROR_PROXY_NETWORK",
     "TEMPLATE_ERROR_RESPONSE_EMPTY",
     "TEMPLATE_ERROR_VMESS_JSON_DECODE_FAILED",
     "TEMPLATE_ERROR_VMESS_JSON_PARSE_FAILED",
@@ -238,7 +242,7 @@ TEMPLATE_ERROR_CONFIG_UNEXPECTED_FAILURE = (
     "\n"
     "Exception type: {exc_type}."
     "\n"
-    "Exception message: {exc_msg}."
+    "Exception message: '{exc_msg}'."
 )
 TEMPLATE_ERROR_CONFIG_URL_PARSE_FAILED = (
     "{protocol} config could not be parsed from URL: '{url}'"
@@ -253,17 +257,17 @@ TEMPLATE_ERROR_EXPECTED_STRING = (
     "Expected string, got {type_name!r}."
 )
 TEMPLATE_ERROR_FAILED_EXTRACT_POST_ID = (
-    "Failed to extract post ID from '{url}' - {exc_type}: {exc_msg}."
+    "Failed to extract post ID from '{url}' - {exc_type}: '{exc_msg}'."
 )
 TEMPLATE_ERROR_FAILED_FETCH_ID = (
     "Failed to fetch ID {current_id} "
-    "(channel_name={channel_name}) - {exc_type}: {exc_msg}."
+    "(channel_name={channel_name}) - {exc_type}: '{exc_msg}'."
 )
 TEMPLATE_ERROR_FAILED_SCRIPT_EXECUTION = (
     "Script '{name}' execution failed."
 )
 TEMPLATE_ERROR_FAILED_SERIALIZATION = (
-    "Failed to serialize object '{title}' - {exc_type}: {exc_msg}."
+    "Failed to serialize object '{title}' - {exc_type}: '{exc_msg}'."
 )
 TEMPLATE_ERROR_FILE_NOT_EXIST = (
     "The file does not exist: '{filepath}'."
@@ -287,6 +291,25 @@ TEMPLATE_ERROR_NUMBER_OUT_OF_RANGE = (
 )
 TEMPLATE_ERROR_PARENT_DIRECTORY_NOT_EXIST = (
     "Parent directory does not exist: '{parent}'."
+)
+TEMPLATE_ERROR_PROXY_AUTH_OR_PROTOCOL = (
+    "Proxy communication failed [{url}] - {exc_type}: '{exc_msg}'."
+)
+TEMPLATE_ERROR_PROXY_INVALID_FORMAT = (
+    "Invalid proxy format: '{proxy_url}'\n"
+    "Expected syntax: protocol://[username:password@]host:port\n"
+    "Supported protocols: http, https, socks5, socks5h\n"
+    "Examples:\n"
+    "   http://127.0.0.1:8080\n"
+    "   https://username:password@localhost:8443\n"
+    "   socks5://username:password@[::1]:1080\n"
+    "   socks5h://my-proxy.com:10808"
+)
+TEMPLATE_ERROR_PROXY_INVALID_PORT = (
+    "Invalid port number: {port}. Port must be between 1 and 65535."
+)
+TEMPLATE_ERROR_PROXY_NETWORK = (
+    "Connection failed [{url}] - {exc_type}: '{exc_msg}'."
 )
 TEMPLATE_ERROR_RESPONSE_EMPTY = (
     "Received empty response for ID {current_id:,}"

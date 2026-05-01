@@ -170,9 +170,9 @@ ruff check .
 
 * **aiofiles** – асинхронная работа с файлами
 
-* **asteval** - безопасная оценка Python-выражений (используется для фильтрации каналов и конфигураций)
+* **asteval** – безопасная оценка Python-выражений (используется для фильтрации каналов и конфигураций)
 
-* **httpx** - современный HTTP-клиент с поддержкой синхронных и асинхронных запросов
+* **httpx[socks]** – современный HTTP-клиент с поддержкой асинхронных запросов и SOCKS-прокси (включает зависимость `socksio`)
 
 * **lxml** – парсинг и обработка HTML/XML
 
@@ -670,7 +670,13 @@ python -m scripts.scraper -h
 
   * `-U, --batch-update N` - Максимальное количество каналов, обновляемых параллельно (по умолчанию: `100`).
 
-* **Сеть и таймаут**
+* **Сеть, прокси и таймаут**
+
+  * `-P, --proxy [URL]` - URL прокси-сервера. Имеет приоритет над переменными окружения. Если не указан, проверяются `HTTPS_PROXY`, `HTTP_PROXY` и `ALL_PROXY`. Если ничего не найдено, используется локальный прокси по умолчанию (`socks5://127.0.0.1:10808`).
+
+    * Поддерживаемые протоколы: `http`, `https`, `socks5`, `socks5h`.
+
+    * Формат: `protocol://[username:password@]host:port`.
 
   * `-T, --time-out SECONDS` - Таймаут HTTP-клиента в секундах для запросов при обновлении информации о каналах и извлечении V2Ray-конфигураций (по умолчанию: `30.0`).
 
@@ -682,6 +688,8 @@ python -m scripts.scraper -h
 
 * Параллельно обновляет каналы, число одновременно обновляемых задаётся через `--batch-update`.
 
+* Выполняет все сетевые запросы через прокси-сервер, указанный в параметре `--proxy`.
+
 * Использует HTTP-клиент с таймаутом `--time-out` для обновления каналов и извлечения конфигураций.
 
 * Сохраняет извлечённые V2Ray-конфигурации в файл `configs/v2ray-raw.txt`.
@@ -691,7 +699,7 @@ python -m scripts.scraper -h
 **Пример использования:**
 
 ```bash
-python -m scripts.scraper -C channels/current.json -R configs/v2ray-raw.txt -E 20 -U 100 --time-out 30.0
+python -m scripts.scraper -C channels/current.json -R configs/v2ray-raw.txt -E 20 -U 100 --proxy socks5://127.0.0.1:10808 --time-out 30.0
 ```
 
 > Можете добавить `uv run` перед командой `python`, чтобы запустить её через `uv`.
@@ -815,7 +823,7 @@ python main.py --help-scripts
 **Пример использования:**
 
 ```bash
-python main.py --batch-extract 10 --batch-update 100 --filter "host and port" --duplicate --sort "protocol" --reverse
+python main.py --batch-extract 10 --batch-update 100 --proxy --filter "host and port" --duplicate --sort "protocol" --reverse
 ```
 
 > Можете добавить `uv run` перед командой `python`, чтобы запустить её через `uv`.
