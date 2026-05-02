@@ -27,12 +27,12 @@ from domain.channel import (
     assign_current_id_to_channels,
     delete_channels,
     diff_channel_id,
+    display_channel_info,
     format_channel_status,
     get_filtered_keys,
     get_normalized_current_id,
     get_sorted_keys,
     normalize_channel_names,
-    print_channel_info,
     process_channels,
     reset_channels,
     sort_channel_names,
@@ -47,6 +47,7 @@ from tests.unit.domain.constants.common import (
     DEFAULT_LAST_ID,
     MESSAGE_CHANNEL_DELETE_SKIPPED,
     MESSAGE_CHANNEL_SHOW_INFO,
+    MESSAGE_NO_CHANNELS_TO_DISPLAY,
     TEMPLATE_CHANNEL_ASSIGNMENT_APPLIED,
     TEMPLATE_CHANNEL_ASSIGNMENT_OFFSET_APPLIED,
     TEMPLATE_CHANNEL_ASSIGNMENT_OFFSET_SKIPPED,
@@ -81,6 +82,8 @@ from tests.unit.domain.constants.test_cases.channel import (
     DELETE_CHANNELS_CASES,
     DIFF_CHANNEL_ID_ARGS,
     DIFF_CHANNEL_ID_CASES,
+    DISPLAY_CHANNEL_INFO_VARIOUS_ARGS,
+    DISPLAY_CHANNEL_INFO_VARIOUS_CASES,
     FORMAT_CHANNEL_STATUS_ARGS,
     FORMAT_CHANNEL_STATUS_CASES,
     GET_FILTERED_KEYS_ARGS,
@@ -91,8 +94,6 @@ from tests.unit.domain.constants.test_cases.channel import (
     GET_SORTED_KEYS_CASES,
     NORMALIZE_CHANNEL_NAMES_ARGS,
     NORMALIZE_CHANNEL_NAMES_CASES,
-    PRINT_CHANNEL_INFO_VARIOUS_ARGS,
-    PRINT_CHANNEL_INFO_VARIOUS_CASES,
     PROCESS_CHANNELS_CALLS_ARGS,
     PROCESS_CHANNELS_CALLS_CASES,
     RESET_CHANNELS_ARGS,
@@ -265,6 +266,74 @@ def test_diff_channel_id(
 
 
 @pytest.mark.parametrize(
+    DISPLAY_CHANNEL_INFO_VARIOUS_ARGS,
+    DISPLAY_CHANNEL_INFO_VARIOUS_CASES,
+)
+def test_display_channel_info_various(
+    mock_logger: Mock,
+    channels: ChannelsDict,
+) -> None:
+    display_channel_info(
+        channels=channels,
+    )
+
+    total_diff = 0
+    filtered_names = get_sorted_keys(
+        channels=channels,
+        apply_filter=True,
+    )
+
+    if not filtered_names:
+        mock_logger.warning.assert_called_once_with(
+            msg=MESSAGE_NO_CHANNELS_TO_DISPLAY,
+        )
+        mock_logger.info.assert_not_called()
+        return
+
+    separator_line = repeat_char_line(
+        char="-",
+    )
+    expected_calls = [
+        separator_line,
+        MESSAGE_CHANNEL_SHOW_INFO,
+    ]
+
+    for channel_name in filtered_names:
+        diff, expected_msg = format_channel_status(
+            channel_name=channel_name,
+            channel_info=channels[channel_name],
+        )
+        total_diff += diff
+        expected_calls.append(expected_msg)
+
+    expected_calls.append(
+        TEMPLATE_CHANNEL_TOTAL_AVAILABLE.format(
+            count=len(channels),
+        ),
+    )
+    expected_calls.append(
+        TEMPLATE_CHANNEL_LEFT_TO_CHECK.format(
+            count=len(filtered_names),
+        ),
+    )
+    expected_calls.append(
+        TEMPLATE_CHANNEL_TOTAL_MESSAGES.format(
+            count=total_diff,
+        ),
+    )
+    expected_calls.append(
+        separator_line,
+    )
+
+    actual_calls = [
+        call.kwargs.get("msg", "")
+        for call in mock_logger.info.call_args_list
+    ]
+
+    assert actual_calls == expected_calls
+
+
+@pytest.mark.parametrize(
     FORMAT_CHANNEL_STATUS_ARGS,
     FORMAT_CHANNEL_STATUS_CASES,
 )
@@ -370,67 +439,6 @@ def test_normalize_channel_names(
     assert list(result) == list(expected)
     assert result == expected
     assert result is not channels
-
-
-@pytest.mark.parametrize(
-    PRINT_CHANNEL_INFO_VARIOUS_ARGS,
-    PRINT_CHANNEL_INFO_VARIOUS_CASES,
-)
-def test_print_channel_info_various(
-    mock_logger: Mock,
-    channels: ChannelsDict,
-) -> None:
-    total_diff = 0
-    separator_line = repeat_char_line(
-        char="-",
-    )
-    expected_calls = [
-        separator_line,
-        MESSAGE_CHANNEL_SHOW_INFO,
-    ]
-
-    filtered_names = get_sorted_keys(
-        channels=channels,
-        apply_filter=True,
-    )
-
-    for channel_name in filtered_names:
-        diff, expected_msg = format_channel_status(
-            channel_name=channel_name,
-            channel_info=channels[channel_name],
-        )
-        total_diff += diff
-        expected_calls.append(expected_msg)
-
-    expected_calls.append(
-        TEMPLATE_CHANNEL_TOTAL_AVAILABLE.format(
-            count=len(channels),
-        ),
-    )
-    expected_calls.append(
-        TEMPLATE_CHANNEL_LEFT_TO_CHECK.format(
-            count=len(filtered_names),
-        ),
-    )
-    expected_calls.append(
-        TEMPLATE_CHANNEL_TOTAL_MESSAGES.format(
-            count=total_diff,
-        ),
-    )
-    expected_calls.append(
-        separator_line,
-    )
-
-    print_channel_info(
-        channels=channels,
-    )
-
-    actual_calls = [
-        call.kwargs.get("msg", "")
-        for call in mock_logger.info.call_args_list
-    ]
-
-    assert actual_calls == expected_calls
 
 
 @pytest.mark.parametrize(

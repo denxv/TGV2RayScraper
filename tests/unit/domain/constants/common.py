@@ -13,6 +13,7 @@ from core.constants.common import (
 from core.constants.messages import (
     MESSAGE_CHANNEL_DELETE_SKIPPED,
     MESSAGE_CHANNEL_SHOW_INFO,
+    MESSAGE_NO_CHANNELS_TO_DISPLAY,
 )
 from core.constants.templates import (
     TEMPLATE_CHANNEL_ASSIGNMENT_APPLIED,
@@ -51,6 +52,7 @@ __all__ = [
     "LAST_POST_ID",
     "MESSAGE_CHANNEL_DELETE_SKIPPED",
     "MESSAGE_CHANNEL_SHOW_INFO",
+    "MESSAGE_NO_CHANNELS_TO_DISPLAY",
     "MESSAGE_OFFSET",
     "NUM1",
     "NUM2",

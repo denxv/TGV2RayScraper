@@ -566,9 +566,9 @@ python -m scripts.update_channels -h
 
 * **Global options**
 
-  * `--no-backup` - Skip creating backup files for channel and Telegram URL lists. By default, backup is created.
-
   * `--no-dry-run` - Disable check-only mode and actually assign `current_id`. By default, `dry-run` mode is enabled.
+
+  * `--skip-backup` - Skip creating backup files for channel and Telegram URL lists. By default, backup is created.
 
 * **Input files**
 
@@ -608,7 +608,7 @@ python -m scripts.update_channels -h
 
 * Runs in dry-run mode by default without making any changes (can be disabled with `--no-dry-run`).
 
-* Creates backup copies of the channel list and URL files if needed (backup can be disabled with `--no-backup`).
+* Creates backup files for channel and URL lists if necessary (backup creation can be skipped using `--skip-backup`).
 
 * Selects channels based on the specified filter (`--channel-filter`), if provided.
 
@@ -658,6 +658,10 @@ python -m scripts.scraper -h
 
 **Options**
 
+* **Global options**
+
+  * `--skip-update` - Skip updating channel information. Avoids redundant requests if channels are already updated. By default, channels are updated.
+
 * **Input / Output files**
 
   * `-C, --channels PATH` - Path to the input JSON file containing the list of channels (default: `channels/current.json`).
@@ -686,7 +690,7 @@ python -m scripts.scraper -h
 
 * Extracts V2Ray configurations in parallel, with the number of simultaneous requests set by `--batch-extract`.
 
-* Updates channels in parallel, with the number of channels updated at the same time set by `--batch-update`.
+* Updates channels in parallel (unless `--skip-update` is used), with the number of simultaneous updates controlled by `--batch-update`.
 
 * Performs all network requests through the proxy server specified in the `--proxy` parameter.
 
@@ -699,7 +703,7 @@ python -m scripts.scraper -h
 **Example usage:**
 
 ```bash
-python -m scripts.scraper -C channels/current.json -R configs/v2ray-raw.txt -E 20 -U 100 --proxy socks5://127.0.0.1:10808 --time-out 30.0
+python -m scripts.scraper -C channels/current.json -R configs/v2ray-raw.txt -E 20 -U 100 --proxy socks5://127.0.0.1:10808 --time-out 30.0 --skip-update
 ```
 
 > You can add `uv run` before the `python` command to run it through `uv`.
@@ -730,6 +734,10 @@ python -m scripts.v2ray_cleaner -h
 
 **Options**
 
+* **Global options**
+
+  * `--skip-normalize` - Skip config normalization to preserve their original structure. By default, normalization is enabled.
+
 * **Input files**
 
   * `-I, --configs-raw PATH` - Path to the input TXT file with raw V2Ray configs for parsing (default: `configs/v2ray-raw.txt`).
@@ -741,10 +749,6 @@ python -m scripts.v2ray_cleaner -h
   * `-O, --configs-clean PATH` - Path to the output TXT file for cleaned and processed configs (default: `configs/v2ray-clean.txt`).
 
   * `--export [PATH]` - Path to the output JSON file for exporting parsed configs for later reuse without re-parsing raw input (default: `configs/v2ray.json`).
-
-* **Normalization options**
-
-  * `-N, --no-normalize` - Disable normalization of configs. By default, normalization is enabled.
 
 * **Filter / Sort**
 
@@ -762,7 +766,7 @@ python -m scripts.v2ray_cleaner -h
 
 * Imports already parsed configurations from a JSON file using the `--import` option. If the specified file is empty or invalid, raw configs are parsed instead.
 
-* Applies filters based on Python-like conditions using the `--config-filter` parameter and performs optional normalization, which can be disabled with `--no-normalize`.
+* Applies filters based on Python-like conditions using the `--config-filter` parameter and performs optional normalization, which can be skipped via `--skip-normalize`.
 
 * Removes duplicate entries based on specified fields when using the `--duplicate` option.
 

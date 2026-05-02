@@ -197,21 +197,7 @@ def parse_args() -> ArgsNamespace:
     )
 
     parser.add_argument(
-        "--no-backup",
-        action="store_const",
-        const="",
-        help=SUPPRESS,
-    )
-
-    parser.add_argument(
         "--no-dry-run",
-        action="store_const",
-        const="",
-        help=SUPPRESS,
-    )
-
-    parser.add_argument(
-        "--no-normalize",
         action="store_const",
         const="",
         help=SUPPRESS,
@@ -245,6 +231,27 @@ def parse_args() -> ArgsNamespace:
 
     parser.add_argument(
         "--reverse",
+        action="store_const",
+        const="",
+        help=SUPPRESS,
+    )
+
+    parser.add_argument(
+        "--skip-backup",
+        action="store_const",
+        const="",
+        help=SUPPRESS,
+    )
+
+    parser.add_argument(
+        "--skip-normalize",
+        action="store_const",
+        const="",
+        help=SUPPRESS,
+    )
+
+    parser.add_argument(
+        "--skip-update",
         action="store_const",
         const="",
         help=SUPPRESS,

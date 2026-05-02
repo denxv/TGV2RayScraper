@@ -54,7 +54,7 @@ def parse_args() -> ArgsNamespace:
             "and update 'current_id'."
         ),
         epilog=(
-            "Example: PYTHONPATH=. python scripts/%(prog)s "
+            "Example: PYTHONPATH=. python scripts/update_channels.py "
             "-C channels/current.json -U channels/urls.txt "
             '-F "count < 100" --no-dry-run --reset-all'
         ),
@@ -74,21 +74,23 @@ def parse_args() -> ArgsNamespace:
         "Global options",
     )
     group_global.add_argument(
-        "--no-backup",
-        action="store_false",
-        dest="backup",
-        help=(
-            "Skip creating backup files for channel and Telegram URL lists. "
-            "By default, backup is created."
-        ),
-    )
-    group_global.add_argument(
         "--no-dry-run",
         action="store_false",
+        default=True,
         dest="dry_run",
         help=(
             "Disable check-only mode and actually assign 'current_id'. "
             "By default, dry-run mode is enabled."
+        ),
+    )
+    group_global.add_argument(
+        "--skip-backup",
+        action="store_true",
+        default=False,
+        dest="skip_backup",
+        help=(
+            "Skip creating backup files for channel and Telegram URL lists. "
+            "By default, backup is created."
         ),
     )
 
@@ -151,6 +153,7 @@ def parse_args() -> ArgsNamespace:
     group_actions.add_argument(
         "-D", "--delete-channels",
         action="store_true",
+        default=False,
         dest="delete_channels",
         help=(
             "Delete channels that are unavailable or "
@@ -180,6 +183,7 @@ def parse_args() -> ArgsNamespace:
     group_reset.add_argument(
         "--reset-all",
         action="store_true",
+        default=False,
         dest="reset_all",
         help=(
             "Reset all channel values to their defaults. "
@@ -235,7 +239,7 @@ async def main() -> None:
             channels=current_channels,
             channels_path=parsed_args.channels_path,
             urls_path=parsed_args.urls_path,
-            make_backups=parsed_args.backup,
+            skip_backup=parsed_args.skip_backup,
         )
     except (
         CancelledError,

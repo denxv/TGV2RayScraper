@@ -53,7 +53,7 @@ def parse_args() -> ArgsNamespace:
             "and sorting proxy configuration entries."
         ),
         epilog=(
-            "Example: PYTHONPATH=. python scripts/%(prog)s "
+            "Example: PYTHONPATH=. python scripts/v2ray_cleaner.py "
             "-I configs/v2ray-raw.txt -O configs/v2ray-clean.txt "
             "-F \"re_search(r'speedtest|google', host)\" --reverse "
             '-D "host, port" -S "protocol, host, port" '
@@ -69,6 +69,20 @@ def parse_args() -> ArgsNamespace:
         "-h", "--help",
         action="help",
         help=SUPPRESS,
+    )
+
+    group_global = parser.add_argument_group(
+        "Global options",
+    )
+    group_global.add_argument(
+        "--skip-normalize",
+        action="store_true",
+        default=False,
+        dest="skip_normalize",
+        help=(
+            "Skip config normalization to preserve their original structure. "
+            "By default, normalization is enabled."
+        ),
     )
 
     group_input_files = parser.add_argument_group(
@@ -147,19 +161,6 @@ def parse_args() -> ArgsNamespace:
         ),
     )
 
-    group_normalization = parser.add_argument_group(
-        "Normalization options",
-    )
-    group_normalization.add_argument(
-        "-N", "--no-normalize",
-        action="store_false",
-        dest="normalize",
-        help=(
-            "Disable normalization of configs. "
-            "By default, normalization is enabled."
-        ),
-    )
-
     group_filter_sort = parser.add_argument_group(
         "Filter / Sort",
     )
@@ -192,6 +193,7 @@ def parse_args() -> ArgsNamespace:
     group_filter_sort.add_argument(
         "-R", "--reverse",
         action="store_true",
+        default=False,
         dest="reverse",
         help="Sort in descending order (only applies with --sort).",
     )
@@ -232,7 +234,7 @@ async def main() -> None:
         configs = await load_configs(
             configs_path=parsed_args.configs_raw_path,
             import_path=parsed_args.import_path,
-            normalize=parsed_args.normalize,
+            skip_normalize=parsed_args.skip_normalize,
         )
 
         processed_configs = process_configs(

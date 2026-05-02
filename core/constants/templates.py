@@ -80,6 +80,7 @@ __all__ = [
     "TEMPLATE_FORMAT_TG_URL_AFTER",
     "TEMPLATE_FORMAT_TITLE_OBJECT_PRETTY",
     "TEMPLATE_MSG_FILE_BACKUP_COMPLETED",
+    "TEMPLATE_MSG_PROXY_USED",
     "TEMPLATE_MSG_SCRIPT_COMPLETED",
     "TEMPLATE_MSG_SCRIPT_STARTED",
     "TEMPLATE_TITLE_CHANNEL_DELETE",
@@ -404,6 +405,9 @@ TEMPLATE_FORMAT_TG_URL_AFTER = (
 )
 TEMPLATE_MSG_FILE_BACKUP_COMPLETED = (
     "File '{src_name}' backed up as '{backup_name}'."
+)
+TEMPLATE_MSG_PROXY_USED = (
+    "Routing traffic through proxy: '{url}'."
 )
 TEMPLATE_MSG_SCRIPT_COMPLETED = (
     "Script '{name}' completed successfully."

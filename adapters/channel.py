@@ -25,6 +25,7 @@ from core.constants.common import (
     XPATH_POST_IDS,
 )
 from core.constants.messages import (
+    MESSAGE_BACKUP_SKIPPED,
     MESSAGE_CHANNEL_LOAD_COMPLETED,
     MESSAGE_CHANNEL_LOAD_STARTED,
     MESSAGE_CHANNEL_SAVE_COMPLETED,
@@ -228,9 +229,13 @@ async def save_channels_and_urls(  # type: ignore[misc]
     channels_path: FilePath = DEFAULT_PATH_CHANNELS,
     urls_path: FilePath = DEFAULT_PATH_URLS,
     *,
-    make_backups: bool = True,
+    skip_backup: bool = False,
 ) -> None:
-    if make_backups:
+    if skip_backup:
+        logger.info(
+            msg=MESSAGE_BACKUP_SKIPPED,
+        )
+    else:
         make_backup(
             files=[
                 channels_path,

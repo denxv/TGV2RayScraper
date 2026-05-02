@@ -11,6 +11,10 @@ from core.constants.common import (
     BATCH_UPDATE_DEFAULT,
     DEFAULT_CURRENT_ID,
 )
+from core.constants.messages import (
+    MESSAGE_CHANNEL_UPDATE_SKIPPED,
+    MESSAGE_NO_CHANNELS_TO_UPDATE,
+)
 from core.constants.templates import (
     TEMPLATE_CHANNEL_UPDATE_INFO_STARTED,
 )
@@ -77,7 +81,21 @@ async def update_info(
     client: AsyncHTTPClient,
     channels: ChannelsDict,
     batch_size: BatchSize = BATCH_UPDATE_DEFAULT,
+    *,
+    skip_update: bool = False,
 ) -> None:
+    if not channels:
+        logger.warning(
+            msg=MESSAGE_NO_CHANNELS_TO_UPDATE,
+        )
+        return
+
+    if skip_update:
+        logger.info(
+            msg=MESSAGE_CHANNEL_UPDATE_SKIPPED,
+        )
+        return
+
     logger.info(
         msg=TEMPLATE_CHANNEL_UPDATE_INFO_STARTED.format(
             count=len(channels),

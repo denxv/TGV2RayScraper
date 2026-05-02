@@ -19,6 +19,7 @@ from core.constants.messages import (
     MESSAGE_CHANNEL_SHOW_INFO,
     MESSAGE_CHANNEL_UPDATE_COMPLETED,
     MESSAGE_CHANNEL_UPDATE_STARTED,
+    MESSAGE_NO_CHANNELS_TO_DISPLAY,
 )
 from core.constants.templates import (
     TEMPLATE_CHANNEL_ASSIGNMENT_APPLIED,
@@ -74,12 +75,12 @@ __all__ = [
     "assign_current_id_to_channels",
     "delete_channels",
     "diff_channel_id",
+    "display_channel_info",
     "format_channel_status",
     "get_filtered_keys",
     "get_normalized_current_id",
     "get_sorted_keys",
     "normalize_channel_names",
-    "print_channel_info",
     "process_channels",
     "reset_channels",
     "sort_channel_names",
@@ -232,6 +233,62 @@ def diff_channel_id(
     )
 
 
+def display_channel_info(
+    channels: ChannelsDict,
+) -> None:
+    total_channels_post = 0
+    channel_names = get_sorted_keys(
+        channels=channels,
+        apply_filter=True,
+    )
+
+    if not channel_names:
+        logger.warning(
+            msg=MESSAGE_NO_CHANNELS_TO_DISPLAY,
+        )
+        return
+
+    separator_line = repeat_char_line(
+        char="-",
+    )
+    logger.info(
+        msg=separator_line,
+    )
+    logger.info(
+        msg=MESSAGE_CHANNEL_SHOW_INFO,
+    )
+
+    for name in channel_names:
+        diff, status_line = format_channel_status(
+            channel_name=name,
+            channel_info=channels[name],
+        )
+        total_channels_post += diff
+
+        logger.info(
+            msg=status_line,
+        )
+
+    logger.info(
+        msg=TEMPLATE_CHANNEL_TOTAL_AVAILABLE.format(
+            count=len(channels),
+        ),
+    )
+    logger.info(
+        msg=TEMPLATE_CHANNEL_LEFT_TO_CHECK.format(
+            count=len(channel_names),
+        ),
+    )
+    logger.info(
+        msg=TEMPLATE_CHANNEL_TOTAL_MESSAGES.format(
+            count=total_channels_post,
+        ),
+    )
+    logger.info(
+        msg=separator_line,
+    )
+
+
 def format_channel_status(
     channel_name: ChannelName,
     channel_info: ChannelInfo,
@@ -348,54 +405,6 @@ def normalize_channel_names(
         )
 
     return normalized
-
-
-def print_channel_info(channels: ChannelsDict) -> None:
-    separator_line = repeat_char_line(
-        char="-",
-    )
-    logger.info(
-        msg=separator_line,
-    )
-    logger.info(
-        msg=MESSAGE_CHANNEL_SHOW_INFO,
-    )
-
-    total_channels_post = 0
-    channel_names = get_sorted_keys(
-        channels=channels,
-        apply_filter=True,
-    )
-
-    for name in channel_names:
-        diff, status_line = format_channel_status(
-            channel_name=name,
-            channel_info=channels[name],
-        )
-        total_channels_post += diff
-
-        logger.info(
-            msg=status_line,
-        )
-
-    logger.info(
-        msg=TEMPLATE_CHANNEL_TOTAL_AVAILABLE.format(
-            count=len(channels),
-        ),
-    )
-    logger.info(
-        msg=TEMPLATE_CHANNEL_LEFT_TO_CHECK.format(
-            count=len(channel_names),
-        ),
-    )
-    logger.info(
-        msg=TEMPLATE_CHANNEL_TOTAL_MESSAGES.format(
-            count=total_channels_post,
-        ),
-    )
-    logger.info(
-        msg=separator_line,
-    )
 
 
 def process_channels(

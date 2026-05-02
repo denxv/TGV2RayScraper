@@ -37,12 +37,12 @@ __all__ = [
     "ASSIGN_CURRENT_ID_TO_CHANNELS_VARIOUS_EXAMPLES",
     "DELETE_CHANNELS_EXAMPLES",
     "DIFF_CHANNEL_ID_EXAMPLES",
+    "DISPLAY_CHANNEL_INFO_VARIOUS_EXAMPLES",
     "FORMAT_CHANNEL_STATUS_EXAMPLES",
     "GET_FILTERED_KEYS_EXAMPLES",
     "GET_NORMALIZED_CURRENT_ID_EXAMPLES",
     "GET_SORTED_KEYS_EXAMPLES",
     "NORMALIZE_CHANNEL_NAMES_EXAMPLES",
-    "PRINT_CHANNEL_INFO_VARIOUS_EXAMPLES",
     "PROCESS_CHANNELS_CALLS_EXAMPLES",
     "RESET_CHANNELS_EXAMPLES",
     "SORT_CHANNEL_NAMES_EXAMPLES",
@@ -304,6 +304,36 @@ DIFF_CHANNEL_ID_EXAMPLES: tuple[
             NUM3 - NUM2,
         ),
         "normal_difference",
+    ),
+)
+
+DISPLAY_CHANNEL_INFO_VARIOUS_EXAMPLES: tuple[
+    tuple[
+        object,
+        str,
+    ],
+    ...,
+] = (
+    (
+        CHANNELS_SAMPLE,
+        "mixed_channels",
+    ),
+    (
+        {},
+        "no_channels",
+    ),
+    (
+        CHANNEL_INFO_BY_NAME(
+            "channel_base_current_equal_last",
+        ),
+        "single_channel_equal",
+    ),
+    (
+        CHANNEL_INFO_BY_NAMES([
+            "channel_base_current_gt_last",
+            "channel_base_current_lt_last",
+        ]),
+        "two_channels",
     ),
 )
 
@@ -647,36 +677,6 @@ NORMALIZE_CHANNEL_NAMES_EXAMPLES: tuple[
         {},
         {},
         "no_channels",
-    ),
-)
-
-PRINT_CHANNEL_INFO_VARIOUS_EXAMPLES: tuple[
-    tuple[
-        object,
-        str,
-    ],
-    ...,
-] = (
-    (
-        CHANNELS_SAMPLE,
-        "mixed_channels",
-    ),
-    (
-        {},
-        "no_channels",
-    ),
-    (
-        CHANNEL_INFO_BY_NAME(
-            "channel_base_current_equal_last",
-        ),
-        "single_channel_equal",
-    ),
-    (
-        CHANNEL_INFO_BY_NAMES([
-            "channel_base_current_gt_last",
-            "channel_base_current_lt_last",
-        ]),
-        "two_channels",
     ),
 )
 

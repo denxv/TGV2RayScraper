@@ -33,6 +33,10 @@ from core.constants.common import (
 from core.constants.formats import (
     FORMAT_PROGRESS_BAR,
 )
+from core.constants.messages import (
+    MESSAGE_CONFIG_NORMALIZATION_SKIPPED,
+    MESSAGE_NO_CHANNELS_TO_EXTRACT,
+)
 from core.constants.patterns import (
     PATTERN_V2RAY_PROTOCOLS_URL,
 )
@@ -86,6 +90,22 @@ __all__ = [
     "save_configs",
     "write_configs",
 ]
+
+
+def _apply_normalization(
+    configs: V2RayConfigs | V2RayConfigsRaw,
+    *,
+    skip_normalize: bool = False,
+) -> V2RayConfigs | V2RayConfigsRaw:
+    if skip_normalize:
+        logger.info(
+            msg=MESSAGE_CONFIG_NORMALIZATION_SKIPPED,
+        )
+        return configs
+
+    return normalize_configs(
+        configs=configs,  # type: ignore[arg-type]
+    )
 
 
 async def _fetch_and_parse_configs(
@@ -270,6 +290,13 @@ async def fetch_and_write_configs(
         channels=channels,
         apply_filter=True,
     )
+
+    if not channels_to_extract:
+        logger.warning(
+            msg=MESSAGE_NO_CHANNELS_TO_EXTRACT,
+        )
+        return
+
     total_configs = 0
     channels_count = len(channels_to_extract)
 
@@ -335,17 +362,15 @@ async def load_configs(
     configs_path: FilePath = DEFAULT_PATH_CONFIGS_RAW,
     import_path: FilePath | None = None,
     *,
-    normalize: bool = True,
+    skip_normalize: bool = False,
 ) -> V2RayConfigs | V2RayConfigsRaw:
     if (
         import_path is not None
         and (imported_configs := await import_configs(import_path))
     ):
-        return (
-            normalize_configs(
-                configs=imported_configs,  # type: ignore[arg-type]
-            )
-            if normalize else imported_configs
+        return _apply_normalization(
+            configs=imported_configs,
+            skip_normalize=skip_normalize,
         )
 
     logger.info(
@@ -373,11 +398,9 @@ async def load_configs(
         ),
     )
 
-    return (
-        normalize_configs(
-            configs=configs,
-        )
-        if normalize else configs
+    return _apply_normalization(
+        configs=configs,
+        skip_normalize=skip_normalize,
     )
 
 

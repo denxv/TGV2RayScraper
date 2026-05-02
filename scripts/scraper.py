@@ -48,6 +48,7 @@ from core.constants.messages import (
 from core.constants.templates import (
     TEMPLATE_ERROR_PROXY_AUTH_OR_PROTOCOL,
     TEMPLATE_ERROR_PROXY_NETWORK,
+    TEMPLATE_MSG_PROXY_USED,
 )
 from core.logger import (
     log_debug_object,
@@ -64,7 +65,7 @@ from core.utils import (
     validate_proxy_url,
 )
 from domain.channel import (
-    print_channel_info,
+    display_channel_info,
 )
 
 
@@ -75,9 +76,9 @@ def parse_args() -> ArgsNamespace:
             "Asynchronous Telegram channel scraper (stable and fast)."
         ),
         epilog=(
-            "Example: PYTHONPATH=. python scripts/%(prog)s "
+            "Example: PYTHONPATH=. python scripts/scraper.py "
             "-C channels/current.json -R configs/v2ray-raw.txt "
-            "-E 20 -U 100 --proxy --time-out 30.0"
+            "-E 20 -U 100 --proxy --time-out 30.0 --skip-update"
         ),
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
@@ -89,6 +90,21 @@ def parse_args() -> ArgsNamespace:
         "-h", "--help",
         action="help",
         help=SUPPRESS,
+    )
+
+    group_global = parser.add_argument_group(
+        "Global options",
+    )
+    group_global.add_argument(
+        "--skip-update",
+        action="store_true",
+        default=False,
+        dest="skip_update",
+        help=(
+            "Skip updating channel information. "
+            "Avoids redundant requests if channels are already updated. "
+            "By default, channels are updated."
+        ),
     )
 
     group_files = parser.add_argument_group(
@@ -171,7 +187,6 @@ def parse_args() -> ArgsNamespace:
     group_network.add_argument(
         "-P", "--proxy",
         const=DEFAULT_PROXY_URL,
-        default=None,
         dest="proxy_url",
         help=(
             "Proxy server URL. Takes precedence over environment variables. "
@@ -225,14 +240,24 @@ async def main() -> None:
                 timeout=parsed_args.time_out,
             ),
         ) as client:
+            if parsed_args.proxy_url:
+                logger.info(
+                    msg=TEMPLATE_MSG_PROXY_USED.format(
+                        url=parsed_args.proxy_url,
+                    ),
+                )
+
             await update_info(
                 client=client,
                 channels=channels,
                 batch_size=parsed_args.batch_update,
+                skip_update=parsed_args.skip_update,
             )
-            print_channel_info(
+
+            display_channel_info(
                 channels=channels,
             )
+
             await fetch_and_write_configs(
                 client=client,
                 channels=channels,
