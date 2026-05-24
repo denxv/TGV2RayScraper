@@ -293,12 +293,6 @@
         "last_id": -1,
         "state": 0
     },
-    "freev2rng": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "g0dv2ray": {
         "count": 0,
         "current_id": 1,
@@ -629,12 +623,6 @@
         "last_id": -1,
         "state": 0
     },
-    "server_nekobox": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "servernett": {
         "count": 0,
         "current_id": 1,
@@ -654,12 +642,6 @@
         "state": 0
     },
     "shadowsocks_phs": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "shadowsocks_s": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -756,12 +738,6 @@
         "state": 0
     },
     "tiny_vpn_official": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "tkm_fast": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -864,12 +840,6 @@
         "state": 0
     },
     "v2ray_tz": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "v2ray_v_vpn": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
@@ -1086,12 +1056,6 @@
         "state": 0
     },
     "vpnsal": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
-    "vpnserverrr": {
         "count": 0,
         "current_id": 1,
         "last_id": -1,
