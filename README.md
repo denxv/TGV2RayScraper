@@ -162,6 +162,326 @@ Checks code style and errors:
 ruff check .
 ```
 
+## Usage
+
+### **1. Update Channels**
+
+You can run the channel update script as follows:
+
+```bash
+python -m scripts.update_channels
+```
+
+> You can also prepend `uv run` before any `python` command to run it through `uv`.
+
+An alternative method using `PYTHONPATH` is also available:
+
+```bash
+PYTHONPATH=. python scripts/update_channels.py
+```
+
+You can use the `-h` flag to see all available options:
+
+```bash
+python -m scripts.update_channels -h
+```
+
+**Options**
+
+* **Global options**
+
+  * `--debug` - Enable debug logging in the console. By default, the console displays logs at `INFO` level.
+
+  * `--no-dry-run` - Disable dry-run mode and allow modification of channel metadata, including assigning `current_id` and resetting fields (e.g. `count`, `last_id`, etc.). By default, dry-run mode is enabled.
+
+  * `--skip-backup` - Skip creating backup files for channel and Telegram URL lists. By default, backup is created.
+
+* **Input files**
+
+  * `-C, --channels PATH` - Path to the JSON file containing the list of channels (default: `channels/current.json`).
+
+  * `-U, --urls PATH` - Path to the input TXT file containing new channel URLs (default: `channels/urls.txt`).
+
+* **Channel selection**
+
+  * `-F, --channel-filter CONDITION` - Filter channels using a Python-like expression (for example: `"count < 100 and current_id == last_id or state == -1"`).
+
+    > Used to select the channels to which reset operations (`--reset-*`) are applied.
+
+* **Channel actions**
+
+  * `-D, --delete-channels` - Delete channels that are unavailable or meet specific conditions. By default, deletion is disabled.
+
+  * `-M, --message-offset N` - Number of recent messages taken into account when assigning `current_id`.
+
+* **Channel reset options**
+
+  * `--reset-all` - Reset all channel fields to their default values (can be combined with `--reset-<field>` and `--channel-filter`).
+
+  * `--reset-count [N]` - Reset `count` to the specified value or to the default value (`0`).
+
+  * `--reset-current-id [N]` - Reset `current_id` to the specified value or to the default value (`1`).
+
+  * `--reset-last-id [N]` - Reset `last_id` to the specified value or to the default value (`-1`).
+
+  * `--reset-state [N]` - Reset `state` to the specified value or to the default value (`0`).
+
+**The script performs the following actions:**
+
+* Displays `INFO` level logs in the console by default, debug output can be enabled using the `--debug` option.
+
+* Logs detailed debug information and warnings to the file `logs/yyyy-mm-dd.log`.
+
+* Loads the current list of channels from `channels/current.json`.
+
+* Merges existing channels with new URLs from `channels/urls.txt`.
+
+* Runs in dry-run mode by default without making any changes (can be disabled with `--no-dry-run`).
+
+* Creates backup files for channel and URL lists if necessary (backup creation can be skipped using `--skip-backup`).
+
+* Selects channels based on the specified filter (`--channel-filter`), if provided.
+
+* Deletes unavailable or flagged channels when the `--delete-channels` option is used.
+
+* Resets channel field values to their defaults or to explicitly specified values (`--reset-*`).
+
+* Assigns or updates the `current_id` field, taking the specified message offset into account (`--message-offset`).
+
+* Saves the updated data back to `channels/current.json` and `channels/urls.txt`.
+
+**Example usage:**
+
+```bash
+python -m scripts.update_channels -C channels/current.json -U channels/urls.txt -F "count < 100" --no-dry-run --reset-all
+```
+
+> You can add `uv run` before the `python` command to run it via `uv`.
+
+---
+
+### **2. Running Scrapers**
+
+#### **Asynchronous Scraper** (fast and stable)
+
+You can run the asynchronous scraper as follows:
+
+```bash
+python -m scripts.scraper
+```
+
+> You can also prepend `uv run` before any `python` command to run it through `uv`.
+
+An alternative method using `PYTHONPATH` is also available:
+
+```bash
+PYTHONPATH=. python scripts/scraper.py
+```
+
+You can use the `-h` flag to see all available options:
+
+```bash
+python -m scripts.scraper -h
+```
+
+**Options**
+
+* **Global options**
+
+  * `--debug` - Enable debug logging in the console. By default, the console displays logs at `INFO` level.
+
+* **HTTP client**
+
+  * `--proxy [URL]` - Proxy server for HTTP requests. Takes precedence over environment variables. If not specified, `HTTPS_PROXY`, `HTTP_PROXY`, and `ALL_PROXY` are used. If none are found, a local proxy is used by default (`socks5://127.0.0.1:10808`).
+
+    * Supported protocols: `http`, `https`, `socks5`, `socks5h`.
+
+    * Format: `protocol://[username:password@]host:port`.
+
+  * `--retries N` - Maximum number of HTTP request retry attempts on failure (default: `3`).
+
+  * `--retry-delay SECONDS` - Maximum number of HTTP request retry attempts after failed requests (default: `0.5`).
+
+  * `--time-out SECONDS` - HTTP client timeout in seconds for requests used during channel information updates and V2Ray configuration extraction (default: `30.0`).
+
+* **Input / Output files**
+
+  * `-C, --channels PATH` - Path to the input JSON file containing the list of channels (default: `channels/current.json`).
+
+  * `-R, --configs-raw PATH` - Path to the output TXT file for saving scraped V2Ray configurations (default: `configs/v2ray-raw.txt`).
+
+* **Channel update pipeline**
+
+  * `--skip-update` - Skip updating channel information. Avoids redundant requests if channels are already updated. By default, channel updates are performed.
+
+  * `-U, --channels-batch N` - Number of channels processed per batch during updates (default: `100`).
+
+* **Configuration extraction pipeline**
+
+  * `-E, --configs-batch N` - Number of messages processed per batch during configuration extraction (default: `20`).
+
+  * `-P, --channels-concurrency N` - Maximum number of channels processed concurrently during configuration extraction (default: `5`).
+
+**The script performs the following actions:**
+
+* Displays `INFO` level logs in the console by default, debug output can be enabled using the `--debug` option.
+
+* Logs detailed information about the update and extraction process, including warnings and errors for each channel to the file `logs/yyyy-mm-dd.log`.
+
+* Loads the current list of channels from `channels/current.json`.
+
+* Updates channel metadata in parallel (unless `--skip-update` is specified), with the number of concurrently updated channels controlled by `--channels-batch`.
+
+* Extracts V2Ray configurations in parallel using:
+
+  * `--channels-concurrency` - the maximum number of channels processed simultaneously;
+
+  * `--configs-batch` - the number of messages processed per step within a single channel.
+
+* Routes all network requests through the proxy server specified via `--proxy`.
+
+* Uses an HTTP client with timeout set by `--time-out` for all requests, including channel updates and configuration extraction.
+
+* Uses retry logic on network failures (`--retries`) with delay between attempts (`--retry-delay`).
+
+* Saves extracted V2Ray configurations to `configs/v2ray-raw.txt`.
+
+**Example usage:**
+
+```bash
+python -m scripts.scraper -C channels/current.json -R configs/v2ray-raw.txt -E 20 -U 100 --proxy socks5://127.0.0.1:10808 --time-out 30.0 --skip-update
+```
+
+> You can add `uv run` before the `python` command to run it through `uv`.
+
+---
+
+### **3. Cleaning V2Ray Configurations**
+
+You can run the V2Ray configuration cleaner script as follows:
+
+```bash
+python -m scripts.v2ray_cleaner
+```
+
+> You can also prepend `uv run` before any `python` command to run it through `uv`.
+
+Alternatively, you can run it using `PYTHONPATH`:
+
+```bash
+PYTHONPATH=. python scripts/v2ray_cleaner.py
+```
+
+You can also run with `-h` to see all available options:
+
+```bash
+python -m scripts.v2ray_cleaner -h
+```
+
+**Options**
+
+* **Global options**
+
+  * `--debug` - Enable debug logging in the console. By default, the console displays logs at `INFO` level.
+
+  * `--skip-normalize` - Skip config normalization to preserve their original structure. By default, normalization is enabled.
+
+* **Input files**
+
+  * `-I, --configs-raw PATH` - Path to the input TXT file with raw V2Ray configs for parsing (default: `configs/v2ray-raw.txt`).
+
+  * `--import [PATH]` - Path to the input JSON file with already parsed configs. If empty or invalid, raw configs will be parsed instead (default: `configs/v2ray.json`).
+
+* **Output files**
+
+  * `-O, --configs-clean PATH` - Path to the output TXT file for cleaned and processed configs (default: `configs/v2ray-clean.txt`).
+
+  * `--export [PATH]` - Path to the output JSON file for exporting parsed configs for later reuse without re-parsing raw input (default: `configs/v2ray.json`).
+
+* **Filter / Sort**
+
+  * `-D, --duplicate [FIELDS]` - Remove duplicates by specified fields (default: `"protocol, host, port"`).
+
+  * `-F, --config-filter CONDITION` - Keep only entries matching a Python-like condition (e.g., `"host == '1.1.1.1' and port > 1000"`).
+
+  * `-R, --reverse` - Sort in descending order (applies only with `--sort`).
+
+  * `-S, --sort [FIELDS]` - Sort entries by comma-separated fields (default: `"protocol"`).
+
+**The script performs the following:**
+
+* Displays `INFO` level logs in the console by default, debug output can be enabled using the `--debug` option.
+
+* Logs detailed information about the processing, including errors and warnings for each configuration to the file `logs/yyyy-mm-dd.log`.
+
+* Reads raw V2Ray configurations from the file `configs/v2ray-raw.txt` and parses them for further processing.
+
+* Imports already parsed configurations from a JSON file using the `--import` option. If the specified file is empty or invalid, raw configs are parsed instead.
+
+* Applies filters based on Python-like conditions using the `--config-filter` parameter and performs optional normalization, which can be skipped via `--skip-normalize`.
+
+* Removes duplicate entries based on specified fields when using the `--duplicate` option.
+
+* Sorts entries by the specified fields using `--sort` and can reverse the order with `--reverse` if needed.
+
+* Saves the cleaned and processed configurations to the file `configs/v2ray-clean.txt`.
+
+* Exports parsed configurations to a JSON file using the `--export` option for later reuse without re-parsing the raw input.
+
+* Supports flexible selection of fields for filtering, sorting, and removing duplicates, allowing extraction of only the required configurations.
+
+**Example usage:**
+
+```bash
+python -m scripts.v2ray_cleaner -I configs/v2ray-raw.txt -O configs/v2ray-clean.txt -F "re_search(r'speedtest|google', host)" --reverse -D "host, port" -S "protocol, host, port" --import configs/v2ray.json --export
+```
+
+> You can add `uv run` before the `python` command to run it through `uv`.
+
+---
+
+### **4. Running All Steps via `main.py`**
+
+```bash
+python main.py
+```
+
+> You can also prepend `uv run` before any `python` command to run it through `uv`.
+
+You can also run with `-h` to see all available options:
+
+```bash
+python main.py -h
+```
+
+**Options**
+
+* **Global options**
+
+  * `-D, --debug` - Enable debug logging in the console. By default, the console displays logs at `INFO` level.
+
+  * `-H, --help-scripts [NAMES]` - Show help for internal pipeline scripts. Script names can be provided as a comma-separated list (e.g. `"scraper, update_channels, v2ray_cleaner"`). If no value is provided (e.g. `-H`), help is shown for all scripts.
+
+**The script performs the following:**
+
+* Executes all pipeline steps in order:
+
+  1. `update_channels.py` – updates the list of channels.
+
+  2. `scraper.py` – collects channel data from Telegram asynchronously.
+
+  3. `v2ray_cleaner.py` – cleans, normalizes, and processes the scraped proxy configuration files.
+
+* Collects only relevant arguments for each script automatically.
+
+**Example usage:**
+
+```bash
+python main.py --debug --configs-batch 10 --channels-batch 50 --channels-concurrency 10 --proxy --retry-delay 1.5 --channel-filter "state == -1" --config-filter "host and port" --duplicate --reset-all --reset-count 0 --reverse --sort "host, port"
+```
+
+> You can add `uv run` before the `python` command to run it through `uv`.
+
 ## Dependencies
 
 ### Main Dependencies
@@ -651,326 +971,6 @@ vmess://uuid@host:port?params#name
 wireguard://privatekey@host:port/path?params#name
 wireguard://privatekey@host:port?params#name
 ```
-
-## Usage
-
-### **1. Update Channels**
-
-You can run the channel update script as follows:
-
-```bash
-python -m scripts.update_channels
-```
-
-> You can also prepend `uv run` before any `python` command to run it through `uv`.
-
-An alternative method using `PYTHONPATH` is also available:
-
-```bash
-PYTHONPATH=. python scripts/update_channels.py
-```
-
-You can use the `-h` flag to see all available options:
-
-```bash
-python -m scripts.update_channels -h
-```
-
-**Options**
-
-* **Global options**
-
-  * `--debug` - Enable debug logging in the console. By default, the console displays logs at `INFO` level.
-
-  * `--no-dry-run` - Disable dry-run mode and allow modification of channel metadata, including assigning `current_id` and resetting fields (e.g. `count`, `last_id`, etc.). By default, dry-run mode is enabled.
-
-  * `--skip-backup` - Skip creating backup files for channel and Telegram URL lists. By default, backup is created.
-
-* **Input files**
-
-  * `-C, --channels PATH` - Path to the JSON file containing the list of channels (default: `channels/current.json`).
-
-  * `-U, --urls PATH` - Path to the input TXT file containing new channel URLs (default: `channels/urls.txt`).
-
-* **Channel selection**
-
-  * `-F, --channel-filter CONDITION` - Filter channels using a Python-like expression (for example: `"count < 100 and current_id == last_id or state == -1"`).
-
-    > Used to select the channels to which reset operations (`--reset-*`) are applied.
-
-* **Channel actions**
-
-  * `-D, --delete-channels` - Delete channels that are unavailable or meet specific conditions. By default, deletion is disabled.
-
-  * `-M, --message-offset N` - Number of recent messages taken into account when assigning `current_id`.
-
-* **Channel reset options**
-
-  * `--reset-all` - Reset all channel fields to their default values (can be combined with `--reset-<field>` and `--channel-filter`).
-
-  * `--reset-count [N]` - Reset `count` to the specified value or to the default value (`0`).
-
-  * `--reset-current-id [N]` - Reset `current_id` to the specified value or to the default value (`1`).
-
-  * `--reset-last-id [N]` - Reset `last_id` to the specified value or to the default value (`-1`).
-
-  * `--reset-state [N]` - Reset `state` to the specified value or to the default value (`0`).
-
-**The script performs the following actions:**
-
-* Displays `INFO` level logs in the console by default, debug output can be enabled using the `--debug` option.
-
-* Logs detailed debug information and warnings to the file `logs/yyyy-mm-dd.log`.
-
-* Loads the current list of channels from `channels/current.json`.
-
-* Merges existing channels with new URLs from `channels/urls.txt`.
-
-* Runs in dry-run mode by default without making any changes (can be disabled with `--no-dry-run`).
-
-* Creates backup files for channel and URL lists if necessary (backup creation can be skipped using `--skip-backup`).
-
-* Selects channels based on the specified filter (`--channel-filter`), if provided.
-
-* Deletes unavailable or flagged channels when the `--delete-channels` option is used.
-
-* Resets channel field values to their defaults or to explicitly specified values (`--reset-*`).
-
-* Assigns or updates the `current_id` field, taking the specified message offset into account (`--message-offset`).
-
-* Saves the updated data back to `channels/current.json` and `channels/urls.txt`.
-
-**Example usage:**
-
-```bash
-python -m scripts.update_channels -C channels/current.json -U channels/urls.txt -F "count < 100" --no-dry-run --reset-all
-```
-
-> You can add `uv run` before the `python` command to run it via `uv`.
-
----
-
-### **2. Running Scrapers**
-
-#### **Asynchronous Scraper** (fast and stable)
-
-You can run the asynchronous scraper as follows:
-
-```bash
-python -m scripts.scraper
-```
-
-> You can also prepend `uv run` before any `python` command to run it through `uv`.
-
-An alternative method using `PYTHONPATH` is also available:
-
-```bash
-PYTHONPATH=. python scripts/scraper.py
-```
-
-You can use the `-h` flag to see all available options:
-
-```bash
-python -m scripts.scraper -h
-```
-
-**Options**
-
-* **Global options**
-
-  * `--debug` - Enable debug logging in the console. By default, the console displays logs at `INFO` level.
-
-* **HTTP client**
-
-  * `--proxy [URL]` - Proxy server for HTTP requests. Takes precedence over environment variables. If not specified, `HTTPS_PROXY`, `HTTP_PROXY`, and `ALL_PROXY` are used. If none are found, a local proxy is used by default (`socks5://127.0.0.1:10808`).
-
-    * Supported protocols: `http`, `https`, `socks5`, `socks5h`.
-
-    * Format: `protocol://[username:password@]host:port`.
-
-  * `--retries N` - Maximum number of HTTP request retry attempts on failure (default: `3`).
-
-  * `--retry-delay SECONDS` - Maximum number of HTTP request retry attempts after failed requests (default: `0.5`).
-
-  * `--time-out SECONDS` - HTTP client timeout in seconds for requests used during channel information updates and V2Ray configuration extraction (default: `30.0`).
-
-* **Input / Output files**
-
-  * `-C, --channels PATH` - Path to the input JSON file containing the list of channels (default: `channels/current.json`).
-
-  * `-R, --configs-raw PATH` - Path to the output TXT file for saving scraped V2Ray configurations (default: `configs/v2ray-raw.txt`).
-
-* **Channel update pipeline**
-
-  * `--skip-update` - Skip updating channel information. Avoids redundant requests if channels are already updated. By default, channel updates are performed.
-
-  * `-U, --channels-batch N` - Number of channels processed per batch during updates (default: `100`).
-
-* **Configuration extraction pipeline**
-
-  * `-E, --configs-batch N` - Number of messages processed per batch during configuration extraction (default: `20`).
-
-  * `-P, --channels-concurrency N` - Maximum number of channels processed concurrently during configuration extraction (default: `5`).
-
-**The script performs the following actions:**
-
-* Displays `INFO` level logs in the console by default, debug output can be enabled using the `--debug` option.
-
-* Logs detailed information about the update and extraction process, including warnings and errors for each channel to the file `logs/yyyy-mm-dd.log`.
-
-* Loads the current list of channels from `channels/current.json`.
-
-* Updates channel metadata in parallel (unless `--skip-update` is specified), with the number of concurrently updated channels controlled by `--channels-batch`.
-
-* Extracts V2Ray configurations in parallel using:
-
-  * `--channels-concurrency` - the maximum number of channels processed simultaneously;
-
-  * `--configs-batch` - the number of messages processed per step within a single channel.
-
-* Routes all network requests through the proxy server specified via `--proxy`.
-
-* Uses an HTTP client with timeout set by `--time-out` for all requests, including channel updates and configuration extraction.
-
-* Uses retry logic on network failures (`--retries`) with delay between attempts (`--retry-delay`).
-
-* Saves extracted V2Ray configurations to `configs/v2ray-raw.txt`.
-
-**Example usage:**
-
-```bash
-python -m scripts.scraper -C channels/current.json -R configs/v2ray-raw.txt -E 20 -U 100 --proxy socks5://127.0.0.1:10808 --time-out 30.0 --skip-update
-```
-
-> You can add `uv run` before the `python` command to run it through `uv`.
-
----
-
-### **3. Cleaning V2Ray Configurations**
-
-You can run the V2Ray configuration cleaner script as follows:
-
-```bash
-python -m scripts.v2ray_cleaner
-```
-
-> You can also prepend `uv run` before any `python` command to run it through `uv`.
-
-Alternatively, you can run it using `PYTHONPATH`:
-
-```bash
-PYTHONPATH=. python scripts/v2ray_cleaner.py
-```
-
-You can also run with `-h` to see all available options:
-
-```bash
-python -m scripts.v2ray_cleaner -h
-```
-
-**Options**
-
-* **Global options**
-
-  * `--debug` - Enable debug logging in the console. By default, the console displays logs at `INFO` level.
-
-  * `--skip-normalize` - Skip config normalization to preserve their original structure. By default, normalization is enabled.
-
-* **Input files**
-
-  * `-I, --configs-raw PATH` - Path to the input TXT file with raw V2Ray configs for parsing (default: `configs/v2ray-raw.txt`).
-
-  * `--import [PATH]` - Path to the input JSON file with already parsed configs. If empty or invalid, raw configs will be parsed instead (default: `configs/v2ray.json`).
-
-* **Output files**
-
-  * `-O, --configs-clean PATH` - Path to the output TXT file for cleaned and processed configs (default: `configs/v2ray-clean.txt`).
-
-  * `--export [PATH]` - Path to the output JSON file for exporting parsed configs for later reuse without re-parsing raw input (default: `configs/v2ray.json`).
-
-* **Filter / Sort**
-
-  * `-D, --duplicate [FIELDS]` - Remove duplicates by specified fields (default: `"protocol, host, port"`).
-
-  * `-F, --config-filter CONDITION` - Keep only entries matching a Python-like condition (e.g., `"host == '1.1.1.1' and port > 1000"`).
-
-  * `-R, --reverse` - Sort in descending order (applies only with `--sort`).
-
-  * `-S, --sort [FIELDS]` - Sort entries by comma-separated fields (default: `"protocol"`).
-
-**The script performs the following:**
-
-* Displays `INFO` level logs in the console by default, debug output can be enabled using the `--debug` option.
-
-* Logs detailed information about the processing, including errors and warnings for each configuration to the file `logs/yyyy-mm-dd.log`.
-
-* Reads raw V2Ray configurations from the file `configs/v2ray-raw.txt` and parses them for further processing.
-
-* Imports already parsed configurations from a JSON file using the `--import` option. If the specified file is empty or invalid, raw configs are parsed instead.
-
-* Applies filters based on Python-like conditions using the `--config-filter` parameter and performs optional normalization, which can be skipped via `--skip-normalize`.
-
-* Removes duplicate entries based on specified fields when using the `--duplicate` option.
-
-* Sorts entries by the specified fields using `--sort` and can reverse the order with `--reverse` if needed.
-
-* Saves the cleaned and processed configurations to the file `configs/v2ray-clean.txt`.
-
-* Exports parsed configurations to a JSON file using the `--export` option for later reuse without re-parsing the raw input.
-
-* Supports flexible selection of fields for filtering, sorting, and removing duplicates, allowing extraction of only the required configurations.
-
-**Example usage:**
-
-```bash
-python -m scripts.v2ray_cleaner -I configs/v2ray-raw.txt -O configs/v2ray-clean.txt -F "re_search(r'speedtest|google', host)" --reverse -D "host, port" -S "protocol, host, port" --import configs/v2ray.json --export
-```
-
-> You can add `uv run` before the `python` command to run it through `uv`.
-
----
-
-### **4. Running All Steps via `main.py`**
-
-```bash
-python main.py
-```
-
-> You can also prepend `uv run` before any `python` command to run it through `uv`.
-
-You can also run with `-h` to see all available options:
-
-```bash
-python main.py -h
-```
-
-**Options**
-
-* **Global options**
-
-  * `-D, --debug` - Enable debug logging in the console. By default, the console displays logs at `INFO` level.
-
-  * `-H, --help-scripts [NAMES]` - Show help for internal pipeline scripts. Script names can be provided as a comma-separated list (e.g. `"scraper, update_channels, v2ray_cleaner"`). If no value is provided (e.g. `-H`), help is shown for all scripts.
-
-**The script performs the following:**
-
-* Executes all pipeline steps in order:
-
-  1. `update_channels.py` – updates the list of channels.
-
-  2. `scraper.py` – collects channel data from Telegram asynchronously.
-
-  3. `v2ray_cleaner.py` – cleans, normalizes, and processes the scraped proxy configuration files.
-
-* Collects only relevant arguments for each script automatically.
-
-**Example usage:**
-
-```bash
-python main.py --debug --configs-batch 10 --channels-batch 50 --channels-concurrency 10 --proxy --retry-delay 1.5 --channel-filter "state == -1" --config-filter "host and port" --duplicate --reset-all --reset-count 0 --reverse --sort "host, port"
-```
-
-> You can add `uv run` before the `python` command to run it through `uv`.
 
 ## Notes
 
