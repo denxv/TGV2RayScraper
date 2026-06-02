@@ -2,10 +2,10 @@ from functools import (
     wraps,
 )
 
-from core.constants.templates import (
-    TEMPLATE_CHANNEL_COUNT_DIFFERENCE,
+from core.constants.templates.info.channel import (
+    TEMPLATE_INFO_CHANNEL_COUNT_DIFFERENCE,
 )
-from core.logger import (
+from core.terminal.logger import (
     logger,
 )
 from core.typing import (
@@ -21,8 +21,8 @@ __all__ = [
 
 def status(
     start: str,
-    end: str = "",
     *,
+    end: str = "",
     tracking: bool = False,
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
 
@@ -64,7 +64,7 @@ def status(
             ):
                 new_size = len(result)
                 logger.info(
-                    msg=TEMPLATE_CHANNEL_COUNT_DIFFERENCE.format(
+                    msg=TEMPLATE_INFO_CHANNEL_COUNT_DIFFERENCE.format(
                         old_size=old_size,
                         new_size=new_size,
                         diff=new_size - old_size,

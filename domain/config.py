@@ -1,3 +1,6 @@
+from dataclasses import (
+    dataclass,
+)
 from json import (
     dumps,
     loads,
@@ -11,38 +14,52 @@ from urllib.parse import (
 from core.constants.common import (
     DEFAULT_JSON_INDENT,
 )
-from core.constants.messages import (
-    MESSAGE_CHANNEL_DEDUPLICATION_SKIPPED,
+from core.constants.formats import (
+    FORMAT_CONFIG_NAME,
+    FORMAT_CONFIG_SSR_BODY,
+    FORMAT_CONFIG_URL,
+    FORMAT_CONFIG_URL_BODY,
+    FORMAT_CONFIG_URL_LOCATION,
+)
+from core.constants.messages.error import (
     MESSAGE_ERROR_SSR_MISSING_BASE64,
 )
-from core.constants.patterns import (
-    PATTERN_URL_SS,
-    PATTERN_URL_SSR_PLAIN,
-    PATTERN_V2RAY_PROTOCOLS_URL,
+from core.constants.messages.warning import (
+    MESSAGE_WARNING_CHANNEL_DEDUPLICATION_SKIPPED,
+)
+from core.constants.patterns.v2ray.common import (
     PATTERN_VMESS_JSON,
+)
+from core.constants.patterns.v2ray.detector import (
+    PATTERN_V2RAY_URL_DETECTOR,
+)
+from core.constants.patterns.v2ray.registry import (
     PATTERNS_V2RAY_URLS_BY_PROTOCOL,
 )
-from core.constants.templates import (
-    TEMPLATE_CONFIG_DEDUPLICATION_COMPLETED,
-    TEMPLATE_CONFIG_DEDUPLICATION_STARTED,
-    TEMPLATE_CONFIG_FILTER_COMPLETED,
-    TEMPLATE_CONFIG_FILTER_STARTED,
-    TEMPLATE_CONFIG_NORMALIZE_COMPLETED,
-    TEMPLATE_CONFIG_NORMALIZE_STARTED,
-    TEMPLATE_CONFIG_SORT_COMPLETED,
-    TEMPLATE_CONFIG_SORT_STARTED,
+from core.constants.patterns.v2ray.url import (
+    PATTERN_URL_SS,
+    PATTERN_URL_SSR_PLAIN,
+)
+from core.constants.templates.debug.config import (
+    TEMPLATE_DEBUG_CONFIG_UNEXPECTED_FAILURE,
+)
+from core.constants.templates.error import (
     TEMPLATE_ERROR_CONFIG_MISSING_REQUIRED_FIELDS,
-    TEMPLATE_ERROR_CONFIG_UNEXPECTED_FAILURE,
     TEMPLATE_ERROR_CONFIG_URL_PARSE_FAILED,
     TEMPLATE_ERROR_VMESS_JSON_DECODE_FAILED,
     TEMPLATE_ERROR_VMESS_JSON_PARSE_FAILED,
-    TEMPLATE_FORMAT_CONFIG_NAME,
-    TEMPLATE_FORMAT_CONFIG_SSR_BODY,
-    TEMPLATE_FORMAT_CONFIG_URL,
-    TEMPLATE_FORMAT_CONFIG_URL_BODY,
-    TEMPLATE_FORMAT_CONFIG_URL_LOCATION,
 )
-from core.logger import (
+from core.constants.templates.info.config import (
+    TEMPLATE_INFO_CONFIG_DEDUPLICATION_COMPLETED,
+    TEMPLATE_INFO_CONFIG_DEDUPLICATION_STARTED,
+    TEMPLATE_INFO_CONFIG_FILTER_COMPLETED,
+    TEMPLATE_INFO_CONFIG_FILTER_STARTED,
+    TEMPLATE_INFO_CONFIG_NORMALIZE_COMPLETED,
+    TEMPLATE_INFO_CONFIG_NORMALIZE_STARTED,
+    TEMPLATE_INFO_CONFIG_SORT_COMPLETED,
+    TEMPLATE_INFO_CONFIG_SORT_STARTED,
+)
+from core.terminal.logger import (
     logger,
 )
 from core.typing import (
@@ -66,6 +83,7 @@ from domain.predicates import (
 )
 
 __all__ = [
+    "ConfigExtractionResult",
     "filter_by_condition",
     "line_to_configs",
     "normalize_config",
@@ -80,12 +98,20 @@ __all__ = [
 ]
 
 
+@dataclass(slots=True, frozen=True)
+class ConfigExtractionResult:
+    channel_name: str
+    total_found: int
+    new_found: int
+
+
 def filter_by_condition(
     configs: V2RayConfigs,
+    *,
     condition: ConditionStr,
 ) -> V2RayConfigs:
     logger.info(
-        msg=TEMPLATE_CONFIG_FILTER_STARTED.format(
+        msg=TEMPLATE_INFO_CONFIG_FILTER_STARTED.format(
             count=len(configs),
             condition=condition,
         ),
@@ -101,7 +127,7 @@ def filter_by_condition(
     )
 
     logger.info(
-        msg=TEMPLATE_CONFIG_FILTER_COMPLETED.format(
+        msg=TEMPLATE_INFO_CONFIG_FILTER_COMPLETED.format(
             count=len(configs),
             removed=len(configs) - len(filtered_configs),
         ),
@@ -113,16 +139,14 @@ def filter_by_condition(
 def line_to_configs(
     line: str,
 ) -> V2RayConfigRawIterator:
-    clean_line = unquote(
-        string=line.strip(),
-    )
-
     return (
         config_match.groupdict(
             default="",
         )
-        for url_match in PATTERN_V2RAY_PROTOCOLS_URL.finditer(
-            string=clean_line,
+        for url_match in PATTERN_V2RAY_URL_DETECTOR.finditer(
+            string=unquote(
+                string=line.strip(),
+            ),
         )
         for pattern in PATTERNS_V2RAY_URLS_BY_PROTOCOL.get(
             url_match.group("protocol"),
@@ -196,7 +220,7 @@ def normalize_config(
             and _config.get("name", "")
         )
     ):
-        _config["name"] = TEMPLATE_FORMAT_CONFIG_NAME.format_map({
+        _config["name"] = FORMAT_CONFIG_NAME.format_map({
             key: _config.get(key, "*")
             for key in (
                 "protocol",
@@ -204,7 +228,7 @@ def normalize_config(
                 "port",
             )
         })
-        _config["url"] = TEMPLATE_FORMAT_CONFIG_URL.format_map({
+        _config["url"] = FORMAT_CONFIG_URL.format_map({
             key: _config.get(key, "*")
             for key in (
                 "url",
@@ -237,7 +261,7 @@ def normalize_configs(
 ) -> V2RayConfigs:
     total_before = len(configs)
     logger.info(
-        msg=TEMPLATE_CONFIG_NORMALIZE_STARTED.format(
+        msg=TEMPLATE_INFO_CONFIG_NORMALIZE_STARTED.format(
             count=total_before,
         ),
     )
@@ -253,7 +277,9 @@ def normalize_configs(
             )
         except Exception as e:  # noqa: PERF203
             logger.debug(
-                msg=TEMPLATE_ERROR_CONFIG_UNEXPECTED_FAILURE.format(
+                msg=TEMPLATE_DEBUG_CONFIG_UNEXPECTED_FAILURE.format(
+                    exc_type=type(e).__name__,
+                    exc_msg=str(e),
                     config=dumps(
                         obj=_config,
                         default=str,
@@ -261,14 +287,12 @@ def normalize_configs(
                         indent=DEFAULT_JSON_INDENT,
                         sort_keys=True,
                     ),
-                    exc_type=type(e).__name__,
-                    exc_msg=str(e),
                 ),
             )
 
     total_after = len(normalized_configs)
     logger.info(
-        msg=TEMPLATE_CONFIG_NORMALIZE_COMPLETED.format(
+        msg=TEMPLATE_INFO_CONFIG_NORMALIZE_COMPLETED.format(
             count=total_after,
             removed=total_before - total_after,
         ),
@@ -305,14 +329,14 @@ def normalize_ss_base64(
         )
     )
 
-    url = TEMPLATE_FORMAT_CONFIG_URL_BODY.format(
+    url = FORMAT_CONFIG_URL_BODY.format(
         protocol=protocol,
         body=b64decode_safe(
             string=base64,
         ),
     )
     if host and port:
-        url += TEMPLATE_FORMAT_CONFIG_URL_LOCATION.format(
+        url += FORMAT_CONFIG_URL_LOCATION.format(
             host=host,
             port=port,
         )
@@ -327,7 +351,6 @@ def normalize_ss_base64(
         raise ValueError(
             TEMPLATE_ERROR_CONFIG_URL_PARSE_FAILED.format(
                 protocol=str(protocol).upper(),
-                url=url,
             ),
         )
 
@@ -352,7 +375,7 @@ def normalize_ssr_base64(
         )
 
     protocol = config.get("protocol", "ssr")
-    url = TEMPLATE_FORMAT_CONFIG_URL_BODY.format(
+    url = FORMAT_CONFIG_URL_BODY.format(
         protocol=protocol,
         body=b64decode_safe(
             string=base64,
@@ -367,7 +390,6 @@ def normalize_ssr_base64(
         raise ValueError(
             TEMPLATE_ERROR_CONFIG_URL_PARSE_FAILED.format(
                 protocol=str(protocol).upper(),
-                url=url,
             ),
         )
 
@@ -389,7 +411,7 @@ def normalize_ssr_base64(
         )
     }
     ssr_params.update({
-        "remarks": TEMPLATE_FORMAT_CONFIG_NAME.format_map({
+        "remarks": FORMAT_CONFIG_NAME.format_map({
             key: ssr_config.get(key, "*")
             for key in (
                 "protocol",
@@ -406,7 +428,7 @@ def normalize_ssr_base64(
     })
 
     base64 = b64encode_safe(
-        string=TEMPLATE_FORMAT_CONFIG_SSR_BODY.format_map({
+        string=FORMAT_CONFIG_SSR_BODY.format_map({
             key: ssr_config.get(key, "")
             for key in (
                 "host",
@@ -420,7 +442,7 @@ def normalize_ssr_base64(
         }),
     )
     ssr_config.update({
-        "url": TEMPLATE_FORMAT_CONFIG_URL_BODY.format(
+        "url": FORMAT_CONFIG_URL_BODY.format(
             protocol=protocol,
             body=base64,
         ),
@@ -456,7 +478,7 @@ def normalize_vmess_base64(
     ):
         raise ValueError(
             TEMPLATE_ERROR_VMESS_JSON_PARSE_FAILED.format(
-                base64=base64,
+                payload=base64,
             ),
         )
 
@@ -467,7 +489,7 @@ def normalize_vmess_base64(
             s=vmess.group("json"),
         )
         vmess_config.update({
-            "ps": TEMPLATE_FORMAT_CONFIG_NAME.format(
+            "ps": FORMAT_CONFIG_NAME.format(
                 protocol=protocol,
                 host=vmess_config.get("add", "255.255.255.255"),
                 port=vmess_config.get("port", "0"),
@@ -483,12 +505,12 @@ def normalize_vmess_base64(
     except Exception as e:
         raise ValueError(
             TEMPLATE_ERROR_VMESS_JSON_DECODE_FAILED.format(
-                json=vmess.group("json"),
+                payload=vmess.group("json"),
             ),
         ) from e
 
     return {
-        "url": TEMPLATE_FORMAT_CONFIG_URL_BODY.format(
+        "url": FORMAT_CONFIG_URL_BODY.format(
             protocol=protocol,
             body=base64,
         ),
@@ -518,6 +540,7 @@ def normalize_vmess_base64(
 
 def process_configs(
     configs: V2RayConfigs,
+    *,
     args: ArgsNamespace,
 ) -> V2RayConfigs:
     _configs: V2RayConfigs = configs
@@ -546,10 +569,11 @@ def process_configs(
 
 def remove_duplicates_by_fields(
     configs: V2RayConfigs,
+    *,
     fields: ConfigFields,
 ) -> V2RayConfigs:
     logger.info(
-        msg=TEMPLATE_CONFIG_DEDUPLICATION_STARTED.format(
+        msg=TEMPLATE_INFO_CONFIG_DEDUPLICATION_STARTED.format(
             count=len(configs),
             fields=fields,
         ),
@@ -557,7 +581,7 @@ def remove_duplicates_by_fields(
 
     if not fields:
         logger.warning(
-            msg=MESSAGE_CHANNEL_DEDUPLICATION_SKIPPED,
+            msg=MESSAGE_WARNING_CHANNEL_DEDUPLICATION_SKIPPED,
         )
         return configs
 
@@ -591,9 +615,9 @@ def remove_duplicates_by_fields(
     )
 
     logger.info(
-        msg=TEMPLATE_CONFIG_DEDUPLICATION_COMPLETED.format(
-            remain=len(unique_configs),
+        msg=TEMPLATE_INFO_CONFIG_DEDUPLICATION_COMPLETED.format(
             removed=len(configs) - len(unique_configs),
+            remain=len(unique_configs),
         ),
     )
 
@@ -602,12 +626,12 @@ def remove_duplicates_by_fields(
 
 def sort_by_fields(
     configs: V2RayConfigs,
-    fields: ConfigFields,
     *,
+    fields: ConfigFields,
     reverse: bool = False,
 ) -> V2RayConfigs:
     logger.info(
-        msg=TEMPLATE_CONFIG_SORT_STARTED.format(
+        msg=TEMPLATE_INFO_CONFIG_SORT_STARTED.format(
             count=len(configs),
             fields=fields,
             reverse=reverse,
@@ -647,7 +671,7 @@ def sort_by_fields(
     )
 
     logger.info(
-        msg=TEMPLATE_CONFIG_SORT_COMPLETED.format(
+        msg=TEMPLATE_INFO_CONFIG_SORT_COMPLETED.format(
             count=len(sorted_configs),
         ),
     )

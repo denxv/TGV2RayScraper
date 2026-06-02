@@ -1,3 +1,11 @@
+from core.typing import (
+    ChannelInfo,
+    ChannelName,
+    ChannelNames,
+    ChannelsDict,
+    PostID,
+    RecordPredicate,
+)
 from tests.unit.domain.constants.common import (
     CHANNEL_MIN_ID_DIFF,
     CHANNEL_STATE_AVAILABLE,
@@ -73,10 +81,10 @@ ASSIGN_CURRENT_ID_TO_CHANNELS_INVALID_OFFSET_EXAMPLES: tuple[
 
 ASSIGN_CURRENT_ID_TO_CHANNELS_VARIOUS_EXAMPLES: tuple[
     tuple[
-        dict[str, dict[str, int]],
+        ChannelsDict,
         int,
         bool,
-        dict[str, int | None],
+        dict[ChannelName, int | None],
         str,
     ],
     ...,
@@ -133,9 +141,9 @@ ASSIGN_CURRENT_ID_TO_CHANNELS_VARIOUS_EXAMPLES: tuple[
 
 DELETE_CHANNELS_EXAMPLES: tuple[
     tuple[
-        object,
-        list[str],
-        list[str],
+        ChannelsDict,
+        ChannelNames,
+        ChannelNames,
         str,
     ],
     ...,
@@ -248,7 +256,7 @@ DELETE_CHANNELS_EXAMPLES: tuple[
 
 DIFF_CHANNEL_ID_EXAMPLES: tuple[
     tuple[
-        dict[str, object],
+        ChannelInfo,
         int,
         str,
     ],
@@ -263,7 +271,7 @@ DIFF_CHANNEL_ID_EXAMPLES: tuple[
         "current_greater_than_last",
     ),
     (
-        {},
+        {},  # type: ignore[typeddict-item]
         max(
             CHANNEL_MIN_ID_DIFF,
             DEFAULT_LAST_ID - DEFAULT_CURRENT_ID,
@@ -309,7 +317,7 @@ DIFF_CHANNEL_ID_EXAMPLES: tuple[
 
 DISPLAY_CHANNEL_INFO_VARIOUS_EXAMPLES: tuple[
     tuple[
-        object,
+        ChannelsDict,
         str,
     ],
     ...,
@@ -339,8 +347,8 @@ DISPLAY_CHANNEL_INFO_VARIOUS_EXAMPLES: tuple[
 
 FORMAT_CHANNEL_STATUS_EXAMPLES: tuple[
     tuple[
-        str,
-        dict[str, object],
+        ChannelName,
+        ChannelInfo,
         str,
     ],
     ...,
@@ -357,7 +365,7 @@ FORMAT_CHANNEL_STATUS_EXAMPLES: tuple[
     ),
     (
         "channel_missing_values",
-        {},
+        {},  # type: ignore[typeddict-item]
         "missing_values",
     ),
     (
@@ -369,8 +377,8 @@ FORMAT_CHANNEL_STATUS_EXAMPLES: tuple[
 
 GET_FILTERED_KEYS_EXAMPLES: tuple[
     tuple[
-        object,
-        list[str],
+        ChannelsDict,
+        ChannelNames,
         str,
     ],
     ...,
@@ -423,8 +431,8 @@ GET_FILTERED_KEYS_EXAMPLES: tuple[
 
 GET_NORMALIZED_CURRENT_ID_EXAMPLES: tuple[
     tuple[
-        dict[str, object],
-        int,
+        ChannelInfo,
+        PostID,
         str,
     ],
     ...,
@@ -446,7 +454,7 @@ GET_NORMALIZED_CURRENT_ID_EXAMPLES: tuple[
         "current_zero",
     ),
     (
-        {},
+        {},  # type: ignore[typeddict-item]
         max(
             DEFAULT_CURRENT_ID,
             DEFAULT_LAST_ID,
@@ -489,10 +497,10 @@ GET_NORMALIZED_CURRENT_ID_EXAMPLES: tuple[
 
 GET_SORTED_KEYS_EXAMPLES: tuple[
     tuple[
-        object,
+        ChannelsDict,
         bool,
         bool,
-        list[str],
+        ChannelNames,
         str,
     ],
     ...,
@@ -603,8 +611,8 @@ GET_SORTED_KEYS_EXAMPLES: tuple[
 
 NORMALIZE_CHANNEL_NAMES_EXAMPLES: tuple[
     tuple[
-        object,
-        object,
+        ChannelsDict,
+        ChannelsDict,
         str,
     ],
     ...,
@@ -652,7 +660,7 @@ NORMALIZE_CHANNEL_NAMES_EXAMPLES: tuple[
     ),
     (
         {
-            name: {
+            name: {  # type: ignore[misc]
                 **CHANNEL_BASE,
             }
             for name in (
@@ -750,12 +758,12 @@ PROCESS_CHANNELS_CALLS_EXAMPLES: tuple[
 
 RESET_CHANNELS_EXAMPLES: tuple[
     tuple[
-        dict[str, object] | None,
-        object | None,
+        ChannelInfo | None,
+        RecordPredicate | None,
         str,
     ],
     ...,
-] = (
+] = (  # type: ignore[assignment]
     (
         {},
         lambda channel: channel["current_id"] == channel["last_id"],
@@ -775,7 +783,7 @@ RESET_CHANNELS_EXAMPLES: tuple[
         {
             "current_id": NUM1 + NUM2 + NUM3,
         },
-        lambda channel: channel["count"] > 0,
+        lambda channel: channel["count"] > 0,  # type: ignore[operator]
         "overrides_and_predicate",
     ),
     (
@@ -795,7 +803,7 @@ RESET_CHANNELS_EXAMPLES: tuple[
 
 SORT_CHANNEL_NAMES_EXAMPLES: tuple[
     tuple[
-        list[str],
+        ChannelNames,
         str,
     ],
     ...,
@@ -850,10 +858,10 @@ SORT_CHANNEL_NAMES_EXAMPLES: tuple[
 
 UPDATE_LAST_ID_AND_STATE_EXAMPLES: tuple[
     tuple[
-        str,
-        dict[str, object],
-        int,
-        dict[str, object],
+        ChannelName,
+        ChannelInfo,
+        PostID,
+        ChannelInfo,
         str,
     ],
     ...,
@@ -889,9 +897,9 @@ UPDATE_LAST_ID_AND_STATE_EXAMPLES: tuple[
     ),
     (
         "channel_base_empty_channel_info",
-        {},
+        {},  # type: ignore[typeddict-item]
         LAST_POST_ID,
-        {
+        {  # type: ignore[typeddict-item]
             "last_id": LAST_POST_ID,
             "state": CHANNEL_STATE_AVAILABLE,
         },
@@ -953,9 +961,9 @@ UPDATE_LAST_ID_AND_STATE_EXAMPLES: tuple[
 
 UPDATE_WITH_NEW_CHANNELS_EXAMPLES: tuple[
     tuple[
-        object,
-        list[str],
-        list[str],
+        ChannelsDict,
+        ChannelNames,
+        ChannelNames,
         str,
     ],
     ...,

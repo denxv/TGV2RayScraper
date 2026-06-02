@@ -51,10 +51,16 @@ __all__ = [
     "UPDATE_WITH_NEW_CHANNELS_CASES",
 ]
 
-ASSIGN_CURRENT_ID_TO_CHANNELS_INVALID_OFFSET_ARGS = (
+ASSIGN_CURRENT_ID_TO_CHANNELS_INVALID_OFFSET_ARGS: tuple[
+    str,
+    ...,
+] = (
     "invalid_offset",
 )
-ASSIGN_CURRENT_ID_TO_CHANNELS_INVALID_OFFSET_CASES = tuple(
+ASSIGN_CURRENT_ID_TO_CHANNELS_INVALID_OFFSET_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         invalid_offset,
         id=case_id,
@@ -65,13 +71,19 @@ ASSIGN_CURRENT_ID_TO_CHANNELS_INVALID_OFFSET_CASES = tuple(
     ) in ASSIGN_CURRENT_ID_TO_CHANNELS_INVALID_OFFSET_EXAMPLES
 )
 
-ASSIGN_CURRENT_ID_TO_CHANNELS_VARIOUS_ARGS = (
+ASSIGN_CURRENT_ID_TO_CHANNELS_VARIOUS_ARGS: tuple[
+    str,
+    ...,
+] = (
     "channels",
     "message_offset",
     "dry_run",
     "expected_current_ids",
 )
-ASSIGN_CURRENT_ID_TO_CHANNELS_VARIOUS_CASES = tuple(
+ASSIGN_CURRENT_ID_TO_CHANNELS_VARIOUS_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         channels,
         message_offset,
@@ -88,12 +100,18 @@ ASSIGN_CURRENT_ID_TO_CHANNELS_VARIOUS_CASES = tuple(
     ) in ASSIGN_CURRENT_ID_TO_CHANNELS_VARIOUS_EXAMPLES
 )
 
-DELETE_CHANNELS_ARGS = (
+DELETE_CHANNELS_ARGS: tuple[
+    str,
+    ...,
+] = (
     "channels",
     "expected_keys_to_keep",
     "expected_deleted",
 )
-DELETE_CHANNELS_CASES = tuple(
+DELETE_CHANNELS_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         channels,
         expected_keys_to_keep,
@@ -108,11 +126,17 @@ DELETE_CHANNELS_CASES = tuple(
     ) in DELETE_CHANNELS_EXAMPLES
 )
 
-DIFF_CHANNEL_ID_ARGS = (
+DIFF_CHANNEL_ID_ARGS: tuple[
+    str,
+    ...,
+] = (
     "channel_info",
     "expected",
 )
-DIFF_CHANNEL_ID_CASES = tuple(
+DIFF_CHANNEL_ID_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         channel_info,
         expected,
@@ -125,10 +149,16 @@ DIFF_CHANNEL_ID_CASES = tuple(
     ) in DIFF_CHANNEL_ID_EXAMPLES
 )
 
-DISPLAY_CHANNEL_INFO_VARIOUS_ARGS = (
+DISPLAY_CHANNEL_INFO_VARIOUS_ARGS: tuple[
+    str,
+    ...,
+] = (
     "channels",
 )
-DISPLAY_CHANNEL_INFO_VARIOUS_CASES = tuple(
+DISPLAY_CHANNEL_INFO_VARIOUS_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         channels,
         id=case_id,
@@ -139,11 +169,17 @@ DISPLAY_CHANNEL_INFO_VARIOUS_CASES = tuple(
     ) in DISPLAY_CHANNEL_INFO_VARIOUS_EXAMPLES
 )
 
-FORMAT_CHANNEL_STATUS_ARGS = (
+FORMAT_CHANNEL_STATUS_ARGS: tuple[
+    str,
+    ...,
+] = (
     "channel_name",
     "channel_info",
 )
-FORMAT_CHANNEL_STATUS_CASES = tuple(
+FORMAT_CHANNEL_STATUS_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         channel_name,
         channel_info,
@@ -156,11 +192,17 @@ FORMAT_CHANNEL_STATUS_CASES = tuple(
     ) in FORMAT_CHANNEL_STATUS_EXAMPLES
 )
 
-GET_FILTERED_KEYS_ARGS = (
+GET_FILTERED_KEYS_ARGS: tuple[
+    str,
+    ...,
+] = (
     "channels",
     "expected",
 )
-GET_FILTERED_KEYS_CASES = tuple(
+GET_FILTERED_KEYS_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         channels,
         expected,
@@ -173,11 +215,17 @@ GET_FILTERED_KEYS_CASES = tuple(
     ) in GET_FILTERED_KEYS_EXAMPLES
 )
 
-GET_NORMALIZED_CURRENT_ID_ARGS = (
+GET_NORMALIZED_CURRENT_ID_ARGS: tuple[
+    str,
+    ...,
+] = (
     "channel_info",
     "expected",
 )
-GET_NORMALIZED_CURRENT_ID_CASES = tuple(
+GET_NORMALIZED_CURRENT_ID_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         channel_info,
         expected,
@@ -190,13 +238,19 @@ GET_NORMALIZED_CURRENT_ID_CASES = tuple(
     ) in GET_NORMALIZED_CURRENT_ID_EXAMPLES
 )
 
-GET_SORTED_KEYS_ARGS = (
+GET_SORTED_KEYS_ARGS: tuple[
+    str,
+    ...,
+] = (
     "channels",
     "apply_filter",
     "reverse",
     "expected",
 )
-GET_SORTED_KEYS_CASES = tuple(
+GET_SORTED_KEYS_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         channels,
         apply_filter,
@@ -213,11 +267,17 @@ GET_SORTED_KEYS_CASES = tuple(
     ) in GET_SORTED_KEYS_EXAMPLES
 )
 
-NORMALIZE_CHANNEL_NAMES_ARGS = (
+NORMALIZE_CHANNEL_NAMES_ARGS: tuple[
+    str,
+    ...,
+] = (
     "channels",
     "expected",
 )
-NORMALIZE_CHANNEL_NAMES_CASES = tuple(
+NORMALIZE_CHANNEL_NAMES_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         channels,
         expected,
@@ -230,13 +290,19 @@ NORMALIZE_CHANNEL_NAMES_CASES = tuple(
     ) in NORMALIZE_CHANNEL_NAMES_EXAMPLES
 )
 
-PROCESS_CHANNELS_CALLS_ARGS = (
+PROCESS_CHANNELS_CALLS_ARGS: tuple[
+    str,
+    ...,
+] = (
     "message_offset",
     "dry_run",
     "delete_channels_flag",
     "reset_all",
 )
-PROCESS_CHANNELS_CALLS_CASES = tuple(
+PROCESS_CHANNELS_CALLS_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         message_offset,
         dry_run,
@@ -253,13 +319,19 @@ PROCESS_CHANNELS_CALLS_CASES = tuple(
     ) in PROCESS_CHANNELS_CALLS_EXAMPLES
 )
 
-RESET_CHANNELS_ARGS = (
+RESET_CHANNELS_ARGS: tuple[
+    str,
+    ...,
+] = (
     "channel_overrides",
     "channel_predicate",
     "dry_run",
     "reset_to_defaults",
 )
-RESET_CHANNELS_CASES = tuple(
+RESET_CHANNELS_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         channel_overrides,
         channel_predicate,
@@ -286,12 +358,18 @@ RESET_CHANNELS_CASES = tuple(
     )
 )
 
-SORT_CHANNEL_NAMES_ARGS = (
+SORT_CHANNEL_NAMES_ARGS: tuple[
+    str,
+    ...,
+] = (
     "channel_names",
     "ignore_case",
     "reverse",
 )
-SORT_CHANNEL_NAMES_CASES = tuple(
+SORT_CHANNEL_NAMES_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         names,
         ignore_case,
@@ -316,13 +394,19 @@ SORT_CHANNEL_NAMES_CASES = tuple(
     )
 )
 
-UPDATE_LAST_ID_AND_STATE_ARGS = (
+UPDATE_LAST_ID_AND_STATE_ARGS: tuple[
+    str,
+    ...,
+] = (
     "channel_name",
     "channel_info",
     "last_post_id",
     "expected",
 )
-UPDATE_LAST_ID_AND_STATE_CASES = tuple(
+UPDATE_LAST_ID_AND_STATE_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         channel_name,
         channel_info,
@@ -339,12 +423,18 @@ UPDATE_LAST_ID_AND_STATE_CASES = tuple(
     ) in UPDATE_LAST_ID_AND_STATE_EXAMPLES
 )
 
-UPDATE_WITH_NEW_CHANNELS_ARGS = (
+UPDATE_WITH_NEW_CHANNELS_ARGS: tuple[
+    str,
+    ...,
+] = (
     "current_channels",
     "new_channel_names",
     "expected_keys",
 )
-UPDATE_WITH_NEW_CHANNELS_CASES = tuple(
+UPDATE_WITH_NEW_CHANNELS_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         current_channels,
         new_channel_names,

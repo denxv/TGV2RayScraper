@@ -12,6 +12,9 @@ from pytest_mock import (
     MockerFixture,
 )
 
+from core.terminal.renderers import (
+    render_channel_status,
+)
 from core.typing import (
     ChannelInfo,
     ChannelName,
@@ -20,10 +23,9 @@ from core.typing import (
     PostID,
     RecordPredicate,
 )
-from core.utils import (
-    repeat_char_line,
-)
 from domain.channel import (
+    ChannelStatus,
+    ChannelUpdateResult,
     assign_current_id_to_channels,
     delete_channels,
     diff_channel_id,
@@ -45,29 +47,24 @@ from domain.predicates import (
 from tests.unit.domain.constants.common import (
     DEFAULT_CHANNEL_VALUES,
     DEFAULT_LAST_ID,
-    MESSAGE_CHANNEL_DELETE_SKIPPED,
-    MESSAGE_CHANNEL_SHOW_INFO,
-    MESSAGE_NO_CHANNELS_TO_DISPLAY,
-    TEMPLATE_CHANNEL_ASSIGNMENT_APPLIED,
-    TEMPLATE_CHANNEL_ASSIGNMENT_OFFSET_APPLIED,
-    TEMPLATE_CHANNEL_ASSIGNMENT_OFFSET_SKIPPED,
-    TEMPLATE_CHANNEL_ASSIGNMENT_SKIPPED,
-    TEMPLATE_CHANNEL_LEFT_TO_CHECK,
-    TEMPLATE_CHANNEL_LOG_STATUS,
-    TEMPLATE_CHANNEL_LOG_UPDATE,
-    TEMPLATE_CHANNEL_MISSING_ADD_COMPLETED,
-    TEMPLATE_CHANNEL_RESET_SKIPPED,
-    TEMPLATE_CHANNEL_RESET_SKIPPED_NO_CHANGES,
-    TEMPLATE_CHANNEL_RESET_TOTAL,
-    TEMPLATE_CHANNEL_TOTAL_AVAILABLE,
-    TEMPLATE_CHANNEL_TOTAL_MESSAGES,
-    TEMPLATE_ERROR_INVALID_OFFSET,
+    FORMAT_CHANNEL_CHANGE,
+    MESSAGE_INFO_CHANNEL_DELETE_SKIPPED,
+    MESSAGE_WARNING_NO_CHANNELS_TO_DISPLAY,
+    TEMPLATE_DEBUG_CHANNEL_ASSIGNMENT_OFFSET_APPLIED,
+    TEMPLATE_DEBUG_CHANNEL_MISSING_ADD_COMPLETED,
+    TEMPLATE_DEBUG_CHANNEL_RESET_SKIPPED_NO_CHANGES,
     TEMPLATE_ERROR_INVALID_OVERRIDE_FIELDS,
-    TEMPLATE_FORMAT_CHANNEL_CHANGE,
-    TEMPLATE_FORMAT_STRING_QUOTED_NAME,
+    TEMPLATE_INFO_CHANNEL_ASSIGNMENT_APPLIED,
+    TEMPLATE_INFO_CHANNEL_ASSIGNMENT_SKIPPED,
+    TEMPLATE_INFO_CHANNEL_RESET_SKIPPED,
+    TEMPLATE_INFO_CHANNEL_RESET_TOTAL,
+    TEMPLATE_INFO_CHANNELS_STATUS_COMPLETED,
+    TEMPLATE_INFO_CHANNELS_STATUS_STARTED,
     TEMPLATE_TITLE_CHANNEL_DELETE,
     TEMPLATE_TITLE_CHANNEL_INFO,
     TEMPLATE_TITLE_CHANNEL_RESET,
+    TEMPLATE_WARNING_CHANNEL_ASSIGNMENT_OFFSET_SKIPPED,
+    TEMPLATE_WARNING_INVALID_OFFSET,
 )
 from tests.unit.domain.constants.fixtures.channel import (
     CHANNEL_INFO_BY_NAMES,
@@ -113,7 +110,7 @@ from tests.unit.domain.constants.test_cases.channel import (
 )
 def test_assign_current_id_to_channels_invalid_offset(
     mock_logger: Mock,
-    invalid_offset: object,
+    invalid_offset: int | str,
 ) -> None:
     expected_channels = CHANNEL_INFO_BY_NAMES([
         "channel_available",
@@ -130,7 +127,7 @@ def test_assign_current_id_to_channels_invalid_offset(
     assert updated_channels is not expected_channels
 
     mock_logger.warning.assert_any_call(
-        msg=TEMPLATE_ERROR_INVALID_OFFSET.format(
+        msg=TEMPLATE_WARNING_INVALID_OFFSET.format(
             offset=invalid_offset,
         ),
     )
@@ -147,7 +144,7 @@ def test_assign_current_id_to_channels_various(
     message_offset: int,
     *,
     dry_run: bool,
-    expected_current_ids: dict[str, int],
+    expected_current_ids: dict[ChannelName, int],
 ) -> None:
     updated_channels = assign_current_id_to_channels(
         channels=channels,
@@ -174,10 +171,8 @@ def test_assign_current_id_to_channels_various(
         if diff <= message_offset:
             continue
 
-        _expected_msg = TEMPLATE_CHANNEL_ASSIGNMENT_OFFSET_SKIPPED.format(
-            name=TEMPLATE_FORMAT_STRING_QUOTED_NAME.format(
-                name=name,
-            ),
+        _exp_msg = TEMPLATE_WARNING_CHANNEL_ASSIGNMENT_OFFSET_SKIPPED.format(
+            name=name,
             diff=diff,
             offset=message_offset,
         )
@@ -190,26 +185,24 @@ def test_assign_current_id_to_channels_various(
                 obj=channels[name],
             )
             mock_logger.warning.assert_any_call(
-                msg=_expected_msg,
+                msg=_exp_msg,
             )
         else:
             mock_logger.debug.assert_any_call(
-                msg=TEMPLATE_CHANNEL_ASSIGNMENT_OFFSET_APPLIED.format(
-                    message=_expected_msg,
+                msg=TEMPLATE_DEBUG_CHANNEL_ASSIGNMENT_OFFSET_APPLIED.format(
+                    message=_exp_msg,
                 ),
             )
             mock_logger.info.assert_any_call(
-                msg=TEMPLATE_CHANNEL_ASSIGNMENT_APPLIED.format(
-                    name=TEMPLATE_FORMAT_STRING_QUOTED_NAME.format(
-                        name=name,
-                    ),
+                msg=TEMPLATE_INFO_CHANNEL_ASSIGNMENT_APPLIED.format(
                     offset=-message_offset,
+                    name=name,
                 ),
             )
 
     if dry_run:
         mock_logger.info.assert_any_call(
-            msg=TEMPLATE_CHANNEL_ASSIGNMENT_SKIPPED.format(
+            msg=TEMPLATE_INFO_CHANNEL_ASSIGNMENT_SKIPPED.format(
                 count=len(channel_names_for_update),
             ),
         )
@@ -271,13 +264,13 @@ def test_diff_channel_id(
 )
 def test_display_channel_info_various(
     mock_logger: Mock,
+    mock_console: Mock,
     channels: ChannelsDict,
 ) -> None:
     display_channel_info(
         channels=channels,
     )
 
-    total_diff = 0
     filtered_names = get_sorted_keys(
         channels=channels,
         apply_filter=True,
@@ -285,52 +278,42 @@ def test_display_channel_info_various(
 
     if not filtered_names:
         mock_logger.warning.assert_called_once_with(
-            msg=MESSAGE_NO_CHANNELS_TO_DISPLAY,
+            msg=MESSAGE_WARNING_NO_CHANNELS_TO_DISPLAY,
         )
         mock_logger.info.assert_not_called()
         return
 
-    separator_line = repeat_char_line(
-        char="-",
+    total_messages = render_channel_status(
+        results=[
+            format_channel_status(
+                channel_name=name,
+                channel_info=channels[name],
+            )
+            for name in filtered_names
+        ],
+        console=mock_console,
     )
+
+    mock_logger.warning.assert_not_called()
+
     expected_calls = [
-        separator_line,
-        MESSAGE_CHANNEL_SHOW_INFO,
+        call(
+            msg=TEMPLATE_INFO_CHANNELS_STATUS_STARTED.format(
+                count=len(filtered_names),
+            ),
+        ),
+        call(
+            msg=TEMPLATE_INFO_CHANNELS_STATUS_COMPLETED.format(
+                total=len(channels),
+                pending=len(filtered_names),
+                messages=total_messages,
+            ),
+        ),
     ]
 
-    for channel_name in filtered_names:
-        diff, expected_msg = format_channel_status(
-            channel_name=channel_name,
-            channel_info=channels[channel_name],
-        )
-        total_diff += diff
-        expected_calls.append(expected_msg)
-
-    expected_calls.append(
-        TEMPLATE_CHANNEL_TOTAL_AVAILABLE.format(
-            count=len(channels),
-        ),
-    )
-    expected_calls.append(
-        TEMPLATE_CHANNEL_LEFT_TO_CHECK.format(
-            count=len(filtered_names),
-        ),
-    )
-    expected_calls.append(
-        TEMPLATE_CHANNEL_TOTAL_MESSAGES.format(
-            count=total_diff,
-        ),
-    )
-    expected_calls.append(
-        separator_line,
-    )
-
-    actual_calls = [
-        call.kwargs.get("msg", "")
-        for call in mock_logger.info.call_args_list
-    ]
-
-    assert actual_calls == expected_calls
+    mock_logger.info.assert_has_calls(expected_calls)
+    assert mock_logger.info.call_count == 2
+    mock_console.print.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -341,7 +324,7 @@ def test_format_channel_status(
     channel_name: ChannelName,
     channel_info: ChannelInfo,
 ) -> None:
-    diff, message = format_channel_status(
+    result = format_channel_status(
         channel_name=channel_name,
         channel_info=channel_info,
     )
@@ -350,23 +333,16 @@ def test_format_channel_status(
         channel_info=channel_info,
     )
 
-    assert diff == expected_diff
-
-    expected_message = (
-        TEMPLATE_CHANNEL_LOG_STATUS.format(
-            name=channel_name,
-            current_id=get_normalized_current_id(
-                channel_info=channel_info,
-            ),
-            last_id=channel_info.get(
-                "last_id",
-                DEFAULT_LAST_ID,
-            ),
-            diff=expected_diff,
-        )
+    assert isinstance(result, ChannelStatus)
+    assert result.channel_name == channel_name
+    assert result.current_id == get_normalized_current_id(
+        channel_info=channel_info,
     )
-
-    assert message == expected_message
+    assert result.last_id == channel_info.get(
+        "last_id",
+        DEFAULT_LAST_ID,
+    )
+    assert result.diff_id == expected_diff
 
 
 @pytest.mark.parametrize(
@@ -498,7 +474,7 @@ def test_process_channels_calls(
     else:
         mock_delete.assert_not_called()
         mock_logger.info.assert_any_call(
-            msg=MESSAGE_CHANNEL_DELETE_SKIPPED,
+            msg=MESSAGE_INFO_CHANNEL_DELETE_SKIPPED,
         )
 
     if message_offset:
@@ -551,7 +527,7 @@ def test_reset_channels(
         reset_to_defaults=reset_to_defaults,
     )
 
-    overrides = channel_overrides or {}
+    overrides = channel_overrides or {}  # type: ignore[var-annotated]
 
     valid_overrides = {
         key: value
@@ -561,7 +537,7 @@ def test_reset_channels(
 
     if not reset_to_defaults and not valid_overrides:
         mock_logger.debug.assert_called_with(
-            msg=TEMPLATE_CHANNEL_RESET_SKIPPED_NO_CHANGES.format(
+            msg=TEMPLATE_DEBUG_CHANNEL_RESET_SKIPPED_NO_CHANGES.format(
                 reset_to_defaults=reset_to_defaults,
                 valid_overrides=valid_overrides,
             ),
@@ -582,14 +558,14 @@ def test_reset_channels(
 
     if dry_run:
         mock_logger.info.assert_called_with(
-            msg=TEMPLATE_CHANNEL_RESET_SKIPPED.format(
+            msg=TEMPLATE_INFO_CHANNEL_RESET_SKIPPED.format(
                 count=len(channel_names_to_reset),
             ),
         )
         return
 
     mock_logger.info.assert_called_with(
-        msg=TEMPLATE_CHANNEL_RESET_TOTAL.format(
+        msg=TEMPLATE_INFO_CHANNEL_RESET_TOTAL.format(
             count=len(channel_names_to_reset),
         ),
     )
@@ -601,7 +577,7 @@ def test_reset_channels(
                     name=name,
                 ),
                 obj={
-                    key: TEMPLATE_FORMAT_CHANNEL_CHANGE.format(
+                    key: FORMAT_CHANNEL_CHANGE.format(
                         before=channels[name].get(key),
                         after=result[name][key],  # type: ignore[literal-required]
                     )
@@ -674,7 +650,6 @@ def test_sort_channel_names(
     UPDATE_LAST_ID_AND_STATE_CASES,
 )
 def test_update_last_id_and_state(
-    mock_logger: Mock,
     channel_name: ChannelName,
     channel_info: ChannelInfo,
     last_post_id: PostID,
@@ -685,7 +660,7 @@ def test_update_last_id_and_state(
         DEFAULT_LAST_ID,
     )
 
-    update_last_id_and_state(
+    result = update_last_id_and_state(
         channel_name=channel_name,
         channel_info=channel_info,
         last_post_id=last_post_id,
@@ -693,16 +668,11 @@ def test_update_last_id_and_state(
 
     assert channel_info == expected
 
-    if old_last_id != last_post_id:
-        mock_logger.info.assert_called_once_with(
-            msg=TEMPLATE_CHANNEL_LOG_UPDATE.format(
-                name=channel_name,
-                last_id=old_last_id,
-                last_post_id=last_post_id,
-            ),
-        )
-    else:
-        mock_logger.info.assert_not_called()
+    assert isinstance(result, ChannelUpdateResult)
+    assert result.channel_name == channel_name
+    assert result.old_last_id == old_last_id
+    assert result.new_last_id == last_post_id
+    assert result.changed == (old_last_id != last_post_id)
 
 
 @pytest.mark.parametrize(
@@ -733,7 +703,7 @@ def test_update_with_new_channels(
         assert updated_channels[name] is not DEFAULT_CHANNEL_VALUES
 
         mock_logger.debug.assert_any_call(
-            msg=TEMPLATE_CHANNEL_MISSING_ADD_COMPLETED.format(
+            msg=TEMPLATE_DEBUG_CHANNEL_MISSING_ADD_COMPLETED.format(
                 name=name,
             ),
         )

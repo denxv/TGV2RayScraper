@@ -4,7 +4,9 @@ from argparse import (
 )
 from asyncio import (
     CancelledError,
-    run,
+)
+from asyncio import (
+    run as asyncio_run,
 )
 
 from adapters.config import (
@@ -20,22 +22,29 @@ from core.constants.common import (
     DEFAULT_PATH_CONFIGS_RAW,
     SUPPRESS,
 )
-from core.constants.messages import (
-    MESSAGE_ERROR_PROGRAM_EXIT,
+from core.constants.messages.error import (
     MESSAGE_ERROR_UNEXPECTED_FAILURE,
 )
-from core.constants.patterns import (
+from core.constants.messages.info import (
+    MESSAGE_INFO_PROGRAM_EXIT,
+)
+from core.constants.patterns.v2ray.registry import (
     PATTERNS_V2RAY_URLS_BY_PROTOCOL,
 )
-from core.logger import (
+from core.context import (
+    IOContext,
+)
+from core.terminal.logger import (
     log_debug_object,
     logger,
+    set_console_level,
 )
 from core.typing import (
     ArgsNamespace,
 )
 from core.utils import (
     abs_path,
+    normalize_condition,
     parse_valid_fields,
     rel_path,
     validate_file_path,
@@ -73,6 +82,16 @@ def parse_args() -> ArgsNamespace:
 
     group_global = parser.add_argument_group(
         "Global options",
+    )
+    group_global.add_argument(
+        "--debug",
+        action="store_true",
+        default=False,
+        dest="debug",
+        help=(
+            "Enable debug logging in console. "
+            "By default, console shows INFO level logs."
+        ),
     )
     group_global.add_argument(
         "--skip-normalize",
@@ -188,7 +207,7 @@ def parse_args() -> ArgsNamespace:
             "If omitted, no filtering is applied."
         ),
         metavar="CONDITION",
-        type=str,
+        type=normalize_condition,
     )
     group_filter_sort.add_argument(
         "-R", "--reverse",
@@ -214,9 +233,14 @@ def parse_args() -> ArgsNamespace:
 
     args = parser.parse_args()
 
+    set_console_level(
+        logger=logger,
+        debug=args.debug,
+    )
+
     log_debug_object(
-        title="Parsed command-line arguments",
         obj=args,
+        title="Parsed command-line arguments",
     )
 
     return args
@@ -226,13 +250,18 @@ async def main() -> None:
     try:
         parsed_args = parse_args()
 
+        io_ctx = IOContext(
+            configs_clean_path=parsed_args.configs_clean_path,
+            configs_raw_path=parsed_args.configs_raw_path,
+        )
+
         log_debug_object(
-            title="Compiled URL regex patterns by V2Ray protocol",
             obj=PATTERNS_V2RAY_URLS_BY_PROTOCOL,
+            title="Compiled URL regex patterns by V2Ray protocol",
         )
 
         configs = await load_configs(
-            configs_path=parsed_args.configs_raw_path,
+            ctx=io_ctx,
             import_path=parsed_args.import_path,
             skip_normalize=parsed_args.skip_normalize,
         )
@@ -243,8 +272,8 @@ async def main() -> None:
         )
 
         await save_configs(
+            ctx=io_ctx,
             configs=processed_configs,
-            configs_path=parsed_args.configs_clean_path,
             export_path=parsed_args.export_path,
         )
     except (
@@ -252,7 +281,7 @@ async def main() -> None:
         KeyboardInterrupt,
     ):
         logger.info(
-            msg=MESSAGE_ERROR_PROGRAM_EXIT,
+            msg=MESSAGE_INFO_PROGRAM_EXIT,
         )
     except Exception:
         logger.exception(
@@ -261,6 +290,6 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    run(
+    asyncio_run(
         main=main(),
     )

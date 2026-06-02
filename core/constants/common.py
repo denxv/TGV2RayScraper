@@ -14,23 +14,29 @@ from urllib.request import (
 
 from core.typing import (
     ChannelInfo,
+    Padding,
+    ScriptConfig,
+    ScriptName,
 )
 
 __all__ = [
     "BASE64_BLOCK_SIZE",
-    "BATCH_EXTRACT_DEFAULT",
-    "BATCH_EXTRACT_MAX",
-    "BATCH_EXTRACT_MIN",
-    "BATCH_UPDATE_DEFAULT",
-    "BATCH_UPDATE_MAX",
-    "BATCH_UPDATE_MIN",
+    "CHANNELS_BATCH_DEFAULT",
+    "CHANNELS_BATCH_MAX",
+    "CHANNELS_BATCH_MIN",
+    "CHANNELS_CONCURRENCY_DEFAULT",
+    "CHANNELS_CONCURRENCY_MAX",
+    "CHANNELS_CONCURRENCY_MIN",
     "CHANNEL_FAILED_ATTEMPTS_THRESHOLD",
     "CHANNEL_MIN_ID_DIFF",
     "CHANNEL_REMOVE_THRESHOLD",
     "CHANNEL_STATE_AVAILABLE",
     "CHANNEL_STATE_UNAVAILABLE",
+    "CHANNEL_TABLE_PADDING",
     "CLI_SCRIPTS_CONFIG",
-    "COLORS",
+    "CONFIGS_BATCH_DEFAULT",
+    "CONFIGS_BATCH_MAX",
+    "CONFIGS_BATCH_MIN",
     "DEBUG",
     "DEFAULT_CHANNEL_VALUES",
     "DEFAULT_COUNT",
@@ -40,7 +46,6 @@ __all__ = [
     "DEFAULT_JSON_INDENT",
     "DEFAULT_LAST_ID",
     "DEFAULT_LOGGER_NAME",
-    "DEFAULT_LOG_LINE_LENGTH",
     "DEFAULT_PATH_CHANNELS",
     "DEFAULT_PATH_CONFIGS_CLEAN",
     "DEFAULT_PATH_CONFIGS_EXPORT",
@@ -53,10 +58,17 @@ __all__ = [
     "DEFAULT_STATE",
     "DEFAULT_VALUE_MAX",
     "DEFAULT_VALUE_MIN",
+    "HTTP_RETRIES_DEFAULT",
+    "HTTP_RETRIES_MAX",
+    "HTTP_RETRIES_MIN",
+    "HTTP_RETRY_DELAY_DEFAULT",
+    "HTTP_RETRY_DELAY_MAX",
+    "HTTP_RETRY_DELAY_MIN",
     "HTTP_TIMEOUT_DEFAULT",
     "HTTP_TIMEOUT_MAX",
     "HTTP_TIMEOUT_MIN",
     "INFO",
+    "LOGGING_THEME",
     "MESSAGE_OFFSET_DEFAULT",
     "MESSAGE_OFFSET_MAX",
     "MESSAGE_OFFSET_MIN",
@@ -67,45 +79,107 @@ __all__ = [
     "POST_FIRST_ID",
     "POST_FIRST_INDEX",
     "POST_LAST_INDEX",
+    "PROGRESS_REMOVE_DELAY_DEFAULT",
     "SUPPRESS",
-    "TEXT_LENGTH_MSG_OFFSET",
+    "TELEGRAM_POST_PAGE_SIZE",
     "TEXT_LENGTH_NAME",
     "TEXT_LENGTH_NUMBER",
     "XPATH_POST_IDS",
     "XPATH_TG_MESSAGES_TEXT",
 ]
 
-BASE64_BLOCK_SIZE = 4
+_ENV_PROXIES: dict[str, str] = getproxies()
 
-BATCH_EXTRACT_DEFAULT = 20
-BATCH_EXTRACT_MAX = 100
-BATCH_EXTRACT_MIN = 1
+BASE64_BLOCK_SIZE: int = 4
 
-BATCH_ID = 20
+CHANNELS_BATCH_DEFAULT: int = 100
+CHANNELS_BATCH_MAX: int = 1000
+CHANNELS_BATCH_MIN: int = 1
 
-BATCH_UPDATE_DEFAULT = 100
-BATCH_UPDATE_MAX = 1000
-BATCH_UPDATE_MIN = 1
+CHANNELS_CONCURRENCY_DEFAULT: int = 5
+CHANNELS_CONCURRENCY_MAX: int = 100
+CHANNELS_CONCURRENCY_MIN: int = 1
 
-CHANNEL_FAILED_ATTEMPTS_THRESHOLD = -3
-CHANNEL_MIN_ID_DIFF = 0
-CHANNEL_REMOVE_THRESHOLD = 0
-CHANNEL_STATE_AVAILABLE = 1
-CHANNEL_STATE_UNAVAILABLE = -1
+CONFIGS_BATCH_DEFAULT: int = 20
+CONFIGS_BATCH_MAX: int = 500
+CONFIGS_BATCH_MIN: int = 1
 
-COLORS = {
-    "DEBUG": "\033[37m",
-    "INFO": "\033[32m",
-    "WARNING": "\033[33m",
-    "ERROR": "\033[31m",
-    "CRITICAL": "\033[31m",
-    "RESET": "\033[0m",
-}
+CHANNEL_FAILED_ATTEMPTS_THRESHOLD: int = -3
+CHANNEL_MIN_ID_DIFF: int = 0
+CHANNEL_REMOVE_THRESHOLD: int = 0
+CHANNEL_STATE_AVAILABLE: int = 1
+CHANNEL_STATE_UNAVAILABLE: int = -1
 
-DEFAULT_COUNT = 0
-DEFAULT_CURRENT_ID = 1
-DEFAULT_LAST_ID = -1
-DEFAULT_STATE = 0
+CHANNEL_TABLE_PADDING: Padding = (1, 0, 1, 25)
+
+DEFAULT_COUNT: int = 0
+DEFAULT_CURRENT_ID: int = 1
+DEFAULT_LAST_ID: int = -1
+DEFAULT_STATE: int = 0
+
+DEFAULT_HELP_INDENT: int = 40
+DEFAULT_HELP_WIDTH: int = 150
+DEFAULT_JSON_INDENT: int = 4
+DEFAULT_LOGGER_NAME: str = "TGV2RayScraper"
+
+DEFAULT_PATH_PROJECT: Path = (Path(__file__).parent / "../../").resolve()
+
+DEFAULT_PATH_CHANNELS: Path = (
+    DEFAULT_PATH_PROJECT / "channels/current.json"
+)
+DEFAULT_PATH_CONFIGS_CLEAN: Path = (
+    DEFAULT_PATH_PROJECT / "configs/v2ray-clean.txt"
+)
+DEFAULT_PATH_CONFIGS_EXPORT: Path = (
+    DEFAULT_PATH_PROJECT / "configs/v2ray.json"
+)
+DEFAULT_PATH_CONFIGS_IMPORT: Path = (
+    DEFAULT_PATH_PROJECT / "configs/v2ray.json"
+)
+DEFAULT_PATH_CONFIGS_RAW: Path = (
+    DEFAULT_PATH_PROJECT / "configs/v2ray-raw.txt"
+)
+DEFAULT_PATH_LOGS: Path = (
+    DEFAULT_PATH_PROJECT / "logs"
+)
+DEFAULT_PATH_URLS: Path = (
+    DEFAULT_PATH_PROJECT / "channels/urls.txt"
+)
+
+DEFAULT_VALUE_MAX: float = float("inf")
+DEFAULT_VALUE_MIN: float = float("-inf")
+
+HTTP_RETRIES_DEFAULT: int = 3
+HTTP_RETRIES_MAX: int = 10
+HTTP_RETRIES_MIN: int = 1
+
+HTTP_RETRY_DELAY_DEFAULT: float = 0.5
+HTTP_RETRY_DELAY_MAX: float = 60.0
+HTTP_RETRY_DELAY_MIN: float = 0.0
+
+HTTP_TIMEOUT_DEFAULT: float = 30.0
+HTTP_TIMEOUT_MAX: float = 100.0
+HTTP_TIMEOUT_MIN: float = 0.1
+
+MESSAGE_OFFSET_DEFAULT: int = 50
+MESSAGE_OFFSET_MAX: int = 1000
+MESSAGE_OFFSET_MIN: int = 1
+
+PORT_MAX: int = 65535
+PORT_MIN: int = 1
+
+POST_DEFAULT_ID: int = 0
+POST_DEFAULT_INDEX: int = 0
+POST_FIRST_ID: int = 1
+POST_FIRST_INDEX: int = 0
+POST_LAST_INDEX: int = -1
+
+PROGRESS_REMOVE_DELAY_DEFAULT: float = 0.25
+
+TELEGRAM_POST_PAGE_SIZE: int = 20
+
+TEXT_LENGTH_NAME: int = 32
+TEXT_LENGTH_NUMBER: int = 7
 
 DEFAULT_CHANNEL_VALUES: ChannelInfo = {
     "count": DEFAULT_COUNT,
@@ -114,16 +188,7 @@ DEFAULT_CHANNEL_VALUES: ChannelInfo = {
     "state": DEFAULT_STATE,
 }
 
-_ENV_PROXIES = getproxies()
-
-DEFAULT_PROXY_URL = (
-    _ENV_PROXIES.get("https")       # HTTPS_PROXY
-    or _ENV_PROXIES.get("http")     # HTTP_PROXY
-    or _ENV_PROXIES.get("all")      # ALL_PROXY
-    or "socks5://127.0.0.1:10808"   # Fallback: local proxy (v2rayN)
-)
-
-CLI_SCRIPTS_CONFIG = {
+CLI_SCRIPTS_CONFIG: dict[ScriptName, ScriptConfig] = {
     "update_channels": {
         "flags": sorted([
             *(
@@ -132,6 +197,7 @@ CLI_SCRIPTS_CONFIG = {
             ),
             "--channel-filter",
             "--channels",
+            "--debug",
             "--delete-channels",
             "--message-offset",
             "--no-dry-run",
@@ -142,11 +208,15 @@ CLI_SCRIPTS_CONFIG = {
     },
     "scraper": {
         "flags": [
-            "--batch-extract",
-            "--batch-update",
             "--channels",
+            "--channels-batch",
+            "--channels-concurrency",
+            "--configs-batch",
             "--configs-raw",
+            "--debug",
             "--proxy",
+            "--retries",
+            "--retry-delay",
             "--skip-update",
             "--time-out",
         ],
@@ -156,6 +226,7 @@ CLI_SCRIPTS_CONFIG = {
             "--config-filter",
             "--configs-clean",
             "--configs-raw",
+            "--debug",
             "--duplicate",
             "--export",
             "--import",
@@ -166,68 +237,29 @@ CLI_SCRIPTS_CONFIG = {
     },
 }
 
-DEFAULT_HELP_INDENT = 40
-DEFAULT_HELP_WIDTH = 150
-DEFAULT_JSON_INDENT = 4
-DEFAULT_LOG_LINE_LENGTH = 100
-DEFAULT_LOGGER_NAME = "TGV2RayScraper"
-
-DEFAULT_PATH_PROJECT = (Path(__file__).parent / "../../").resolve()
-
-DEFAULT_PATH_CHANNELS = (
-    DEFAULT_PATH_PROJECT / "channels/current.json"
-)
-DEFAULT_PATH_CONFIGS_CLEAN = (
-    DEFAULT_PATH_PROJECT / "configs/v2ray-clean.txt"
-)
-DEFAULT_PATH_CONFIGS_EXPORT = (
-    DEFAULT_PATH_PROJECT / "configs/v2ray.json"
-)
-DEFAULT_PATH_CONFIGS_IMPORT = (
-    DEFAULT_PATH_PROJECT / "configs/v2ray.json"
-)
-DEFAULT_PATH_CONFIGS_RAW = (
-    DEFAULT_PATH_PROJECT / "configs/v2ray-raw.txt"
-)
-DEFAULT_PATH_LOGS = (
-    DEFAULT_PATH_PROJECT / "logs"
-)
-DEFAULT_PATH_URLS = (
-    DEFAULT_PATH_PROJECT / "channels/urls.txt"
+DEFAULT_PROXY_URL: str = (
+    _ENV_PROXIES.get("https")       # HTTPS_PROXY
+    or _ENV_PROXIES.get("http")     # HTTP_PROXY
+    or _ENV_PROXIES.get("all")      # ALL_PROXY
+    or "socks5://127.0.0.1:10808"   # Fallback: local proxy (v2rayN)
 )
 
-DEFAULT_VALUE_MAX = float("inf")
-DEFAULT_VALUE_MIN = float("-inf")
+LOGGING_THEME: dict[str, str] = {
+    "logging.level.debug": "cyan",
+    "logging.level.info": "green",
+    "logging.level.warning": "yellow",
+    "logging.level.error": "red",
+    "logging.level.critical": "bold red",
+}
 
-HTTP_TIMEOUT_DEFAULT = 30.0
-HTTP_TIMEOUT_MAX = 100.0
-HTTP_TIMEOUT_MIN = 0.1
-
-MESSAGE_OFFSET_DEFAULT = 50
-MESSAGE_OFFSET_MAX = 1000
-MESSAGE_OFFSET_MIN = 1
-
-PORT_MAX = 65535
-PORT_MIN = 1
-
-POST_DEFAULT_ID = 0
-POST_DEFAULT_INDEX = 0
-POST_FIRST_ID = 1
-POST_FIRST_INDEX = 0
-POST_LAST_INDEX = -1
-
-TEXT_LENGTH_MSG_OFFSET = 4
-TEXT_LENGTH_NAME = 32
-TEXT_LENGTH_NUMBER = 9
-
-XPATH_POST_IDS = (
+XPATH_POST_IDS: str = (
     "//div["
         "contains(@class, 'tgme_widget_message')"
         " and contains(@class, 'text_not_supported_wrap')"
         " and contains(@class, 'js-widget_message')"
     "]//@data-post"
 )
-XPATH_TG_MESSAGES_TEXT = (
+XPATH_TG_MESSAGES_TEXT: str = (
     "//div["
         "contains(@class, 'tgme_widget_message_text')"
         " and contains(@class, 'js-message_text')"

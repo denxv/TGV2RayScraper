@@ -8,17 +8,20 @@ from tests.unit.core.constants.examples.utils import (
     B64DECODE_SAFE_VALID_AND_INVALID_EXAMPLES,
     B64ENCODE_SAFE_INVALID_TYPE_EXAMPLES,
     B64ENCODE_SAFE_VALID_EXAMPLES,
+    BATCHED_EXAMPLES,
     COLLECT_ARGS_COMBINED_EXAMPLES,
     CONVERT_NUMBER_IN_RANGE_INVALID_VALUE_EXAMPLES,
     CONVERT_NUMBER_IN_RANGE_OUT_OF_BOUNDS_EXAMPLES,
     CONVERT_NUMBER_IN_RANGE_VALID_EXAMPLES,
     FLAG_NAME_ROUNDTRIP_EXAMPLES,
+    GET_BATCHES_COUNT_EXAMPLES,
+    NORMALIZE_CONDITION_INVALID_EXAMPLES,
+    NORMALIZE_CONDITION_VALID_EXAMPLES,
     NORMALIZE_SCALAR_EXAMPLES,
     NORMALIZE_VALID_FIELDS_VALID_EXAMPLES,
     PARSE_VALID_FIELDS_INVALID_EXAMPLES,
     RE_FULLMATCH_AND_SEARCH_EXAMPLES,
     REL_PATH_EXAMPLES,
-    REPEAT_CHAR_LINE_EXAMPLES,
     VALIDATE_FILE_PATH_SUCCESS_EXAMPLES,
     VALIDATE_PROXY_URL_INVALID_EXAMPLES,
     VALIDATE_PROXY_URL_VALID_EXAMPLES,
@@ -39,6 +42,8 @@ __all__ = [
     "B64ENCODE_SAFE_INVALID_TYPE_CASES",
     "B64ENCODE_SAFE_VALID_ARGS",
     "B64ENCODE_SAFE_VALID_CASES",
+    "BATCHED_ARGS",
+    "BATCHED_CASES",
     "COLLECT_ARGS_COMBINED_ARGS",
     "COLLECT_ARGS_COMBINED_CASES",
     "CONVERT_NUMBER_IN_RANGE_INVALID_VALUE_ARGS",
@@ -49,6 +54,12 @@ __all__ = [
     "CONVERT_NUMBER_IN_RANGE_VALID_CASES",
     "FLAG_NAME_ROUNDTRIP_ARGS",
     "FLAG_NAME_ROUNDTRIP_CASES",
+    "GET_BATCHES_COUNT_ARGS",
+    "GET_BATCHES_COUNT_CASES",
+    "NORMALIZE_CONDITION_INVALID_ARGS",
+    "NORMALIZE_CONDITION_INVALID_CASES",
+    "NORMALIZE_CONDITION_VALID_ARGS",
+    "NORMALIZE_CONDITION_VALID_CASES",
     "NORMALIZE_SCALAR_ARGS",
     "NORMALIZE_SCALAR_CASES",
     "NORMALIZE_VALID_FIELDS_VALID_ARGS",
@@ -57,8 +68,6 @@ __all__ = [
     "PARSE_VALID_FIELDS_INVALID_CASES",
     "REL_PATH_ARGS",
     "REL_PATH_CASES",
-    "REPEAT_CHAR_LINE_ARGS",
-    "REPEAT_CHAR_LINE_CASES",
     "RE_FULLMATCH_AND_SEARCH_EXTENDED_ARGS",
     "RE_FULLMATCH_AND_SEARCH_EXTENDED_CASES",
     "VALIDATE_FILE_PATH_SUCCESS_ARGS",
@@ -69,10 +78,16 @@ __all__ = [
     "VALIDATE_PROXY_URL_VALID_CASES",
 ]
 
-ABS_PATH_ABSOLUTE_ARGS = (
+ABS_PATH_ABSOLUTE_ARGS: tuple[
+    str,
+    ...,
+] = (
     "absolute_path",
 )
-ABS_PATH_ABSOLUTE_CASES = tuple(
+ABS_PATH_ABSOLUTE_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         absolute_path,
         id=case_id,
@@ -83,10 +98,16 @@ ABS_PATH_ABSOLUTE_CASES = tuple(
     ) in ABS_PATH_ABSOLUTE_EXAMPLES
 )
 
-ABS_PATH_INVALID_TYPE_ARGS = (
+ABS_PATH_INVALID_TYPE_ARGS: tuple[
+    str,
+    ...,
+] = (
     "invalid_input",
 )
-ABS_PATH_INVALID_TYPE_CASES = tuple(
+ABS_PATH_INVALID_TYPE_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         invalid_input,
         id=case_id,
@@ -97,10 +118,16 @@ ABS_PATH_INVALID_TYPE_CASES = tuple(
     ) in ABS_PATH_INVALID_TYPE_EXAMPLES
 )
 
-ABS_PATH_RELATIVE_ARGS = (
+ABS_PATH_RELATIVE_ARGS: tuple[
+    str,
+    ...,
+] = (
     "input_path",
 )
-ABS_PATH_RELATIVE_CASES = tuple(
+ABS_PATH_RELATIVE_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         input_path,
         id=case_id,
@@ -111,10 +138,16 @@ ABS_PATH_RELATIVE_CASES = tuple(
     ) in ABS_PATH_RELATIVE_EXAMPLES
 )
 
-B64DECODE_SAFE_INVALID_INPUTS_ARGS = (
+B64DECODE_SAFE_INVALID_INPUTS_ARGS: tuple[
+    str,
+    ...,
+] = (
     "invalid_input",
 )
-B64DECODE_SAFE_INVALID_INPUTS_CASES = tuple(
+B64DECODE_SAFE_INVALID_INPUTS_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         invalid_input,
         id=case_id,
@@ -125,11 +158,17 @@ B64DECODE_SAFE_INVALID_INPUTS_CASES = tuple(
     ) in B64DECODE_SAFE_INVALID_INPUTS_EXAMPLES
 )
 
-B64DECODE_SAFE_VALID_AND_INVALID_ARGS = (
+B64DECODE_SAFE_VALID_AND_INVALID_ARGS: tuple[
+    str,
+    ...,
+] = (
     "input_str",
     "expected_output",
 )
-B64DECODE_SAFE_VALID_AND_INVALID_CASES = tuple(
+B64DECODE_SAFE_VALID_AND_INVALID_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         input_str,
         expected_output,
@@ -142,10 +181,16 @@ B64DECODE_SAFE_VALID_AND_INVALID_CASES = tuple(
     ) in B64DECODE_SAFE_VALID_AND_INVALID_EXAMPLES
 )
 
-B64ENCODE_SAFE_INVALID_TYPE_ARGS = (
+B64ENCODE_SAFE_INVALID_TYPE_ARGS: tuple[
+    str,
+    ...,
+] = (
     "invalid_input",
 )
-B64ENCODE_SAFE_INVALID_TYPE_CASES = tuple(
+B64ENCODE_SAFE_INVALID_TYPE_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         invalid_input,
         id=case_id,
@@ -156,11 +201,17 @@ B64ENCODE_SAFE_INVALID_TYPE_CASES = tuple(
     ) in B64ENCODE_SAFE_INVALID_TYPE_EXAMPLES
 )
 
-B64ENCODE_SAFE_VALID_ARGS = (
+B64ENCODE_SAFE_VALID_ARGS: tuple[
+    str,
+    ...,
+] = (
     "input_str",
     "expected_output",
 )
-B64ENCODE_SAFE_VALID_CASES = tuple(
+B64ENCODE_SAFE_VALID_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         input_str,
         expected_output,
@@ -173,12 +224,44 @@ B64ENCODE_SAFE_VALID_CASES = tuple(
     ) in B64ENCODE_SAFE_VALID_EXAMPLES
 )
 
-COLLECT_ARGS_COMBINED_ARGS = (
+BATCHED_ARGS: tuple[
+    str,
+    ...,
+] = (
+    "iterable",
+    "size",
+    "expected",
+)
+BATCHED_CASES: tuple[
+    object,
+    ...,
+] = tuple(
+    pytest.param(
+        iterable,
+        size,
+        expected,
+        id=case_id,
+    )
+    for (
+        iterable,
+        size,
+        expected,
+        case_id,
+    ) in BATCHED_EXAMPLES
+)
+
+COLLECT_ARGS_COMBINED_ARGS: tuple[
+    str,
+    ...,
+] = (
     "args_namespace",
     "flags",
     "expected",
 )
-COLLECT_ARGS_COMBINED_CASES = tuple(
+COLLECT_ARGS_COMBINED_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         args_namespace,
         flags,
@@ -193,10 +276,16 @@ COLLECT_ARGS_COMBINED_CASES = tuple(
     ) in COLLECT_ARGS_COMBINED_EXAMPLES
 )
 
-CONVERT_NUMBER_IN_RANGE_INVALID_VALUE_ARGS = (
+CONVERT_NUMBER_IN_RANGE_INVALID_VALUE_ARGS: tuple[
+    str,
+    ...,
+] = (
     "value",
 )
-CONVERT_NUMBER_IN_RANGE_INVALID_VALUE_CASES = tuple(
+CONVERT_NUMBER_IN_RANGE_INVALID_VALUE_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         value,
         id=case_id,
@@ -207,12 +296,18 @@ CONVERT_NUMBER_IN_RANGE_INVALID_VALUE_CASES = tuple(
     ) in CONVERT_NUMBER_IN_RANGE_INVALID_VALUE_EXAMPLES
 )
 
-CONVERT_NUMBER_IN_RANGE_OUT_OF_BOUNDS_ARGS = (
+CONVERT_NUMBER_IN_RANGE_OUT_OF_BOUNDS_ARGS: tuple[
+    str,
+    ...,
+] = (
     "value",
     "min_value",
     "max_value",
 )
-CONVERT_NUMBER_IN_RANGE_OUT_OF_BOUNDS_CASES = tuple(
+CONVERT_NUMBER_IN_RANGE_OUT_OF_BOUNDS_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         value,
         min_value,
@@ -227,7 +322,10 @@ CONVERT_NUMBER_IN_RANGE_OUT_OF_BOUNDS_CASES = tuple(
     ) in CONVERT_NUMBER_IN_RANGE_OUT_OF_BOUNDS_EXAMPLES
 )
 
-CONVERT_NUMBER_IN_RANGE_VALID_ARGS = (
+CONVERT_NUMBER_IN_RANGE_VALID_ARGS: tuple[
+    str,
+    ...,
+] = (
     "value",
     "min_value",
     "max_value",
@@ -235,7 +333,10 @@ CONVERT_NUMBER_IN_RANGE_VALID_ARGS = (
     "as_str",
     "expected",
 )
-CONVERT_NUMBER_IN_RANGE_VALID_CASES = tuple(
+CONVERT_NUMBER_IN_RANGE_VALID_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         value,
         min_value,
@@ -256,11 +357,17 @@ CONVERT_NUMBER_IN_RANGE_VALID_CASES = tuple(
     ) in CONVERT_NUMBER_IN_RANGE_VALID_EXAMPLES
 )
 
-FLAG_NAME_ROUNDTRIP_ARGS = (
+FLAG_NAME_ROUNDTRIP_ARGS: tuple[
+    str,
+    ...,
+] = (
     "flag",
     "name",
 )
-FLAG_NAME_ROUNDTRIP_CASES = tuple(
+FLAG_NAME_ROUNDTRIP_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         flag,
         name,
@@ -273,12 +380,87 @@ FLAG_NAME_ROUNDTRIP_CASES = tuple(
     ) in FLAG_NAME_ROUNDTRIP_EXAMPLES
 )
 
-NORMALIZE_SCALAR_ARGS = (
+GET_BATCHES_COUNT_ARGS: tuple[
+    str,
+    ...,
+] = (
+    "items",
+    "size",
+    "expected",
+)
+GET_BATCHES_COUNT_CASES: tuple[
+    object,
+    ...,
+] = tuple(
+    pytest.param(
+        items,
+        size,
+        expected,
+        id=case_id,
+    )
+    for (
+        items,
+        size,
+        expected,
+        case_id,
+    ) in GET_BATCHES_COUNT_EXAMPLES
+)
+
+NORMALIZE_CONDITION_INVALID_ARGS: tuple[
+    str,
+    ...,
+] = (
+    "invalid_input",
+)
+NORMALIZE_CONDITION_INVALID_CASES: tuple[
+    object,
+    ...,
+] = tuple(
+    pytest.param(
+        invalid_input,
+        id=case_id,
+    )
+    for (
+        invalid_input,
+        case_id,
+    ) in NORMALIZE_CONDITION_INVALID_EXAMPLES
+)
+
+NORMALIZE_CONDITION_VALID_ARGS: tuple[
+    str,
+    ...,
+] = (
+    "input_str",
+    "expected",
+)
+NORMALIZE_CONDITION_VALID_CASES: tuple[
+    object,
+    ...,
+] = tuple(
+    pytest.param(
+        input_str,
+        expected,
+        id=case_id,
+    )
+    for (
+        input_str,
+        expected,
+        case_id,
+    ) in NORMALIZE_CONDITION_VALID_EXAMPLES
+)
+
+NORMALIZE_SCALAR_ARGS: tuple[
+    str,
+    ...,
+] = (
     "value",
     "as_str",
     "expected",
 )
-NORMALIZE_SCALAR_CASES = tuple(
+NORMALIZE_SCALAR_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         value,
         as_str,
@@ -310,11 +492,17 @@ NORMALIZE_SCALAR_CASES = tuple(
     )
 )
 
-NORMALIZE_VALID_FIELDS_VALID_ARGS = (
+NORMALIZE_VALID_FIELDS_VALID_ARGS: tuple[
+    str,
+    ...,
+] = (
     "input_str",
     "expected",
 )
-NORMALIZE_VALID_FIELDS_VALID_CASES = tuple(
+NORMALIZE_VALID_FIELDS_VALID_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         input_str,
         expected,
@@ -327,10 +515,16 @@ NORMALIZE_VALID_FIELDS_VALID_CASES = tuple(
     ) in NORMALIZE_VALID_FIELDS_VALID_EXAMPLES
 )
 
-PARSE_VALID_FIELDS_INVALID_ARGS = (
+PARSE_VALID_FIELDS_INVALID_ARGS: tuple[
+    str,
+    ...,
+] = (
     "invalid_input",
 )
-PARSE_VALID_FIELDS_INVALID_CASES = tuple(
+PARSE_VALID_FIELDS_INVALID_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         invalid_input,
         id=case_id,
@@ -341,16 +535,22 @@ PARSE_VALID_FIELDS_INVALID_CASES = tuple(
     ) in PARSE_VALID_FIELDS_INVALID_EXAMPLES
 )
 
-RE_FULLMATCH_AND_SEARCH_EXTENDED_ARGS = (
+RE_FULLMATCH_AND_SEARCH_EXTENDED_ARGS: tuple[
+    str,
+    ...,
+] = (
     "pattern",
-    "string",
+    "target",
     "expected_fullmatch",
     "expected_search",
 )
-RE_FULLMATCH_AND_SEARCH_EXTENDED_CASES = tuple(
+RE_FULLMATCH_AND_SEARCH_EXTENDED_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         pattern,
-        string,
+        target,
         expected_fullmatch,
         expected_search,
         id=(
@@ -361,17 +561,23 @@ RE_FULLMATCH_AND_SEARCH_EXTENDED_CASES = tuple(
     )
     for (
         pattern,
-        string,
+        target,
         expected_fullmatch,
         expected_search,
         case_id,
     ) in RE_FULLMATCH_AND_SEARCH_EXAMPLES
 )
 
-REL_PATH_ARGS = (
+REL_PATH_ARGS: tuple[
+    str,
+    ...,
+] = (
     "input_path",
 )
-REL_PATH_CASES = tuple(
+REL_PATH_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         input_path,
         id=case_id,
@@ -382,30 +588,17 @@ REL_PATH_CASES = tuple(
     ) in REL_PATH_EXAMPLES
 )
 
-REPEAT_CHAR_LINE_ARGS = (
-    "char",
-    "length",
-    "expected",
-)
-REPEAT_CHAR_LINE_CASES = tuple(
-    pytest.param(
-        char,
-        length,
-        char * length,
-        id=case_id,
-    )
-    for (
-        char,
-        length,
-        case_id,
-    ) in REPEAT_CHAR_LINE_EXAMPLES
-)
-
-VALIDATE_FILE_PATH_SUCCESS_ARGS = (
+VALIDATE_FILE_PATH_SUCCESS_ARGS: tuple[
+    str,
+    ...,
+] = (
     "filename",
     "must_be_file",
 )
-VALIDATE_FILE_PATH_SUCCESS_CASES = tuple(
+VALIDATE_FILE_PATH_SUCCESS_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         filename,
         must_be_file,
@@ -418,10 +611,16 @@ VALIDATE_FILE_PATH_SUCCESS_CASES = tuple(
     ) in VALIDATE_FILE_PATH_SUCCESS_EXAMPLES
 )
 
-VALIDATE_PROXY_URL_INVALID_ARGS = (
+VALIDATE_PROXY_URL_INVALID_ARGS: tuple[
+    str,
+    ...,
+] = (
     "invalid_input",
 )
-VALIDATE_PROXY_URL_INVALID_CASES = tuple(
+VALIDATE_PROXY_URL_INVALID_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         invalid_input,
         id=case_id,
@@ -432,11 +631,17 @@ VALIDATE_PROXY_URL_INVALID_CASES = tuple(
     ) in VALIDATE_PROXY_URL_INVALID_EXAMPLES
 )
 
-VALIDATE_PROXY_URL_VALID_ARGS = (
+VALIDATE_PROXY_URL_VALID_ARGS: tuple[
+    str,
+    ...,
+] = (
     "proxy_url",
     "expected",
 )
-VALIDATE_PROXY_URL_VALID_CASES = tuple(
+VALIDATE_PROXY_URL_VALID_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         proxy_url,
         expected,

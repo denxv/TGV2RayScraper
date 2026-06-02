@@ -1,7 +1,9 @@
 from core.typing import (
     Callable,
+    ChannelInfo,
     ChannelName,
     ChannelNames,
+    ChannelsDict,
 )
 from tests.unit.domain.constants.common import (
     CHANNEL_FAILED_ATTEMPTS_THRESHOLD,
@@ -61,10 +63,10 @@ __all__ = [
     "CHANNEL_ZERO_CURRENT_ID",
 ]
 
-CHANNEL_BASE = {
+CHANNEL_BASE: ChannelInfo = {
     **DEFAULT_CHANNEL_VALUES,
 }
-CHANNEL_BASE_SAMPLE = {
+CHANNEL_BASE_SAMPLE: ChannelInfo = {
     **CHANNEL_BASE,
     "count": NUM1,
     "current_id": NUM2,
@@ -72,69 +74,69 @@ CHANNEL_BASE_SAMPLE = {
     "state": CHANNEL_STATE_AVAILABLE,
 }
 
-CHANNEL_CURRENT_ID_EQUAL_LAST_ID = {
+CHANNEL_CURRENT_ID_EQUAL_LAST_ID: ChannelInfo = {  # type: ignore[typeddict-item]
     "current_id": NUM3,
     "last_id": NUM3,
 }
-CHANNEL_CURRENT_ID_GREATER_THAN_LAST_ID = {
+CHANNEL_CURRENT_ID_GREATER_THAN_LAST_ID: ChannelInfo = {  # type: ignore[typeddict-item]
     "current_id": NUM3,
     "last_id": NUM2,
 }
-CHANNEL_CURRENT_ID_LESS_THAN_LAST_ID = {
+CHANNEL_CURRENT_ID_LESS_THAN_LAST_ID: ChannelInfo = {  # type: ignore[typeddict-item]
     "current_id": NUM2,
     "last_id": NUM3,
 }
 
-CHANNEL_NEGATIVE_CURRENT_ID = {
+CHANNEL_NEGATIVE_CURRENT_ID: ChannelInfo = {
     **CHANNEL_BASE_SAMPLE,
     "current_id": -NUM2,
 }
-CHANNEL_ZERO_CURRENT_ID = {
+CHANNEL_ZERO_CURRENT_ID: ChannelInfo = {
     **CHANNEL_BASE_SAMPLE,
     "current_id": NUM2 - NUM2,
 }
 
-CHANNEL_ANY_ID_RELATION = {
+CHANNEL_ANY_ID_RELATION: ChannelInfo = {
     **CHANNEL_CURRENT_ID_EQUAL_LAST_ID,
     **CHANNEL_CURRENT_ID_GREATER_THAN_LAST_ID,
     **CHANNEL_CURRENT_ID_LESS_THAN_LAST_ID,
 }
 
-CHANNEL_BASE_SAMPLE_CURRENT_EQUAL_LAST = {
+CHANNEL_BASE_SAMPLE_CURRENT_EQUAL_LAST: ChannelInfo = {
     **CHANNEL_BASE_SAMPLE,
     **CHANNEL_CURRENT_ID_EQUAL_LAST_ID,
 }
-CHANNEL_BASE_SAMPLE_CURRENT_GT_LAST = {
+CHANNEL_BASE_SAMPLE_CURRENT_GT_LAST: ChannelInfo = {
     **CHANNEL_BASE_SAMPLE,
     **CHANNEL_CURRENT_ID_GREATER_THAN_LAST_ID,
 }
-CHANNEL_BASE_SAMPLE_CURRENT_LT_LAST = {
+CHANNEL_BASE_SAMPLE_CURRENT_LT_LAST: ChannelInfo = {
     **CHANNEL_BASE_SAMPLE,
     **CHANNEL_CURRENT_ID_LESS_THAN_LAST_ID,
 }
 
-CHANNEL_DEFAULT_COUNT = {
+CHANNEL_DEFAULT_COUNT: ChannelInfo = {
     **CHANNEL_BASE,
     "count": DEFAULT_COUNT,
     "current_id": NUM2,
     "last_id": DEFAULT_LAST_ID,
     "state": CHANNEL_STATE_UNAVAILABLE,
 }
-CHANNEL_DEFAULT_CURRENT_ID = {
+CHANNEL_DEFAULT_CURRENT_ID: ChannelInfo = {
     **CHANNEL_BASE,
     "count": NUM1,
     "current_id": DEFAULT_CURRENT_ID,
     "last_id": NUM3,
     "state": CHANNEL_STATE_AVAILABLE,
 }
-CHANNEL_DEFAULT_LAST_ID = {
+CHANNEL_DEFAULT_LAST_ID: ChannelInfo = {
     **CHANNEL_BASE,
     "count": NUM1,
     "current_id": NUM2,
     "last_id": DEFAULT_LAST_ID,
     "state": CHANNEL_STATE_UNAVAILABLE,
 }
-CHANNEL_DEFAULT_STATE = {
+CHANNEL_DEFAULT_STATE: ChannelInfo = {
     **CHANNEL_BASE,
     "count": NUM1,
     "current_id": NUM2,
@@ -142,95 +144,95 @@ CHANNEL_DEFAULT_STATE = {
     "state": DEFAULT_STATE,
 }
 
-CHANNEL_MISSING_COUNT = {
+CHANNEL_MISSING_COUNT: ChannelInfo = {  # type: ignore[assignment]
     key: value
     for key, value in CHANNEL_DEFAULT_COUNT.items()
     if key != "count"
 }
-CHANNEL_MISSING_CURRENT_ID = {
+CHANNEL_MISSING_CURRENT_ID: ChannelInfo = {  # type: ignore[assignment]
     key: value
     for key, value in CHANNEL_DEFAULT_CURRENT_ID.items()
     if key != "current_id"
 }
-CHANNEL_MISSING_LAST_ID = {
+CHANNEL_MISSING_LAST_ID: ChannelInfo = {  # type: ignore[assignment]
     key: value
     for key, value in CHANNEL_DEFAULT_LAST_ID.items()
     if key != "last_id"
 }
-CHANNEL_MISSING_STATE = {
+CHANNEL_MISSING_STATE: ChannelInfo = {  # type: ignore[assignment]
     key: value
     for key, value in CHANNEL_DEFAULT_STATE.items()
     if key != "state"
 }
 
-CHANNEL_AVAILABLE = {
+CHANNEL_AVAILABLE: ChannelInfo = {
     **CHANNEL_BASE,
     **CHANNEL_ANY_ID_RELATION,
     "state": CHANNEL_STATE_AVAILABLE,
 }
-CHANNEL_NEW = {
+CHANNEL_NEW: ChannelInfo = {
     **CHANNEL_BASE,
 }
-CHANNEL_UNAVAILABLE = {
+CHANNEL_UNAVAILABLE: ChannelInfo = {
     **CHANNEL_DEFAULT_LAST_ID,
     "state": CHANNEL_STATE_UNAVAILABLE,
 }
 
-CHANNEL_REMOVED = {
+CHANNEL_REMOVED: ChannelInfo = {
     **CHANNEL_UNAVAILABLE,
     "state": CHANNEL_FAILED_ATTEMPTS_THRESHOLD,
 }
-CHANNEL_REMOVED_ABOVE_THRESHOLD = {
+CHANNEL_REMOVED_ABOVE_THRESHOLD: ChannelInfo = {
     **CHANNEL_UNAVAILABLE,
     "state": min(
         CHANNEL_FAILED_ATTEMPTS_THRESHOLD + NUM1,
         CHANNEL_STATE_AVAILABLE,
     ),
 }
-CHANNEL_REMOVED_BELOW_THRESHOLD = {
+CHANNEL_REMOVED_BELOW_THRESHOLD: ChannelInfo = {
     **CHANNEL_UNAVAILABLE,
     "state": CHANNEL_FAILED_ATTEMPTS_THRESHOLD - NUM1,
 }
-CHANNEL_SCANNED_COMPLETE = {
+CHANNEL_SCANNED_COMPLETE: ChannelInfo = {
     **CHANNEL_AVAILABLE,
     **CHANNEL_CURRENT_ID_EQUAL_LAST_ID,
 }
-CHANNEL_SCANNED_ABOVE_REMOVE_THRESHOLD = {
+CHANNEL_SCANNED_ABOVE_REMOVE_THRESHOLD: ChannelInfo = {
     **CHANNEL_SCANNED_COMPLETE,
     "count": CHANNEL_REMOVE_THRESHOLD + NUM1,
 }
-CHANNEL_SCANNED_BELOW_REMOVE_THRESHOLD = {
+CHANNEL_SCANNED_BELOW_REMOVE_THRESHOLD: ChannelInfo = {
     **CHANNEL_SCANNED_COMPLETE,
     "count": max(
         CHANNEL_REMOVE_THRESHOLD - NUM1,
         DEFAULT_COUNT,
     ),
 }
-CHANNEL_SCANNED_FOUND_CONFIGS = {
+CHANNEL_SCANNED_FOUND_CONFIGS: ChannelInfo = {
     **CHANNEL_SCANNED_COMPLETE,
     "count": NUM1,
 }
-CHANNEL_SCANNED_NO_FOUND_CONFIGS = {
+CHANNEL_SCANNED_NO_FOUND_CONFIGS: ChannelInfo = {
     **CHANNEL_SCANNED_COMPLETE,
     "count": DEFAULT_COUNT,
 }
-CHANNEL_SCANNED_REMOVE_THRESHOLD = {
+CHANNEL_SCANNED_REMOVE_THRESHOLD: ChannelInfo = {
     **CHANNEL_SCANNED_COMPLETE,
     "count": CHANNEL_REMOVE_THRESHOLD,
 }
 
-CHANNEL_NAMES_SAMPLE = [
+CHANNEL_NAMES_SAMPLE: ChannelNames = [
     f"channel_{i}"
     for i in range(1, 1000, 3)
 ]
-CHANNELS_FROM_NAMES_SAMPLE = {
+CHANNELS_FROM_NAMES_SAMPLE: ChannelsDict = {
     channel_name: {
         **CHANNEL_BASE_SAMPLE,
     }
     for channel_name in CHANNEL_NAMES_SAMPLE
 }
 
-CHANNELS_SAMPLE = {
+CHANNELS_SAMPLE: ChannelsDict = {
     "channel_available": {
         **CHANNEL_AVAILABLE,
     },
@@ -291,8 +293,8 @@ CHANNELS_SAMPLE = {
 
 CHANNEL_DATA_BY_NAME: Callable[
     [ChannelName],
-    dict[str, int],
-] = lambda name: dict(
+    ChannelInfo,
+] = lambda name: dict(  # type: ignore[assignment, return-value]
     CHANNELS_SAMPLE.get(
         name,
         CHANNEL_BASE.copy(),
@@ -319,13 +321,13 @@ CHANNEL_CURRENT_ID_BY_NAMES: Callable[
 }
 CHANNEL_INFO_BY_NAME: Callable[
     [ChannelName],
-    dict[ChannelName, dict[str, int]],
+    ChannelsDict,
 ] = lambda name: {
     name: CHANNEL_DATA_BY_NAME(name),
 }
 CHANNEL_INFO_BY_NAMES: Callable[
     [ChannelNames],
-    dict[ChannelName, dict[str, int]],
+    ChannelsDict,
 ] = lambda names: {
     name: CHANNEL_DATA_BY_NAME(name)
     for name in names

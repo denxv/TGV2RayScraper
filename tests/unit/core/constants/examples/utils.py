@@ -12,8 +12,11 @@ from pathlib import (
     Path,
 )
 
+from core.typing import (
+    Iterable,
+    Sized,
+)
 from tests.unit.core.constants.common import (
-    DEFAULT_LOG_LINE_LENGTH,
     DEFAULT_PATH_PROJECT,
     DEFAULT_PROXY_URL,
 )
@@ -26,16 +29,19 @@ __all__ = [
     "B64DECODE_SAFE_VALID_AND_INVALID_EXAMPLES",
     "B64ENCODE_SAFE_INVALID_TYPE_EXAMPLES",
     "B64ENCODE_SAFE_VALID_EXAMPLES",
+    "BATCHED_EXAMPLES",
     "COLLECT_ARGS_COMBINED_EXAMPLES",
     "CONVERT_NUMBER_IN_RANGE_INVALID_VALUE_EXAMPLES",
     "CONVERT_NUMBER_IN_RANGE_OUT_OF_BOUNDS_EXAMPLES",
     "CONVERT_NUMBER_IN_RANGE_VALID_EXAMPLES",
     "FLAG_NAME_ROUNDTRIP_EXAMPLES",
+    "GET_BATCHES_COUNT_EXAMPLES",
+    "NORMALIZE_CONDITION_INVALID_EXAMPLES",
+    "NORMALIZE_CONDITION_VALID_EXAMPLES",
     "NORMALIZE_SCALAR_EXAMPLES",
     "NORMALIZE_VALID_FIELDS_VALID_EXAMPLES",
     "PARSE_VALID_FIELDS_INVALID_EXAMPLES",
     "REL_PATH_EXAMPLES",
-    "REPEAT_CHAR_LINE_EXAMPLES",
     "RE_FULLMATCH_AND_SEARCH_EXAMPLES",
     "VALIDATE_FILE_PATH_SUCCESS_EXAMPLES",
     "VALIDATE_PROXY_URL_INVALID_EXAMPLES",
@@ -285,6 +291,53 @@ B64ENCODE_SAFE_VALID_EXAMPLES: tuple[
     ),
 )
 
+BATCHED_EXAMPLES: tuple[
+    tuple[
+        Iterable[int],
+        int,
+        list[tuple[int, ...]],
+        str,
+    ],
+    ...,
+] = (
+    (
+        [],
+        3,
+        [],
+        "empty_iterable",
+    ),
+    (
+        [1, 2, 3, 4],
+        2,
+        [(1, 2), (3, 4)],
+        "even_batches",
+    ),
+    (
+        [1, 2, 3, 4, 5],
+        2,
+        [(1, 2), (3, 4), (5,)],
+        "last_partial_batch",
+    ),
+    (
+        [1, 2, 3],
+        -5,
+        [(1,), (2,), (3,)],
+        "negative_size_fallback_to_one",
+    ),
+    (
+        [1, 2, 3],
+        10,
+        [(1, 2, 3)],
+        "size_larger_than_iterable",
+    ),
+    (
+        [1, 2, 3],
+        0,
+        [(1,), (2,), (3,)],
+        "zero_size_fallback_to_one",
+    ),
+)
+
 COLLECT_ARGS_COMBINED_EXAMPLES: tuple[
     tuple[
         Namespace,
@@ -304,7 +357,6 @@ COLLECT_ARGS_COMBINED_EXAMPLES: tuple[
             "--reverse",
         ],
         [
-            "--no-async",
             "--reverse",
         ],
         "flag_with_underscores",
@@ -367,7 +419,6 @@ COLLECT_ARGS_COMBINED_EXAMPLES: tuple[
         ],
         [
             "--const",
-            "--dry-run",
             "--output",
             "log.txt",
             "--retry",
@@ -599,6 +650,118 @@ FLAG_NAME_ROUNDTRIP_EXAMPLES: tuple[
     ),
 )
 
+GET_BATCHES_COUNT_EXAMPLES: tuple[
+    tuple[
+        Sized,
+        int,
+        int,
+        str,
+    ],
+    ...,
+] = (
+    (
+        [],
+        3,
+        0,
+        "empty_items",
+    ),
+    (
+        [1, 2, 3, 4],
+        2,
+        2,
+        "even_division",
+    ),
+    (
+        [1, 2, 3],
+        -2,
+        3,
+        "negative_size_fallback_to_one",
+    ),
+    (
+        [1, 2, 3, 4, 5],
+        2,
+        3,
+        "rounded_up",
+    ),
+    (
+        [1, 2, 3],
+        10,
+        1,
+        "size_larger_than_items",
+    ),
+    (
+        [1, 2, 3],
+        0,
+        3,
+        "zero_size_fallback_to_one",
+    ),
+)
+
+NORMALIZE_CONDITION_INVALID_EXAMPLES: tuple[
+    tuple[
+        str,
+        str,
+    ],
+    ...,
+] = (
+    (
+        "",
+        "empty_string",
+    ),
+    (
+        "\n",
+        "newline_only",
+    ),
+    (
+        "   ",
+        "spaces_only",
+    ),
+    (
+        "\t",
+        "tab_only",
+    ),
+)
+
+NORMALIZE_CONDITION_VALID_EXAMPLES: tuple[
+    tuple[
+        str,
+        str,
+        str,
+    ],
+    ...,
+] = (
+    (
+        "host == 1.1.1.1 and port > 1000",
+        "host == 1.1.1.1 and port > 1000",
+        "complex_condition",
+    ),
+    (
+        "host   ==    1.1.1.1",
+        "host   ==    1.1.1.1",
+        "multiple_spaces",
+    ),
+    (
+        "   host==1.1.1.1   ",
+        "host==1.1.1.1",
+        "no_spaces_expression",
+    ),
+    (
+        "host == 1.1.1.1",
+        "host == 1.1.1.1",
+        "simple_condition",
+    ),
+    (
+        "  host == 1.1.1.1  ",
+        "host == 1.1.1.1",
+        "strip_spaces",
+    ),
+    (
+        "\thost\t==\t1.1.1.1\t",
+        "host\t==\t1.1.1.1",
+        "tabs",
+    ),
+)
+
 NORMALIZE_SCALAR_EXAMPLES: tuple[
     tuple[
         object,
@@ -798,7 +961,7 @@ PARSE_VALID_FIELDS_INVALID_EXAMPLES: tuple[
 RE_FULLMATCH_AND_SEARCH_EXAMPLES: tuple[
     tuple[
         str,
-        float | None | str,
+        object,
         bool,
         bool,
         str,
@@ -1012,41 +1175,6 @@ REL_PATH_EXAMPLES: tuple[
     (
         ".",
         "root_itself",
-    ),
-)
-
-REPEAT_CHAR_LINE_EXAMPLES: tuple[
-    tuple[
-        str,
-        int,
-        str,
-    ],
-    ...,
-] = (
-    (
-        "@",
-        1,
-        "char_at_len_1",
-    ),
-    (
-        "-",
-        DEFAULT_LOG_LINE_LENGTH,
-        "char_dash_default_len",
-    ),
-    (
-        "$",
-        10,
-        "char_dollar_len_10",
-    ),
-    (
-        "#",
-        0,
-        "char_hash_len_0",
-    ),
-    (
-        "*",
-        5,
-        "char_star_len_5",
     ),
 )
 

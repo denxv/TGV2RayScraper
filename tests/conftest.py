@@ -1,7 +1,9 @@
 from datetime import (
     datetime,
-    timedelta,
     timezone,
+)
+from logging import (
+    getLogger,
 )
 from pathlib import (
     Path,
@@ -17,19 +19,16 @@ from _pytest.config import (
 from _pytest.nodes import (
     Item,
 )
-from freezegun import (
-    freeze_time,
-)
 from pytest_mock import (
     MockerFixture,
 )
 
-from core.logger import (
+from core.constants.common import (
+    DEFAULT_LOGGER_NAME,
+)
+from core.terminal.logger import (
     Logger,
     log_debug_object,
-)
-from core.typing import (
-    Iterator,
 )
 
 
@@ -45,41 +44,39 @@ def _create_file(
 
 
 @pytest.fixture
-def frozen_datetime_local_tz() -> Iterator[datetime]:
-    local_tz = datetime.now().astimezone().tzinfo
-
-    fixed_dt = datetime(
-        year=2020,
-        month=11,
-        day=11,
-        hour=12,
-        minute=12,
-        second=12,
-        tzinfo=local_tz)
-
-    with freeze_time(fixed_dt):
-        yield datetime.now().astimezone()
+def fixed_now() -> datetime:
+    return datetime(2010, 10, 20, tzinfo=timezone.utc)
 
 
-@pytest.fixture(
-    params=list(
-        range(-9, 10, 3),
-    ),
-    ids=[
-        f"UTC{offset:+d}"
-        for offset in range(-9, 10, 3)
-    ],
-)
-def frozen_datetime_offset(
-    request: pytest.FixtureRequest,
-    frozen_datetime_local_tz: datetime,
-) -> datetime:
-    return datetime.now(
-        tz=timezone(
-            timedelta(
-                hours=request.param,
-            ),
-        ),
+@pytest.fixture
+def mock_console() -> Mock:
+    return Mock()
+
+
+@pytest.fixture
+def mock_datetime(
+    mocker: MockerFixture,
+    fixed_now: datetime,
+) -> Mock:
+    modules_to_patch = (
+        "core.terminal.logger.datetime",
+        "core.utils.datetime",
+    )
+
+    for module in modules_to_patch:
+        dt_mock = mocker.patch(module)
+        dt_mock.now.return_value = fixed_now
+
+    return dt_mock
+
+
+@pytest.fixture
+def mock_live(
+    mocker: MockerFixture,
+) -> Mock:
+    return mocker.patch(
+        "core.terminal.renderers.Live",
+        autospec=True,
     )
 
 
@@ -114,7 +111,7 @@ def mock_logger(
 
     modules_to_patch = (
         "core.decorators.logger",
-        "core.logger.logger",
+        "core.terminal.logger.logger",
         "core.utils.logger",
         "domain.channel.logger",
     )
@@ -132,12 +129,12 @@ def mock_logger_components(
     components = [
         "FileHandler",
         "MicrosecondFormatter",
-        "StreamHandler",
+        "RichHandler",
     ]
 
     return {
         name: mocker.patch(
-            f"core.logger.{name}",
+            f"core.terminal.logger.{name}",
             autospec=True,
         )
         for name in components
@@ -201,6 +198,11 @@ def pytest_collection_modifyitems(
 
         for mark in markers:
             item.add_marker(mark)
+
+
+@pytest.fixture(autouse=True)
+def reset_logger() -> None:
+    getLogger(DEFAULT_LOGGER_NAME).handlers.clear()
 
 
 @pytest.fixture

@@ -82,6 +82,7 @@ def is_new_channel(
 
 
 def make_predicate(
+    *,
     condition: ConditionStr | None,
 ) -> RecordPredicate | None:
     if condition is None:

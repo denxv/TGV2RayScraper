@@ -1,3 +1,8 @@
+from core.typing import (
+    ChannelInfo,
+    ConditionStr,
+    Record,
+)
 from tests.unit.domain.constants.common import (
     CHANNEL_REMOVE_THRESHOLD,
     DEFAULT_COUNT,
@@ -39,7 +44,7 @@ __all__ = [
 
 IS_CHANNEL_AVAILABLE_EXAMPLES: tuple[
     tuple[
-        dict[str, object],
+        ChannelInfo,
         bool,
         str,
     ],
@@ -51,7 +56,7 @@ IS_CHANNEL_AVAILABLE_EXAMPLES: tuple[
         "available_channel",
     ),
     (
-        {},
+        {},  # type: ignore[typeddict-item]
         False,
         "empty_channel",
     ),
@@ -64,7 +69,7 @@ IS_CHANNEL_AVAILABLE_EXAMPLES: tuple[
 
 IS_CHANNEL_FULLY_SCANNED_EXAMPLES: tuple[
     tuple[
-        dict[str, object],
+        ChannelInfo,
         bool,
         str,
     ],
@@ -86,7 +91,7 @@ IS_CHANNEL_FULLY_SCANNED_EXAMPLES: tuple[
         "current_less_than_last",
     ),
     (
-        {},
+        {},  # type: ignore[typeddict-item]
         False,
         "empty_channel",
     ),
@@ -104,7 +109,7 @@ IS_CHANNEL_FULLY_SCANNED_EXAMPLES: tuple[
 
 IS_NEW_CHANNEL_EXAMPLES: tuple[
     tuple[
-        dict[str, object],
+        ChannelInfo,
         bool,
         str,
     ],
@@ -148,8 +153,8 @@ IS_NEW_CHANNEL_EXAMPLES: tuple[
 
 MAKE_PREDICATE_EXAMPLES: tuple[
     tuple[
-        str | None,
-        dict[str, object],
+        ConditionStr | None,
+        Record,
         bool,
         str,
     ],
@@ -224,7 +229,7 @@ MAKE_PREDICATE_EXAMPLES: tuple[
     (
         "len(tags) > 2",
         {
-            "tags": [
+            "tags": [  # type: ignore[dict-item]
                 "a",
                 "b",
                 "c",
@@ -236,7 +241,7 @@ MAKE_PREDICATE_EXAMPLES: tuple[
     (
         "len(tags) > 3",
         {
-            "tags": [
+            "tags": [  # type: ignore[dict-item]
                 "a",
                 "b",
                 "c",
@@ -255,7 +260,7 @@ MAKE_PREDICATE_EXAMPLES: tuple[
 
 SHOULD_DELETE_CHANNEL_EXAMPLES: tuple[
     tuple[
-        dict[str, object],
+        ChannelInfo,
         bool,
         str,
     ],
@@ -280,7 +285,7 @@ SHOULD_DELETE_CHANNEL_EXAMPLES: tuple[
         "current_less_than_last",
     ),
     (
-        {},
+        {},  # type: ignore[typeddict-item]
         False,
         "empty_channel",
     ),
@@ -362,7 +367,7 @@ SHOULD_DELETE_CHANNEL_EXAMPLES: tuple[
 
 SHOULD_SET_CURRENT_ID_EXAMPLES: tuple[
     tuple[
-        dict[str, object],
+        ChannelInfo,
         bool,
         str,
     ],
@@ -387,7 +392,7 @@ SHOULD_SET_CURRENT_ID_EXAMPLES: tuple[
 
 SHOULD_UPDATE_CHANNEL_EXAMPLES: tuple[
     tuple[
-        dict[str, object],
+        ChannelInfo,
         bool,
         str,
     ],
@@ -414,7 +419,7 @@ SHOULD_UPDATE_CHANNEL_EXAMPLES: tuple[
         "current_less_than_last",
     ),
     (
-        {},
+        {},  # type: ignore[typeddict-item]
         False,
         "empty_dict_defaults_used",
     ),

@@ -9,14 +9,20 @@ __all__ = [
     "STATUS_TRACKING_COMBINED_CASES",
 ]
 
-STATUS_TRACKING_COMBINED_ARGS = (
+STATUS_TRACKING_COMBINED_ARGS: tuple[
+    str,
+    ...,
+] = (
     "args",
     "kwargs",
     "output_dict",
     "tracking",
     "expect_diff_log",
 )
-STATUS_TRACKING_COMBINED_CASES = tuple(
+STATUS_TRACKING_COMBINED_CASES: tuple[
+    object,
+    ...,
+] = tuple(
     pytest.param(
         args,
         kwargs,

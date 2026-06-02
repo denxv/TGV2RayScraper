@@ -166,7 +166,7 @@ ruff check .
 
 ### Main Dependencies
 
-The project requires the following Python libraries (works with Python ≥ 3.10):
+The project requires the following Python libraries (works with Python 3.10+):
 
 * **aiofiles** – asynchronous file handling
 
@@ -176,15 +176,13 @@ The project requires the following Python libraries (works with Python ≥ 3.10)
 
 * **lxml** – parsing and processing HTML/XML
 
-* **tqdm** – progress bar for long-running operations
+* **rich** – enhanced terminal output, colored logging, and improved progress visualization
 
 The full list of dependencies is available in [`requirements.txt`](requirements.txt).
 
 ### Development Dependencies (Dev-dependencies)
 
 For development and testing of the project, additional tools are required:
-
-* **freezegun** – time freezing in tests
 
 * **mypy** – type checking
 
@@ -202,203 +200,319 @@ All dev-dependencies are listed in [`requirements-dev.txt`](requirements-dev.txt
 
 ## Project Structure
 
-* **adapters/** - adapters for asynchronous data operations
+* **adapters/** - adapters for asynchronous work with external data and Telegram
 
-  * `channel.py` - asynchronous operations with channels
+  * `channel.py` - asynchronous HTTP requests to Telegram web previews, HTML parsing via `lxml`, extraction of post IDs, loading/saving JSON/URL and creating backups
 
-  * `config.py` - asynchronous processing of configurations
+  * `config.py` - asynchronous message extraction, V2Ray link parsing via regular expressions, progress bar management, config import/export to TXT/JSON
 
-  * `scraper.py` - asynchronous channel data scraper
+  * `scraper.py` - orchestrator for channel metadata updates: batching, concurrent processing, integration with `rich` renderers
 
-* **channels/** - folder for storing channel and URL list files
+* **channels/** - working storage for channel pool state
 
-  * `current.json` - main file with Telegram channel information
+  * `current.json` - main JSON file with channel metadata (`count`, `current_id`, `last_id`, `state`)
 
-  * `urls.txt` - main file with Telegram channel links
+  * `urls.txt` - source list of Telegram channel links to add to the pool
 
-  * backups of these files are also stored (e.g., `current-backup-<timestamp>.json`, `urls-backup-<timestamp>.txt`)
+  * *automatic file backups are also stored here (e.g., `current-backup-<timestamp>.json`)*
 
-* **configs/** - folder for storing V2Ray configurations
+* **configs/** - directory for collected and processed configurations
 
-  * `v2ray-clean.txt` - cleaned configurations
+  * `v2ray-clean.txt` - final file with cleaned, normalized and filtered configurations
 
-  * `v2ray-raw.txt` - raw configurations
+  * `v2ray-raw.txt` - raw configurations directly extracted by the scraper from posts
 
-* **core/** - core utilities and constants
+  * `v2ray.json` - JSON cache of parsed configurations to speed up repeated processing
 
-  * **constants/** - common constants, formats, messages, regex patterns, and string templates
+* **core/** - project core: utilities, constants, types and infrastructure
 
-    * `common.py` - core constants, default paths, script settings, channel/message parameters, timeouts, colors, flags
+  * **constants/** - static data, patterns, string templates and configuration limits
 
-    * `formats.py` - date, time, log, and progress bar formats
+    * **messages/** - text constants for logging, split by levels
 
-    * `messages.py` - text messages for channels and errors
+      * `error.py` - error messages
 
-    * `patterns.py` - regular expressions for URLs, configs, and identifiers
+      * `info.py` - informational messages
 
-    * `templates.py` - templates for logs, channels, configs, errors, files, and URLs
+      * `warning.py` - warnings
 
-  * `decorators.py` - decorators (e.g., for logging)
+    * **patterns/** - compiled regular expressions
 
-  * `logger.py` - logging utility with colored console output and microsecond timestamps
+      * **v2ray/** - patterns for parsing URL formats of protocols
 
-  * `typing.py` - custom type aliases for the project (channels, V2Ray configs, CLI, sessions, etc.)
+        * `common.py` - common V2Ray patterns (e.g., JSON detector)
 
-  * `utils.py` - utility and helper functions
+        * `detector.py` - universal pattern for determining protocol and link body
 
-* **docs/** - project documentation in multiple languages
+        * `registry.py` - registry of patterns grouped by protocol
 
-  * `ru/` - Russian documentation
+        * `url.py` - specific patterns for parsing fields of each protocol
+
+      * `common.py` - patterns for config fields and parameter delimiters
+
+      * `proxy.py` - validation of proxy server URLs
+
+      * `telegram.py` - extraction of channel names from `t.me` links
+
+    * **templates/** - string templates with variable interpolation for logs
+
+      * **debug/** - debug message templates, organized by domain
+
+        * `channel.py` - debug logs for channel operations
+
+        * `common.py` - general debug logs not tied to a specific domain
+
+        * `config.py` - debug logs for config operations
+
+      * **info/** - informational message templates, organized by domain
+
+        * `channel.py` - informational logs for channel operations
+
+        * `common.py` - general informational logs
+
+        * `config.py` - informational logs for config operations
+
+      * `common.py` - general templates (e.g., progress bar description)
+
+      * `error.py` - error message templates
+
+      * `title.py` - title templates for log objects
+
+      * `warning.py` - warning templates
+
+    * `common.py` - base constants: batch/concurrency limits, paths, timeouts, default channel values, XPath selectors, `rich` colors
+
+    * `formats.py` - formats for dates, times, log file names, backups and URL assembly
+
+  * **terminal/** - command-line interface components based on `rich`
+
+    * `console.py` - global console with custom color theme for logging
+
+    * `logger.py` - `logging` configuration: output to console and file with microseconds, object serialization, level switching
+
+    * `progress.py` - progress bar management: task creation, updates, asynchronous removal
+
+    * `renderers.py` - rendering of channel status tables and live updates via `rich.live`
+
+    * `tables.py` - factories for creating structured tables with specified columns and styles
+
+  * `context.py` - `dataclass` contexts: HTTP client, file paths, batch and concurrency parameters
+
+  * `decorators.py` - `@status` decorator for logging function start/finish and tracking dictionary size changes
+
+  * `typing.py` - strict type aliases (`ParamSpec`, `Protocol`, `TypeAlias`, `TypedDict`) for the entire codebase
+
+  * `utils.py` - general-purpose utilities: paths, base64, batching, CLI validation, number conversion, backups, safe regex
+
+* **docs/** - localized documentation
+
+  * **ru/** - Russian-language documentation
 
     * `README.md` - user guide in Russian
 
-    * `LICENSE` - project license in Russian
+    * `LICENSE` - MIT license text in Russian
 
-* **domain/** - business logic and domain-specific functions
+* **domain/** - business logic and domain functions
 
-  * `channel.py` - operations with channels, sorting, filtering
+  * `channel.py` - channel logic: filtering, sorting, field reset, deletion, diff calculation, updating `current_id`/`last_id`/`state`, dry-run logic
 
-  * `config.py` - processing and normalization of configurations
+  * `config.py` - config logic: normalization (base64 decoding for SS/SSR/VMess), filtering via `asteval`, deduplication by fields, sorting
 
-  * `predicates.py` - filtering logic and predicates
+  * `predicates.py` - predicates and conditions: checking channel availability/freshness, safe execution of Python expressions via `asteval.Interpreter`
 
-* **logs/** - folder for script logs
+* **logs/** - automatically created script execution logs
 
-  * log files with timestamps (e.g., `2020-10-10.log`)
+  * *log files with timestamps (e.g., `2020-10-20.log`)*
 
-* **scripts/** - helper scripts for performing project tasks
+* **scripts/** - CLI scripts for executing main project tasks
 
-  * `scraper.py` - script collects data from Telegram channels asynchronously
+  * `scraper.py` - launch asynchronous scraping: channel updates, config extraction, proxy/timeout/retry configuration
 
-  * `update_channels.py` - script to update channels (removing inactive channels and adding new ones)
+  * `update_channels.py` - pool management: merging with `urls.txt`, filtering, field reset, removing inactive channels, assigning `current_id`
 
-  * `v2ray_cleaner.py` - script cleans, normalizes, and processes obtained V2Ray configurations
+  * `v2ray_cleaner.py` - post-processing: normalization, filtering, duplicate removal, sorting, result export
 
-* **tests/** - directory with all project tests, verifying correctness, stability, and module functionality
+* **tests/** - catalog with all project tests, checking correctness, stability and module functionality
 
-  * **e2e/** - end-to-end tests, verifying full system behavior under different usage scenarios (**not implemented**)
+  * **e2e/** - end-to-end tests checking full system behavior (**not implemented**)
 
-    * `test_async_scraper.py` - checks the asynchronous scraper with real data
+    * `test_async_scraper.py` - tests asynchronous scraper operation with real data
 
-    * `test_update_channels.py` - tests the process of updating channel information
+    * `test_update_channels.py` - tests the channel information update process
 
-    * `test_v2ray_cleaner.py` - verifies correct cleaning of V2Ray configurations
+    * `test_v2ray_cleaner.py` - tests correctness of V2Ray configuration cleaning
 
-  * **fixtures/** - helper files and test data used across different tests (**not implemented**)
+  * **fixtures/** - auxiliary files and test data used for various tests (**not added**)
 
-    * **channels/** - test data and lists for channel processing checks
+    * **channels/** - test data and lists for checking channel functionality
 
       * `sample_current.json` - contains current channels for testing functions
 
       * `sample_urls.txt` - list of URLs for testing data loading
 
-    * **configs/** - test configuration files for processing checks
+    * **configs/** - test configuration files for checking processing
 
       * `sample_v2ray_clean.txt` - contains cleaned configs for tests
 
-      * `sample_v2ray_raw.txt` - contains raw, original configs for tests
+      * `sample_v2ray_raw.txt` - contains original, raw configs for tests
 
-  * **integration/** - integration tests, checking interaction between multiple modules (**not implemented**)
+  * **integration/** - integration tests checking interaction between multiple modules (**not implemented**)
 
-    * **async_/** - asynchronous integration scenarios to verify data flows
+    * **async_/** - asynchronous integration scenarios for checking data flows
 
-      * `test_async_channels_flow.py` - verifies correct processing of channels asynchronously
+      * `test_async_channels_flow.py` - checks correctness of asynchronous channel processing
 
-      * `test_async_configs_flow.py` - verifies correct processing of configs asynchronously
+      * `test_async_configs_flow.py` - checks correctness of asynchronous config processing
 
-    * **sync/** - synchronous integration scenarios to verify data flows
+    * **sync/** - synchronous integration scenarios for checking data flows
 
-      * `test_sync_channels_flow.py` - verifies correct processing of channels synchronously
+      * `test_sync_channels_flow.py` - checks correctness of synchronous channel processing
 
-      * `test_sync_configs_flow.py` - verifies correct processing of configs synchronously
+      * `test_sync_configs_flow.py` - checks correctness of synchronous config processing
 
-  * **unit/** - unit tests, verifying individual functions and classes of the project
+  * **unit/** - unit tests checking individual functions and classes of the project
 
-    * **adapters/** - adapter tests for data handling (**not implemented**)
+    * **adapters/** - adapter tests for data processing (**not implemented**)
 
-      * `test_async_channel.py` - checks processing and validation of channels asynchronously
+      * `test_async_channel.py` - checks asynchronous channel processing and validation
 
-      * `test_async_config.py` - checks processing and validation of configs asynchronously
+      * `test_async_config.py` - checks asynchronous config processing and validation
 
-      * `test_async_scraper.py` - checks scraper locally asynchronously
+      * `test_async_scraper.py` - checks scraper operation locally and asynchronously
 
-    * **core/** - tests for core utilities and constants
+    * **core/** - tests checking main utilities and constants
 
-      * **constants/** - constants and test data used for function verification
+      * **constants/** - stores data for checking the core
 
-        * **examples/** - test data for function verification
+        * **examples/** - collects raw examples for tests
 
-          * `decorators.py` - test data for verifying decorator functionality
+          * **patterns/** - stores strings for checking expressions
 
-          * `logger.py` - test data for verifying logging and message output
+            * **v2ray/** - prepares examples for checking protocols
 
-          * `utils.py` - test data for verifying helper functions and utilities
+              * `common.py` - stores JSON format string examples
 
-        * **test_cases/** - pre-prepared test cases for parameterization
+              * `detector.py` - contains links for checking the detector
 
-          * `decorators.py` - test cases for verifying decorators
+              * `registry.py` - provides data for registry testing
 
-          * `logger.py` - test cases for verifying logging
+              * `url.py` - stores ready links for parsing
 
-          * `utils.py` - test cases for verifying helper functions
+            * `telegram.py` - collects links for checking channels
 
-        * `common.py` - local constants for core tests
+          * **terminal/** - prepares data for checking the console
 
-      * `test_decorators.py` - verifies correctness of custom decorators
+            * `logger.py` - contains strings for checking logs
 
-      * `test_logger.py` - verifies logging functionality and message formatting
+          * `decorators.py` - collects examples for checking decorators
 
-      * `test_utils.py` - verifies helper utilities and functions
+          * `utils.py` - stores data for checking utilities
 
-    * **domain/** - tests verifying the project's domain logic
+        * **patterns/** - runs direct tests of regular expressions
 
-      * **constants/** - domain constants, fixtures, and pre-prepared cases
+          * **v2ray/** - checks ready protocol patterns
 
-        * **examples/** - test data for domain model verification
+            * `test_common.py` - tests common JSON format rules
 
-          * `channel.py` - examples of channels for logic verification
+            * `test_detector.py` - checks protocol detection rules
 
-          * `config.py` - examples of configs for verification (**in progress**)
+            * `test_regitry.py` - checks registry operation correctness
 
-          * `predicates.py` - examples of predicates for filter verification
+            * `test_url.py` - tests URL parsing correctness
 
-        * **fixtures/** - ready-to-use objects for tests
+          * `test_telegram.py` - checks channel search correctness
+
+        * **test_cases/** - forms ready parameters for tests
+
+          * **patterns/** - prepares data sets for patterns
+
+            * **v2ray/** - creates cases for checking protocols
+
+              * `common.py` - forms parameters for JSON testing
+
+              * `detector.py` - creates cases for detector checking
+
+              * `registry.py` - prepares data for registry testing
+
+              * `url.py` - prepares arguments for URL checking
+
+            * `telegram.py` - forms sets for channel checking
+
+          * **terminal/** - creates cases for terminal checking
+
+            * `logger.py` - prepares parameters for log checking
+
+          * `decorators.py` - prepares data for decorator testing
+
+          * `utils.py` - forms cases for utility checking
+
+      * **terminal/** - tests for terminal interface components and data display
+
+        * `test_console.py` - checks console configuration and operation
+
+        * `test_logger.py` - checks logging in the terminal interface
+
+        * `test_progress.py` - checks progress bar display and updates
+
+        * `test_renderers.py` - checks terminal output rendering functions
+
+        * `test_tables.py` - checks table creation and formatting
+
+      * `test_context.py` - checks correctness of application execution contexts
+
+      * `test_decorators.py` - checks correctness of custom decorators
+
+      * `test_utils.py` - checks operation of auxiliary utilities and functions
+
+    * **domain/** - tests checking project domain logic functionality
+
+      * **constants/** - domain constants, fixtures and prepared cases
+
+        * **examples/** - test data of domain model for checking logic
+
+          * `channel.py` - channel examples for checking processing logic
+
+          * `config.py` - config examples for checking processing (**in progress**)
+
+          * `predicates.py` - predicate examples for checking filters
+
+        * **fixtures/** - ready objects for reuse in tests
 
           * `channel.py` - ready channel objects for tests
 
           * `config.py` - ready config objects for tests (**in progress**)
 
-        * **test_cases/** - ready test scenarios for parameterization
+        * **test_cases/** - ready test scenarios for parametrization
 
-          * `channel.py` - test cases for channel logic verification
+          * `channel.py` - test cases for checking channel logic
 
-          * `config.py` - test cases for config logic verification (**in progress**)
+          * `config.py` - test cases for checking config logic (**in progress**)
 
-          * `predicates.py` - test cases for predicate verification
+          * `predicates.py` - test cases for checking predicates
 
         * `common.py` - local constants for domain logic tests
 
-      * `test_channel.py` - verifies correctness of channel logic
+      * `test_channel.py` - checks correctness of channel logic operation
 
-      * `test_config.py` - verifies correctness of config logic (**in progress**)
+      * `test_config.py` - checks correctness of config logic operation (**in progress**)
 
-      * `test_predicates.py` - verifies correctness of predicates
+      * `test_predicates.py` - checks correctness of predicate operation
 
-  * `conftest.py` - global pytest configuration, including fixtures and hooks for all tests
+  * `conftest.py` - common pytest configuration, including fixtures and hooks for all tests
 
-* **LICENSE** - project license (default in English)
+* **LICENSE** - project license text (in English by default)
 
-* **main.py** - main script to run all project operations, including updating channels, collecting data, and processing configurations
+* **main.py** - main script for executing all project operations, including channel updates, data collection and configuration processing
 
-* **pyproject.toml** - configuration file for project metadata, dependencies, and development tools (e.g., `mypy`, `ruff`, `pytest`), centralizing build and tooling settings
+* **pyproject.toml** - project configuration file containing metadata, dependencies and development tool settings (e.g., `mypy`, `ruff`, `pytest`), centralizes build and environment parameters
 
-* **README.md** - main project documentation (default in English)
-
-* **requirements-dev.txt** - list of development dependencies (testing, type checking, linters - `pytest`, `mypy`, `ruff`, etc.)
+* **README.md** - main project documentation (in English by default)
 
 * **requirements.txt** - list of all required libraries for running the project
 
-* **uv.lock** - dependency lock file, recording exact package versions for a reproducible environment
+* **requirements-dev.txt** - list of dependencies for development (testing, typing, linters - `pytest`, `mypy`, `ruff`, etc.)
+
+* **uv.lock** - dependency lock file fixing exact package versions for reproducible environment
 
 ## Structure of Channel JSON File
 
@@ -566,7 +680,9 @@ python -m scripts.update_channels -h
 
 * **Global options**
 
-  * `--no-dry-run` - Disable check-only mode and actually assign `current_id`. By default, `dry-run` mode is enabled.
+  * `--debug` - Enable debug logging in the console. By default, the console displays logs at `INFO` level.
+
+  * `--no-dry-run` - Disable dry-run mode and allow modification of channel metadata, including assigning `current_id` and resetting fields (e.g. `count`, `last_id`, etc.). By default, dry-run mode is enabled.
 
   * `--skip-backup` - Skip creating backup files for channel and Telegram URL lists. By default, backup is created.
 
@@ -578,7 +694,7 @@ python -m scripts.update_channels -h
 
 * **Channel selection**
 
-  * `-F, --channel-filter CONDITION` - Filter channels using a Python-like expression (for example: `count < 100 and current_id == last_id or state == -1`).
+  * `-F, --channel-filter CONDITION` - Filter channels using a Python-like expression (for example: `"count < 100 and current_id == last_id or state == -1"`).
 
     > Used to select the channels to which reset operations (`--reset-*`) are applied.
 
@@ -602,6 +718,10 @@ python -m scripts.update_channels -h
 
 **The script performs the following actions:**
 
+* Displays `INFO` level logs in the console by default, debug output can be enabled using the `--debug` option.
+
+* Logs detailed debug information and warnings to the file `logs/yyyy-mm-dd.log`.
+
 * Loads the current list of channels from `channels/current.json`.
 
 * Merges existing channels with new URLs from `channels/urls.txt`.
@@ -619,8 +739,6 @@ python -m scripts.update_channels -h
 * Assigns or updates the `current_id` field, taking the specified message offset into account (`--message-offset`).
 
 * Saves the updated data back to `channels/current.json` and `channels/urls.txt`.
-
-* Logs detailed debug information and warnings for each processed channel.
 
 **Example usage:**
 
@@ -660,45 +778,63 @@ python -m scripts.scraper -h
 
 * **Global options**
 
-  * `--skip-update` - Skip updating channel information. Avoids redundant requests if channels are already updated. By default, channels are updated.
+  * `--debug` - Enable debug logging in the console. By default, the console displays logs at `INFO` level.
 
-* **Input / Output files**
+* **HTTP client**
 
-  * `-C, --channels PATH` - Path to the input JSON file containing the list of channels (default: `channels/current.json`).
-
-  * `-R, --configs-raw PATH` - Path to the output TXT file for saving scraped V2Ray configs (default: `configs/v2ray-raw.txt`).
-
-* **Processing / Parallelism**
-
-  * `-E, --batch-extract N` - Number of messages processed in parallel when extracting V2Ray configurations (default: `20`).
-
-  * `-U, --batch-update N` - Maximum number of channels updated in parallel (default: `100`).
-
-* **Network / Proxy / Timeout**
-
-  * `-P, --proxy [URL]` - Proxy server URL. Takes precedence over environment variables. Otherwise checks `HTTPS_PROXY` `HTTP_PROXY`, and `ALL_PROXY`. Falls back to local proxy if none are set (default: `socks5://127.0.0.1:10808`).
+  * `--proxy [URL]` - Proxy server for HTTP requests. Takes precedence over environment variables. If not specified, `HTTPS_PROXY`, `HTTP_PROXY`, and `ALL_PROXY` are used. If none are found, a local proxy is used by default (`socks5://127.0.0.1:10808`).
 
     * Supported protocols: `http`, `https`, `socks5`, `socks5h`.
 
     * Format: `protocol://[username:password@]host:port`.
 
-  * `-T, --time-out SECONDS` - HTTP client timeout in seconds for requests used while updating channel info and extracting V2Ray configurations (default: `30.0`).
+  * `--retries N` - Maximum number of HTTP request retry attempts on failure (default: `3`).
+
+  * `--retry-delay SECONDS` - Maximum number of HTTP request retry attempts after failed requests (default: `0.5`).
+
+  * `--time-out SECONDS` - HTTP client timeout in seconds for requests used during channel information updates and V2Ray configuration extraction (default: `30.0`).
+
+* **Input / Output files**
+
+  * `-C, --channels PATH` - Path to the input JSON file containing the list of channels (default: `channels/current.json`).
+
+  * `-R, --configs-raw PATH` - Path to the output TXT file for saving scraped V2Ray configurations (default: `configs/v2ray-raw.txt`).
+
+* **Channel update pipeline**
+
+  * `--skip-update` - Skip updating channel information. Avoids redundant requests if channels are already updated. By default, channel updates are performed.
+
+  * `-U, --channels-batch N` - Number of channels processed per batch during updates (default: `100`).
+
+* **Configuration extraction pipeline**
+
+  * `-E, --configs-batch N` - Number of messages processed per batch during configuration extraction (default: `20`).
+
+  * `-P, --channels-concurrency N` - Maximum number of channels processed concurrently during configuration extraction (default: `5`).
 
 **The script performs the following actions:**
 
-* Loads the current list of channels from the file `channels/current.json`.
+* Displays `INFO` level logs in the console by default, debug output can be enabled using the `--debug` option.
 
-* Extracts V2Ray configurations in parallel, with the number of simultaneous requests set by `--batch-extract`.
+* Logs detailed information about the update and extraction process, including warnings and errors for each channel to the file `logs/yyyy-mm-dd.log`.
 
-* Updates channels in parallel (unless `--skip-update` is used), with the number of simultaneous updates controlled by `--batch-update`.
+* Loads the current list of channels from `channels/current.json`.
 
-* Performs all network requests through the proxy server specified in the `--proxy` parameter.
+* Updates channel metadata in parallel (unless `--skip-update` is specified), with the number of concurrently updated channels controlled by `--channels-batch`.
 
-* Uses an HTTP client with the `--time-out` for updating channels and extracting configurations.
+* Extracts V2Ray configurations in parallel using:
 
-* Saves the extracted V2Ray configurations to the file `configs/v2ray-raw.txt`.
+  * `--channels-concurrency` - the maximum number of channels processed simultaneously;
 
-* Logs detailed information about the extraction and update process, including errors and warnings for each channel.
+  * `--configs-batch` - the number of messages processed per step within a single channel.
+
+* Routes all network requests through the proxy server specified via `--proxy`.
+
+* Uses an HTTP client with timeout set by `--time-out` for all requests, including channel updates and configuration extraction.
+
+* Uses retry logic on network failures (`--retries`) with delay between attempts (`--retry-delay`).
+
+* Saves extracted V2Ray configurations to `configs/v2ray-raw.txt`.
 
 **Example usage:**
 
@@ -736,6 +872,8 @@ python -m scripts.v2ray_cleaner -h
 
 * **Global options**
 
+  * `--debug` - Enable debug logging in the console. By default, the console displays logs at `INFO` level.
+
   * `--skip-normalize` - Skip config normalization to preserve their original structure. By default, normalization is enabled.
 
 * **Input files**
@@ -752,15 +890,19 @@ python -m scripts.v2ray_cleaner -h
 
 * **Filter / Sort**
 
-  * `-D, --duplicate [FIELDS]` - Remove duplicates by specified fields (default: `protocol, host, port`).
+  * `-D, --duplicate [FIELDS]` - Remove duplicates by specified fields (default: `"protocol, host, port"`).
 
   * `-F, --config-filter CONDITION` - Keep only entries matching a Python-like condition (e.g., `"host == '1.1.1.1' and port > 1000"`).
 
   * `-R, --reverse` - Sort in descending order (applies only with `--sort`).
 
-  * `-S, --sort [FIELDS]` - Sort entries by comma-separated fields (default: `protocol`).
+  * `-S, --sort [FIELDS]` - Sort entries by comma-separated fields (default: `"protocol"`).
 
 **The script performs the following:**
+
+* Displays `INFO` level logs in the console by default, debug output can be enabled using the `--debug` option.
+
+* Logs detailed information about the processing, including errors and warnings for each configuration to the file `logs/yyyy-mm-dd.log`.
 
 * Reads raw V2Ray configurations from the file `configs/v2ray-raw.txt` and parses them for further processing.
 
@@ -777,8 +919,6 @@ python -m scripts.v2ray_cleaner -h
 * Exports parsed configurations to a JSON file using the `--export` option for later reuse without re-parsing the raw input.
 
 * Supports flexible selection of fields for filtering, sorting, and removing duplicates, allowing extraction of only the required configurations.
-
-* Logs detailed information about the processing, including errors and warnings for each configuration.
 
 **Example usage:**
 
@@ -798,19 +938,19 @@ python main.py
 
 > You can also prepend `uv run` before any `python` command to run it through `uv`.
 
-You can also run with `-h` or `--help-scripts` to see all available options:
+You can also run with `-h` to see all available options:
 
 ```bash
 python main.py -h
 ```
 
-```bash
-python main.py --help-scripts
-```
+**Options**
 
-**Options include:**
+* **Global options**
 
-* `-H, --help-scripts` - Display help information for all internal pipeline scripts.
+  * `-D, --debug` - Enable debug logging in the console. By default, the console displays logs at `INFO` level.
+
+  * `-H, --help-scripts [NAMES]` - Show help for internal pipeline scripts. Script names can be provided as a comma-separated list (e.g. `"scraper, update_channels, v2ray_cleaner"`). If no value is provided (e.g. `-H`), help is shown for all scripts.
 
 **The script performs the following:**
 
@@ -827,7 +967,7 @@ python main.py --help-scripts
 **Example usage:**
 
 ```bash
-python main.py --batch-extract 10 --batch-update 100 --proxy --filter "host and port" --duplicate --sort "protocol" --reverse
+python main.py --debug --configs-batch 10 --channels-batch 50 --channels-concurrency 10 --proxy --retry-delay 1.5 --channel-filter "state == -1" --config-filter "host and port" --duplicate --reset-all --reset-count 0 --reverse --sort "host, port"
 ```
 
 > You can add `uv run` before the `python` command to run it through `uv`.

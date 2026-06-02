@@ -3,31 +3,16 @@ from argparse import (
 )
 
 from tests.unit.core.constants.common import (
-    FORMAT_LOG_TIME_MICROSECONDS,
+    DEBUG,
+    FORMAT_LOG_TIME,
+    INFO,
 )
 
 __all__ = [
-    "COLOR_LEVEL_FILTER_EXAMPLES",
     "LOG_DEBUG_OBJECT_EXAMPLES",
     "MICROSECOND_FORMATTER_EXAMPLES",
+    "SET_CONSOLE_LEVEL_EXAMPLES",
 ]
-
-COLOR_LEVEL_FILTER_EXAMPLES: tuple[
-    tuple[
-        bool,
-        str,
-    ],
-    ...,
-] = (
-    (
-        False,
-        "color_disabled",
-    ),
-    (
-        True,
-        "color_enabled",
-    ),
-)
 
 LOG_DEBUG_OBJECT_EXAMPLES: tuple[
     tuple[
@@ -98,7 +83,42 @@ MICROSECOND_FORMATTER_EXAMPLES: tuple[
         "custom_format",
     ),
     (
-        FORMAT_LOG_TIME_MICROSECONDS,
+        FORMAT_LOG_TIME,
         "default_format",
+    ),
+)
+
+SET_CONSOLE_LEVEL_EXAMPLES: tuple[
+    tuple[
+        bool,
+        int,
+        int,
+        str,
+    ],
+    ...,
+] = (
+    (
+        True,
+        12345,
+        DEBUG,
+        "debug_forces_debug_level",
+    ),
+    (
+        True,
+        INFO,
+        DEBUG,
+        "debug_mode_overrides_info_level",
+    ),
+    (
+        False,
+        DEBUG,
+        DEBUG,
+        "no_debug_keeps_debug_level",
+    ),
+    (
+        False,
+        INFO,
+        INFO,
+        "no_debug_keeps_info_level",
     ),
 )

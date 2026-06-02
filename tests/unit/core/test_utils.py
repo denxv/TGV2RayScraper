@@ -14,33 +14,39 @@ from unittest.mock import (
 
 import pytest
 
+from core.typing import (
+    Iterable,
+    Sized,
+)
 from core.utils import (
     abs_path,
     b64decode_safe,
     b64encode_safe,
+    batched,
     collect_args,
     convert_number_in_range,
     flag_to_name,
+    get_batches_count,
     make_backup,
     name_to_flag,
+    normalize_condition,
     normalize_scalar,
     normalize_valid_fields,
     parse_valid_fields,
     re_fullmatch,
     re_search,
     rel_path,
-    repeat_char_line,
     validate_file_path,
     validate_proxy_url,
 )
 from tests.unit.core.constants.common import (
     DEFAULT_PATH_PROJECT,
     FORMAT_BACKUP_DATE,
+    FORMAT_BACKUP_FILENAME,
     TEMPLATE_ERROR_EXPECTED_FILE,
     TEMPLATE_ERROR_FILE_NOT_EXIST,
     TEMPLATE_ERROR_PARENT_DIRECTORY_NOT_EXIST,
-    TEMPLATE_FORMAT_FILE_BACKUP_NAME,
-    TEMPLATE_MSG_FILE_BACKUP_COMPLETED,
+    TEMPLATE_INFO_FILE_BACKUP_COMPLETED,
 )
 from tests.unit.core.constants.test_cases.utils import (
     ABS_PATH_ABSOLUTE_ARGS,
@@ -57,6 +63,8 @@ from tests.unit.core.constants.test_cases.utils import (
     B64ENCODE_SAFE_INVALID_TYPE_CASES,
     B64ENCODE_SAFE_VALID_ARGS,
     B64ENCODE_SAFE_VALID_CASES,
+    BATCHED_ARGS,
+    BATCHED_CASES,
     COLLECT_ARGS_COMBINED_ARGS,
     COLLECT_ARGS_COMBINED_CASES,
     CONVERT_NUMBER_IN_RANGE_INVALID_VALUE_ARGS,
@@ -67,6 +75,12 @@ from tests.unit.core.constants.test_cases.utils import (
     CONVERT_NUMBER_IN_RANGE_VALID_CASES,
     FLAG_NAME_ROUNDTRIP_ARGS,
     FLAG_NAME_ROUNDTRIP_CASES,
+    GET_BATCHES_COUNT_ARGS,
+    GET_BATCHES_COUNT_CASES,
+    NORMALIZE_CONDITION_INVALID_ARGS,
+    NORMALIZE_CONDITION_INVALID_CASES,
+    NORMALIZE_CONDITION_VALID_ARGS,
+    NORMALIZE_CONDITION_VALID_CASES,
     NORMALIZE_SCALAR_ARGS,
     NORMALIZE_SCALAR_CASES,
     NORMALIZE_VALID_FIELDS_VALID_ARGS,
@@ -77,8 +91,6 @@ from tests.unit.core.constants.test_cases.utils import (
     RE_FULLMATCH_AND_SEARCH_EXTENDED_CASES,
     REL_PATH_ARGS,
     REL_PATH_CASES,
-    REPEAT_CHAR_LINE_ARGS,
-    REPEAT_CHAR_LINE_CASES,
     VALIDATE_FILE_PATH_SUCCESS_ARGS,
     VALIDATE_FILE_PATH_SUCCESS_CASES,
     VALIDATE_PROXY_URL_INVALID_ARGS,
@@ -227,6 +239,26 @@ def test_b64encode_safe_valid(
 
 
 @pytest.mark.parametrize(
+    BATCHED_ARGS,
+    BATCHED_CASES,
+)
+def test_batched(
+    iterable: Iterable[int],
+    size: int,
+    expected: list[tuple[int, ...]],
+) -> None:
+    result = list(
+        batched(
+            iterable=iterable,
+            size=size,
+        ),
+    )
+
+    assert isinstance(result, list)
+    assert result == expected
+
+
+@pytest.mark.parametrize(
     COLLECT_ARGS_COMBINED_ARGS,
     COLLECT_ARGS_COMBINED_CASES,
 )
@@ -330,9 +362,28 @@ def test_flag_name_roundtrip(
     assert result_flag.lstrip("-").replace("-", "_") == name
 
 
+@pytest.mark.parametrize(
+    GET_BATCHES_COUNT_ARGS,
+    GET_BATCHES_COUNT_CASES,
+)
+def test_get_batches_count(
+    items: Sized,
+    size: int,
+    expected: int,
+) -> None:
+    result = get_batches_count(
+        items=items,
+        size=size,
+    )
+
+    assert isinstance(result, int)
+    assert result == expected
+
+
 def test_make_backup(
     mock_logger: Mock,
-    frozen_datetime_local_tz: datetime,
+    mock_datetime: Mock,
+    fixed_now: datetime,
     tmp_files: list[Path],
 ) -> None:
     make_backup(
@@ -345,9 +396,9 @@ def test_make_backup(
     assert not tmp_files[0].exists()
 
     for file in tmp_files[1:]:
-        backup_name = TEMPLATE_FORMAT_FILE_BACKUP_NAME.format(
+        backup_name = FORMAT_BACKUP_FILENAME.format(
             stem=file.stem,
-            date=frozen_datetime_local_tz.strftime(
+            date=fixed_now.astimezone().strftime(
                 FORMAT_BACKUP_DATE,
             ),
             suffix=file.suffix,
@@ -358,11 +409,39 @@ def test_make_backup(
         assert not file.exists()
 
         mock_logger.info.assert_any_call(
-            msg=TEMPLATE_MSG_FILE_BACKUP_COMPLETED.format(
+            msg=TEMPLATE_INFO_FILE_BACKUP_COMPLETED.format(
                 src_name=file.name,
                 backup_name=backup_name,
             ),
         )
+
+
+@pytest.mark.parametrize(
+    NORMALIZE_CONDITION_INVALID_ARGS,
+    NORMALIZE_CONDITION_INVALID_CASES,
+)
+def test_normalize_condition_invalid(
+    invalid_input: str,
+) -> None:
+    with pytest.raises(ArgumentTypeError):
+        normalize_condition(
+            condition=invalid_input,
+        )
+
+
+@pytest.mark.parametrize(
+    NORMALIZE_CONDITION_VALID_ARGS,
+    NORMALIZE_CONDITION_VALID_CASES,
+)
+def test_normalize_condition_valid(
+    input_str: str,
+    expected: str,
+) -> None:
+    result = normalize_condition(
+        condition=input_str,
+    )
+
+    assert result == expected
 
 
 @pytest.mark.parametrize(
@@ -417,19 +496,19 @@ def test_parse_valid_fields_invalid(
 )
 def test_re_fullmatch_and_search_extended(
     pattern: str,
-    string: float | None | str,
+    target: object,
     *,
     expected_fullmatch: bool,
     expected_search: bool,
 ) -> None:
     result_fullmatch = re_fullmatch(
         pattern=pattern,
-        string=string,
+        target=target,
     )
 
     result_search = re_search(
         pattern=pattern,
-        string=string,
+        target=target,
     )
 
     assert result_fullmatch is expected_fullmatch
@@ -462,29 +541,6 @@ def test_rel_path(
 
     assert isinstance(result, str)
     assert result == expected
-
-
-@pytest.mark.parametrize(
-    REPEAT_CHAR_LINE_ARGS,
-    REPEAT_CHAR_LINE_CASES,
-)
-def test_repeat_char_line(
-    char: str,
-    length: int,
-    expected: str,
-) -> None:
-    result = repeat_char_line(
-        char=char,
-        length=length,
-    )
-
-    assert isinstance(result, str)
-    assert result == expected
-    assert len(result) == length
-    assert all(
-        c == char
-        for c in result
-    )
 
 
 def test_validate_file_path_is_directory(tmp_path: Path) -> None:

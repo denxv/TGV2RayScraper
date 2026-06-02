@@ -8,8 +8,14 @@ from base64 import (
 from datetime import (
     datetime,
 )
+from itertools import (
+    islice,
+)
 from json import (
     dumps,
+)
+from math import (
+    ceil,
 )
 from pathlib import (
     Path,
@@ -21,7 +27,6 @@ from re import (
 
 from core.constants.common import (
     BASE64_BLOCK_SIZE,
-    DEFAULT_LOG_LINE_LENGTH,
     DEFAULT_PATH_PROJECT,
     DEFAULT_VALUE_MAX,
     DEFAULT_VALUE_MIN,
@@ -30,17 +35,22 @@ from core.constants.common import (
 )
 from core.constants.formats import (
     FORMAT_BACKUP_DATE,
+    FORMAT_BACKUP_FILENAME,
+    FORMAT_BASE64_PADDING,
 )
-from core.constants.messages import (
+from core.constants.messages.error import (
+    MESSAGE_ERROR_CONDITION_EMPTY,
     MESSAGE_ERROR_NO_FIELDS_PROVIDED,
     MESSAGE_ERROR_PROXY_EMPTY,
 )
-from core.constants.patterns import (
+from core.constants.patterns.common import (
     PATTERN_CONFIG_FIELD,
     PATTERN_PARAM_SEPARATOR,
+)
+from core.constants.patterns.proxy import (
     PATTERN_PROXY_URL,
 )
-from core.constants.templates import (
+from core.constants.templates.error import (
     TEMPLATE_ERROR_DETECTED_DUPLICATE_FIELD,
     TEMPLATE_ERROR_EXPECTED_FILE,
     TEMPLATE_ERROR_EXPECTED_STRING,
@@ -51,11 +61,11 @@ from core.constants.templates import (
     TEMPLATE_ERROR_PARENT_DIRECTORY_NOT_EXIST,
     TEMPLATE_ERROR_PROXY_INVALID_FORMAT,
     TEMPLATE_ERROR_PROXY_INVALID_PORT,
-    TEMPLATE_FORMAT_FILE_BACKUP_NAME,
-    TEMPLATE_FORMAT_STRING_BASE64_PADDING,
-    TEMPLATE_MSG_FILE_BACKUP_COMPLETED,
 )
-from core.logger import (
+from core.constants.templates.info.common import (
+    TEMPLATE_INFO_FILE_BACKUP_COMPLETED,
+)
+from core.terminal.logger import (
     logger,
 )
 from core.typing import (
@@ -67,11 +77,14 @@ from core.typing import (
     CLIFlags,
     CLIParams,
     ComplexValue,
+    ConditionStr,
     ConfigField,
     ConfigFields,
     FilePath,
     FilePaths,
     FloatStr,
+    Iterable,
+    Iterator,
     MaxValue,
     MinValue,
     NormalizedParamsStr,
@@ -80,15 +93,19 @@ from core.typing import (
     RegexPattern,
     RegexTarget,
     ScalarValue,
+    Sized,
+    T,
 )
 
 __all__ = [
     "abs_path",
     "b64decode_safe",
     "b64encode_safe",
+    "batched",
     "collect_args",
     "convert_number_in_range",
     "flag_to_name",
+    "get_batches_count",
     "make_backup",
     "name_to_flag",
     "normalize_scalar",
@@ -96,7 +113,6 @@ __all__ = [
     "parse_valid_fields",
     "re_fullmatch",
     "re_search",
-    "repeat_char_line",
     "validate_file_path",
 ]
 
@@ -120,14 +136,12 @@ def b64decode_safe(
     ):
         return ""
 
-    string = TEMPLATE_FORMAT_STRING_BASE64_PADDING.format(
-        string=string,
-        padding="=" * (-len(string) % BASE64_BLOCK_SIZE),
-    )
-
     try:
         b64_decoded_bytes = urlsafe_b64decode(
-            s=string,
+            s=FORMAT_BASE64_PADDING.format(
+                value=string,
+                padding="=" * (-len(string) % BASE64_BLOCK_SIZE),
+            ),
         )
     except Exception:
         return ""
@@ -153,8 +167,21 @@ def b64encode_safe(
     )
 
 
+def batched(
+    iterable: Iterable[T],
+    *,
+    size: int = 1,
+) -> Iterator[tuple[T, ...]]:
+    size = max(size, 1)
+    iterator = iter(iterable)
+
+    while batch := tuple(islice(iterator, size)):
+        yield batch
+
+
 def collect_args(
     args: ArgsNamespace,
+    *,
     flags: CLIFlags,
 ) -> CLIParams:
     params = []
@@ -163,38 +190,28 @@ def collect_args(
         attr_name = flag_to_name(
             flag=flag,
         )
-        value = getattr(
-            args,
-            attr_name,
-            None,
-        )
+        value = getattr(args, attr_name, None)
 
-        if value is None:
+        if value is None or value is False:
             continue
 
         cli_flag = name_to_flag(
             name=attr_name,
         )
 
-        if (
-            isinstance(value, bool)
-            or (isinstance(value, str) and not value)
-        ):
+        if value is True or value == "":
             params.append(cli_flag)
         else:
-            params.extend([
-                cli_flag,
-                value,
-            ])
+            params.extend((cli_flag, value))
 
     return params
 
 
 def convert_number_in_range(
     value: FloatStr,
+    *,
     min_value: MinValue = DEFAULT_VALUE_MIN,
     max_value: MaxValue = DEFAULT_VALUE_MAX,
-    *,
     as_int: bool = True,
     as_str: bool = False,
 ) -> NumberValue:
@@ -204,10 +221,11 @@ def convert_number_in_range(
         TypeError,
         ValueError,
     ):
-        _message = TEMPLATE_ERROR_INVALID_NUMBER.format(
-            value=value,
-        )
-        raise ArgumentTypeError(_message) from None
+        raise ArgumentTypeError(
+            TEMPLATE_ERROR_INVALID_NUMBER.format(
+                value=value,
+            ),
+        ) from None
 
     if (
         _value < min_value
@@ -215,9 +233,9 @@ def convert_number_in_range(
     ):
         raise ArgumentTypeError(
             TEMPLATE_ERROR_NUMBER_OUT_OF_RANGE.format(
-                min_value=min_value,
-                max_value=max_value,
                 value=_value,
+                min=min_value,
+                max=max_value,
             ),
         )
 
@@ -229,6 +247,14 @@ def flag_to_name(
 ) -> AttrName:
     cleaned_flag = flag.lstrip("-")
     return cleaned_flag.replace("-", "_")
+
+
+def get_batches_count(
+    items: Sized,
+    *,
+    size: int = 1,
+) -> int:
+    return ceil(len(items) / max(size, 1))
 
 
 def make_backup(
@@ -244,7 +270,7 @@ def make_backup(
         if not src.exists():
             continue
 
-        backup_name = TEMPLATE_FORMAT_FILE_BACKUP_NAME.format(
+        backup_name = FORMAT_BACKUP_FILENAME.format(
             stem=src.stem,
             date=now,
             suffix=src.suffix,
@@ -254,7 +280,7 @@ def make_backup(
         )
 
         logger.info(
-            msg=TEMPLATE_MSG_FILE_BACKUP_COMPLETED.format(
+            msg=TEMPLATE_INFO_FILE_BACKUP_COMPLETED.format(
                 src_name=src.name,
                 backup_name=backup_name,
             ),
@@ -265,6 +291,17 @@ def name_to_flag(
     name: AttrName,
 ) -> CLIFlag:
     return "--" + name.replace("_", "-")
+
+
+def normalize_condition(
+    condition: ConditionStr,
+) -> ConditionStr:
+    if not (normalized := condition.strip()):
+        raise ArgumentTypeError(
+            MESSAGE_ERROR_CONDITION_EMPTY,
+        )
+
+    return normalized
 
 
 def normalize_scalar(
@@ -357,36 +394,31 @@ def parse_valid_fields(
 
 def re_fullmatch(
     pattern: RegexPattern,
-    string: RegexTarget,
+    target: RegexTarget,
 ) -> bool:
-    if not isinstance(string, str):
-        string = str(string)
-
     return bool(
         fullmatch(
             pattern=pattern,
-            string=string,
+            string=str(target),
         ),
     )
 
 
 def re_search(
     pattern: RegexPattern,
-    string: RegexTarget,
+    target: RegexTarget,
 ) -> bool:
-    if not isinstance(string, str):
-        string = str(string)
-
     return bool(
         search(
             pattern=pattern,
-            string=string,
+            string=str(target),
         ),
     )
 
 
 def rel_path(
     path: FilePath,
+    *,
     root: FilePath = DEFAULT_PATH_PROJECT,
 ) -> str:
     path, root = Path(path).resolve(), Path(root).resolve()
@@ -394,13 +426,6 @@ def rel_path(
         str(path.relative_to(root))
         if path.is_relative_to(root) else str(path)
     )
-
-
-def repeat_char_line(
-    char: str = "-",
-    length: int = DEFAULT_LOG_LINE_LENGTH,
-) -> str:
-    return char * length
 
 
 def validate_file_path(
@@ -440,7 +465,9 @@ def validate_file_path(
     return str(filepath)
 
 
-def validate_proxy_url(value: str) -> str:
+def validate_proxy_url(
+    value: str,
+) -> str:
     if not isinstance(value, str):
         raise ArgumentTypeError(
             TEMPLATE_ERROR_EXPECTED_STRING.format(
@@ -464,6 +491,8 @@ def validate_proxy_url(value: str) -> str:
         raise ArgumentTypeError(
             TEMPLATE_ERROR_PROXY_INVALID_PORT.format(
                 port=port,
+                min=PORT_MIN,
+                max=PORT_MAX,
             ),
         )
 

@@ -8,7 +8,7 @@ from core.decorators import (
     status,
 )
 from tests.unit.core.constants.common import (
-    TEMPLATE_CHANNEL_COUNT_DIFFERENCE,
+    TEMPLATE_INFO_CHANNEL_COUNT_DIFFERENCE,
 )
 from tests.unit.core.constants.test_cases.decorators import (
     STATUS_TRACKING_COMBINED_ARGS,
@@ -123,7 +123,7 @@ def test_status_tracking_combined(
         )
 
         mock_logger.info.assert_any_call(
-            msg=TEMPLATE_CHANNEL_COUNT_DIFFERENCE.format(
+            msg=TEMPLATE_INFO_CHANNEL_COUNT_DIFFERENCE.format(
                 old_size=old_size,
                 new_size=len(output_dict),
                 diff=len(output_dict) - old_size,

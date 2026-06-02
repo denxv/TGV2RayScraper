@@ -7,12 +7,11 @@ dependencies = [
     "asteval",
     "httpx[socks]",
     "lxml",
-    "tqdm",
+    "rich",
 ]
 
 [dependency-groups]
 dev = [
-    "freezegun",
     "mypy",
     "pytest",
     "pytest-asyncio",
@@ -26,13 +25,17 @@ source = [
     "adapters",
     "core",
     "domain",
-    "scripts",
 ]
 omit = [
-    "*/__init__.py",
+    "core/constants/messages/**",
+    "core/constants/patterns/common.py",
+    "core/constants/templates/**",
+    "core/constants/common.py",
+    "core/constants/formats.py",
+    "scripts/**",
+    "tests/**",
+    "**/__init__.py",
     "main.py",
-    "scripts/*",
-    "tests/*",
 ]
 
 [tool.mypy]
@@ -74,14 +77,13 @@ module = [
     "asteval",
     "lxml",
     "tests.*",
-    "tqdm.*",
 ]
 disable_error_code = [
     "arg-type",
 ]
 
 [tool.pytest.ini_options]
-addopts = "-v --tb=short --cov=. --cov-report=term-missing"
+addopts = "-v --tb=short --cov=adapters --cov=core --cov=domain --cov-report=term-missing"
 asyncio_mode = "auto"
 log_cli = true
 log_cli_level = "INFO"
@@ -109,7 +111,9 @@ target-version = "py310"
 ignore = [
     "BLE001",
     "D",
+    "PLR0913",
     "PTH123",
+    "UP007",
 ]
 select = [
     "ALL",

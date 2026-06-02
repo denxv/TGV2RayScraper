@@ -4,7 +4,9 @@ from argparse import (
 )
 from asyncio import (
     CancelledError,
-    run,
+)
+from asyncio import (
+    run as asyncio_run,
 )
 
 from adapters.channel import (
@@ -21,13 +23,19 @@ from core.constants.common import (
     MESSAGE_OFFSET_MIN,
     SUPPRESS,
 )
-from core.constants.messages import (
-    MESSAGE_ERROR_PROGRAM_EXIT,
+from core.constants.messages.error import (
     MESSAGE_ERROR_UNEXPECTED_FAILURE,
 )
-from core.logger import (
+from core.constants.messages.info import (
+    MESSAGE_INFO_PROGRAM_EXIT,
+)
+from core.context import (
+    IOContext,
+)
+from core.terminal.logger import (
     log_debug_object,
     logger,
+    set_console_level,
 )
 from core.typing import (
     ArgsNamespace,
@@ -35,6 +43,7 @@ from core.typing import (
 from core.utils import (
     abs_path,
     convert_number_in_range,
+    normalize_condition,
     rel_path,
     validate_file_path,
 )
@@ -74,12 +83,24 @@ def parse_args() -> ArgsNamespace:
         "Global options",
     )
     group_global.add_argument(
+        "--debug",
+        action="store_true",
+        default=False,
+        dest="debug",
+        help=(
+            "Enable debug logging in console. "
+            "By default, console shows INFO level logs."
+        ),
+    )
+    group_global.add_argument(
         "--no-dry-run",
         action="store_false",
         default=True,
         dest="dry_run",
         help=(
-            "Disable check-only mode and actually assign 'current_id'. "
+            "Disable dry-run mode and allow modifying channel metadata, "
+            "including assigning 'current_id' and resetting fields "
+            "(e.g. count, last_id, etc.). "
             "By default, dry-run mode is enabled."
         ),
     )
@@ -144,7 +165,7 @@ def parse_args() -> ArgsNamespace:
             "except new ones will be selected."
         ),
         metavar="CONDITION",
-        type=str,
+        type=normalize_condition,
     )
 
     group_actions = parser.add_argument_group(
@@ -209,9 +230,14 @@ def parse_args() -> ArgsNamespace:
 
     args = parser.parse_args()
 
+    set_console_level(
+        logger=logger,
+        debug=args.debug,
+    )
+
     log_debug_object(
-        title="Parsed command-line arguments",
         obj=args,
+        title="Parsed command-line arguments",
     )
 
     return args
@@ -221,9 +247,13 @@ async def main() -> None:
     try:
         parsed_args = parse_args()
 
-        current_channels, list_channel_names = await load_channels_and_urls(
+        io_ctx = IOContext(
             channels_path=parsed_args.channels_path,
             urls_path=parsed_args.urls_path,
+        )
+
+        current_channels, list_channel_names = await load_channels_and_urls(
+            ctx=io_ctx,
         )
 
         current_channels = update_with_new_channels(
@@ -236,9 +266,8 @@ async def main() -> None:
         )
 
         await save_channels_and_urls(
+            ctx=io_ctx,
             channels=current_channels,
-            channels_path=parsed_args.channels_path,
-            urls_path=parsed_args.urls_path,
             skip_backup=parsed_args.skip_backup,
         )
     except (
@@ -246,7 +275,7 @@ async def main() -> None:
         KeyboardInterrupt,
     ):
         logger.info(
-            msg=MESSAGE_ERROR_PROGRAM_EXIT,
+            msg=MESSAGE_INFO_PROGRAM_EXIT,
         )
     except Exception:
         logger.exception(
@@ -255,6 +284,6 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    run(
+    asyncio_run(
         main=main(),
     )

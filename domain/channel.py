@@ -1,6 +1,9 @@
 from copy import (
     deepcopy,
 )
+from dataclasses import (
+    dataclass,
+)
 
 from core.constants.common import (
     CHANNEL_MIN_ID_DIFF,
@@ -12,43 +15,56 @@ from core.constants.common import (
     DEFAULT_STATE,
     MESSAGE_OFFSET_DEFAULT,
 )
-from core.constants.messages import (
-    MESSAGE_CHANNEL_DELETE_COMPLETED,
-    MESSAGE_CHANNEL_DELETE_SKIPPED,
-    MESSAGE_CHANNEL_DELETE_STARTED,
-    MESSAGE_CHANNEL_SHOW_INFO,
-    MESSAGE_CHANNEL_UPDATE_COMPLETED,
-    MESSAGE_CHANNEL_UPDATE_STARTED,
-    MESSAGE_NO_CHANNELS_TO_DISPLAY,
+from core.constants.formats import (
+    FORMAT_CHANNEL_CHANGE,
 )
-from core.constants.templates import (
-    TEMPLATE_CHANNEL_ASSIGNMENT_APPLIED,
-    TEMPLATE_CHANNEL_ASSIGNMENT_OFFSET_APPLIED,
-    TEMPLATE_CHANNEL_ASSIGNMENT_OFFSET_SKIPPED,
-    TEMPLATE_CHANNEL_ASSIGNMENT_SKIPPED,
-    TEMPLATE_CHANNEL_LEFT_TO_CHECK,
-    TEMPLATE_CHANNEL_LOG_STATUS,
-    TEMPLATE_CHANNEL_LOG_UPDATE,
-    TEMPLATE_CHANNEL_MISSING_ADD_COMPLETED,
-    TEMPLATE_CHANNEL_RESET_SKIPPED,
-    TEMPLATE_CHANNEL_RESET_SKIPPED_NO_CHANGES,
-    TEMPLATE_CHANNEL_RESET_TOTAL,
-    TEMPLATE_CHANNEL_TOTAL_AVAILABLE,
-    TEMPLATE_CHANNEL_TOTAL_MESSAGES,
-    TEMPLATE_ERROR_INVALID_OFFSET,
+from core.constants.messages.info import (
+    MESSAGE_INFO_CHANNEL_DELETE_COMPLETED,
+    MESSAGE_INFO_CHANNEL_DELETE_SKIPPED,
+    MESSAGE_INFO_CHANNEL_DELETE_STARTED,
+    MESSAGE_INFO_CHANNEL_UPDATE_COMPLETED,
+    MESSAGE_INFO_CHANNEL_UPDATE_STARTED,
+)
+from core.constants.messages.warning import (
+    MESSAGE_WARNING_NO_CHANNELS_TO_DISPLAY,
+)
+from core.constants.templates.debug.channel import (
+    TEMPLATE_DEBUG_CHANNEL_ASSIGNMENT_OFFSET_APPLIED,
+    TEMPLATE_DEBUG_CHANNEL_MISSING_ADD_COMPLETED,
+    TEMPLATE_DEBUG_CHANNEL_RESET_SKIPPED_NO_CHANGES,
+)
+from core.constants.templates.error import (
     TEMPLATE_ERROR_INVALID_OVERRIDE_FIELDS,
-    TEMPLATE_FORMAT_CHANNEL_CHANGE,
-    TEMPLATE_FORMAT_STRING_QUOTED_NAME,
+)
+from core.constants.templates.info.channel import (
+    TEMPLATE_INFO_CHANNEL_ASSIGNMENT_APPLIED,
+    TEMPLATE_INFO_CHANNEL_ASSIGNMENT_SKIPPED,
+    TEMPLATE_INFO_CHANNEL_RESET_SKIPPED,
+    TEMPLATE_INFO_CHANNEL_RESET_TOTAL,
+    TEMPLATE_INFO_CHANNELS_STATUS_COMPLETED,
+    TEMPLATE_INFO_CHANNELS_STATUS_STARTED,
+)
+from core.constants.templates.title import (
     TEMPLATE_TITLE_CHANNEL_DELETE,
     TEMPLATE_TITLE_CHANNEL_INFO,
     TEMPLATE_TITLE_CHANNEL_RESET,
 )
+from core.constants.templates.warning import (
+    TEMPLATE_WARNING_CHANNEL_ASSIGNMENT_OFFSET_SKIPPED,
+    TEMPLATE_WARNING_INVALID_OFFSET,
+)
 from core.decorators import (
     status,
 )
-from core.logger import (
+from core.terminal.console import (
+    console,
+)
+from core.terminal.logger import (
     log_debug_object,
     logger,
+)
+from core.terminal.renderers import (
+    render_channel_status,
 )
 from core.typing import (
     ArgsNamespace,
@@ -58,9 +74,6 @@ from core.typing import (
     ChannelsDict,
     PostID,
     RecordPredicate,
-)
-from core.utils import (
-    repeat_char_line,
 )
 from domain.predicates import (
     is_channel_available,
@@ -72,6 +85,8 @@ from domain.predicates import (
 )
 
 __all__ = [
+    "ChannelStatus",
+    "ChannelUpdateResult",
     "assign_current_id_to_channels",
     "delete_channels",
     "diff_channel_id",
@@ -89,10 +104,26 @@ __all__ = [
 ]
 
 
+@dataclass(slots=True, frozen=True)
+class ChannelStatus:
+    channel_name: str
+    current_id: int
+    last_id: int
+    diff_id: int
+
+
+@dataclass(slots=True, frozen=True)
+class ChannelUpdateResult:
+    channel_name: str
+    old_last_id: int
+    new_last_id: int
+    changed: bool
+
+
 def assign_current_id_to_channels(
     channels: ChannelsDict,
-    message_offset: int = MESSAGE_OFFSET_DEFAULT,
     *,
+    message_offset: int = MESSAGE_OFFSET_DEFAULT,
     dry_run: bool = False,
 ) -> ChannelsDict:
     updated_channels = deepcopy(
@@ -104,7 +135,7 @@ def assign_current_id_to_channels(
         or message_offset <= 0
     ):
         logger.warning(
-            msg=TEMPLATE_ERROR_INVALID_OFFSET.format(
+            msg=TEMPLATE_WARNING_INVALID_OFFSET.format(
                 offset=message_offset,
             ),
         )
@@ -126,41 +157,39 @@ def assign_current_id_to_channels(
         if diff <= message_offset:  # pragma: no cover
             continue
 
-        _message = TEMPLATE_CHANNEL_ASSIGNMENT_OFFSET_SKIPPED.format(
-            name=TEMPLATE_FORMAT_STRING_QUOTED_NAME.format(
-                name=name,
-            ),
+        _message = TEMPLATE_WARNING_CHANNEL_ASSIGNMENT_OFFSET_SKIPPED.format(
+            name=name,
             diff=diff,
             offset=message_offset,
         )
 
         if dry_run:
             log_debug_object(
+                obj=updated_channels[name],
                 title=TEMPLATE_TITLE_CHANNEL_INFO.format(
                     name=name,
                 ),
-                obj=updated_channels[name],
             )
             logger.warning(
                 msg=_message,
             )
         else:
             logger.debug(
-                msg=TEMPLATE_CHANNEL_ASSIGNMENT_OFFSET_APPLIED.format(
+                msg=TEMPLATE_DEBUG_CHANNEL_ASSIGNMENT_OFFSET_APPLIED.format(
                     message=_message,
                 ),
             )
 
     if dry_run:
         logger.info(
-            msg=TEMPLATE_CHANNEL_ASSIGNMENT_SKIPPED.format(
+            msg=TEMPLATE_INFO_CHANNEL_ASSIGNMENT_SKIPPED.format(
                 count=len(channel_names_for_update),
             ),
         )
         return updated_channels
 
     for name in channel_names_for_update:
-        current_info: ChannelInfo = updated_channels.get(name, {})
+        current_info: ChannelInfo = updated_channels.get(name, {})  # type: ignore[typeddict-item]
 
         current_info["current_id"] = get_normalized_current_id(
             channel_info={
@@ -170,11 +199,9 @@ def assign_current_id_to_channels(
         )
 
         logger.info(
-            msg=TEMPLATE_CHANNEL_ASSIGNMENT_APPLIED.format(
-                name=TEMPLATE_FORMAT_STRING_QUOTED_NAME.format(
-                    name=name,
-                ),
+            msg=TEMPLATE_INFO_CHANNEL_ASSIGNMENT_APPLIED.format(
                 offset=-message_offset,
+                name=name,
             ),
         )
 
@@ -182,8 +209,8 @@ def assign_current_id_to_channels(
 
 
 @status(
-    start=MESSAGE_CHANNEL_DELETE_STARTED,
-    end=MESSAGE_CHANNEL_DELETE_COMPLETED,
+    start=MESSAGE_INFO_CHANNEL_DELETE_STARTED,
+    end=MESSAGE_INFO_CHANNEL_DELETE_COMPLETED,
     tracking=True,
 )
 def delete_channels(
@@ -205,10 +232,10 @@ def delete_channels(
             channel_info=normalized_info,
         ):
             log_debug_object(
+                obj=info,
                 title=TEMPLATE_TITLE_CHANNEL_DELETE.format(
                     name=name,
                 ),
-                obj=info,
             )
 
             remaining_channels.pop(name, None)
@@ -236,7 +263,6 @@ def diff_channel_id(
 def display_channel_info(
     channels: ChannelsDict,
 ) -> None:
-    total_channels_post = 0
     channel_names = get_sorted_keys(
         channels=channels,
         apply_filter=True,
@@ -244,55 +270,40 @@ def display_channel_info(
 
     if not channel_names:
         logger.warning(
-            msg=MESSAGE_NO_CHANNELS_TO_DISPLAY,
+            msg=MESSAGE_WARNING_NO_CHANNELS_TO_DISPLAY,
         )
         return
 
-    separator_line = repeat_char_line(
-        char="-",
-    )
     logger.info(
-        msg=separator_line,
-    )
-    logger.info(
-        msg=MESSAGE_CHANNEL_SHOW_INFO,
-    )
-
-    for name in channel_names:
-        diff, status_line = format_channel_status(
-            channel_name=name,
-            channel_info=channels[name],
-        )
-        total_channels_post += diff
-
-        logger.info(
-            msg=status_line,
-        )
-
-    logger.info(
-        msg=TEMPLATE_CHANNEL_TOTAL_AVAILABLE.format(
-            count=len(channels),
-        ),
-    )
-    logger.info(
-        msg=TEMPLATE_CHANNEL_LEFT_TO_CHECK.format(
+        msg=TEMPLATE_INFO_CHANNELS_STATUS_STARTED.format(
             count=len(channel_names),
         ),
     )
-    logger.info(
-        msg=TEMPLATE_CHANNEL_TOTAL_MESSAGES.format(
-            count=total_channels_post,
-        ),
+
+    total_messages = render_channel_status(
+        results=[
+            format_channel_status(
+                channel_name=name,
+                channel_info=channels[name],
+            )
+            for name in channel_names
+        ],
+        console=console,
     )
+
     logger.info(
-        msg=separator_line,
+        msg=TEMPLATE_INFO_CHANNELS_STATUS_COMPLETED.format(
+            total=len(channels),
+            pending=len(channel_names),
+            messages=total_messages,
+        ),
     )
 
 
 def format_channel_status(
     channel_name: ChannelName,
     channel_info: ChannelInfo,
-) -> tuple[int, str]:
+) -> ChannelStatus:
     diff = diff_channel_id(
         channel_info=channel_info,
     )
@@ -305,14 +316,11 @@ def format_channel_status(
         DEFAULT_LAST_ID,
     )
 
-    return (
-        diff,
-        TEMPLATE_CHANNEL_LOG_STATUS.format(
-            name=channel_name,
-            current_id=current_id,
-            last_id=last_id,
-            diff=diff,
-        ),
+    return ChannelStatus(
+        channel_name=channel_name,
+        current_id=current_id,
+        last_id=last_id,
+        diff_id=diff,
     )
 
 
@@ -417,7 +425,7 @@ def process_channels(
         )
     else:
         logger.info(
-            msg=MESSAGE_CHANNEL_DELETE_SKIPPED,
+            msg=MESSAGE_INFO_CHANNEL_DELETE_SKIPPED,
         )
 
     if args.message_offset:
@@ -433,7 +441,7 @@ def process_channels(
         if (value := getattr(args, f"reset_{key}", None)) is not None
     }
 
-    if channel_overrides or args.reset_all:
+    if channel_overrides or args.reset_all:  # type: ignore[unreachable]
         channels = reset_channels(
             channels=channels,
             channel_overrides=channel_overrides,
@@ -449,13 +457,13 @@ def process_channels(
 
 def reset_channels(
     channels: ChannelsDict,
+    *,
     channel_overrides: ChannelInfo | None = None,
     channel_predicate: RecordPredicate | None = None,
-    *,
     dry_run: bool = True,
     reset_to_defaults: bool = False,
 ) -> ChannelsDict:
-    overrides: ChannelInfo = channel_overrides or {}
+    overrides: ChannelInfo = channel_overrides or {}    # type: ignore[assignment]
 
     if invalid_fields := set(overrides) - set(DEFAULT_CHANNEL_VALUES):
         raise ValueError(
@@ -474,8 +482,8 @@ def reset_channels(
     }
 
     if not reset_to_defaults and not valid_overrides:
-        logger.debug(
-            msg=TEMPLATE_CHANNEL_RESET_SKIPPED_NO_CHANGES.format(
+        logger.debug(  # type: ignore[unreachable]
+            msg=TEMPLATE_DEBUG_CHANNEL_RESET_SKIPPED_NO_CHANGES.format(
                 reset_to_defaults=reset_to_defaults,
                 valid_overrides=valid_overrides,
             ),
@@ -496,21 +504,21 @@ def reset_channels(
 
     if dry_run:
         logger.info(
-            msg=TEMPLATE_CHANNEL_RESET_SKIPPED.format(
+            msg=TEMPLATE_INFO_CHANNEL_RESET_SKIPPED.format(
                 count=len(channel_names_to_reset),
             ),
         )
         return updated_channels
 
     logger.info(
-        msg=TEMPLATE_CHANNEL_RESET_TOTAL.format(
+        msg=TEMPLATE_INFO_CHANNEL_RESET_TOTAL.format(
             count=len(channel_names_to_reset),
         ),
     )
 
     reset_base = (
         DEFAULT_CHANNEL_VALUES
-        if reset_to_defaults else {}
+        if reset_to_defaults else {}    # type: ignore[typeddict-item]
     )
 
     for name in channel_names_to_reset:
@@ -522,17 +530,17 @@ def reset_channels(
         )
 
         log_debug_object(
-            title=TEMPLATE_TITLE_CHANNEL_RESET.format(
-                name=name,
-            ),
             obj={
-                key: TEMPLATE_FORMAT_CHANNEL_CHANGE.format(
+                key: FORMAT_CHANNEL_CHANGE.format(
                     before=before.get(key),
                     after=channel_info[key],  # type: ignore[literal-required]
                 )
                 for key in channel_info
                 if before.get(key) != channel_info[key]  # type: ignore[literal-required]
             },
+            title=TEMPLATE_TITLE_CHANNEL_RESET.format(
+                name=name,
+            ),
         )
 
     return updated_channels
@@ -556,8 +564,9 @@ def sort_channel_names(
 def update_last_id_and_state(
     channel_name: ChannelName,
     channel_info: ChannelInfo,
+    *,
     last_post_id: PostID,
-) -> None:
+) -> ChannelUpdateResult:
     last_id = channel_info.get(
         "last_id",
         DEFAULT_LAST_ID,
@@ -566,25 +575,14 @@ def update_last_id_and_state(
         "state",
         DEFAULT_STATE,
     )
-    log_message = TEMPLATE_CHANNEL_LOG_UPDATE.format(
-        name=channel_name,
-        last_id=last_id,
-        last_post_id=last_post_id,
-    )
+    changed = last_id != last_post_id
 
-    if last_id != last_post_id:
-        logger.info(
-            msg=log_message,
-        )
+    if changed:
         channel_info["last_id"] = last_post_id
-    else:
-        logger.debug(
-            msg=log_message,
-        )
 
     if last_post_id != DEFAULT_LAST_ID:
         channel_info["state"] = CHANNEL_STATE_AVAILABLE
-    elif last_id != last_post_id:
+    elif changed:
         channel_info["state"] = DEFAULT_STATE
     else:
         channel_info["state"] = min(
@@ -592,10 +590,17 @@ def update_last_id_and_state(
             CHANNEL_STATE_UNAVAILABLE,
         )
 
+    return ChannelUpdateResult(
+        channel_name=channel_name,
+        old_last_id=last_id,
+        new_last_id=last_post_id,
+        changed=changed,
+    )
+
 
 @status(
-    start=MESSAGE_CHANNEL_UPDATE_STARTED,
-    end=MESSAGE_CHANNEL_UPDATE_COMPLETED,
+    start=MESSAGE_INFO_CHANNEL_UPDATE_STARTED,
+    end=MESSAGE_INFO_CHANNEL_UPDATE_COMPLETED,
     tracking=True,
 )
 def update_with_new_channels(
@@ -616,7 +621,7 @@ def update_with_new_channels(
 
         if name not in current_channels:
             logger.debug(
-                msg=TEMPLATE_CHANNEL_MISSING_ADD_COMPLETED.format(
+                msg=TEMPLATE_DEBUG_CHANNEL_MISSING_ADD_COMPLETED.format(
                     name=name,
                 ),
             )
