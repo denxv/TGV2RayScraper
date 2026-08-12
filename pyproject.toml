@@ -110,6 +110,7 @@ target-version = "py310"
 [tool.ruff.lint]
 ignore = [
     "BLE001",
+    "CPY001",
     "D",
     "PLR0913",
     "PTH123",
