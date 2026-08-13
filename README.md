@@ -204,19 +204,23 @@ python -m scripts.update_channels -h
 
 * **Channel selection**
 
-  * `-F, --channel-filter CONDITION` - Filter channels using a Python-like expression (for example: `"count < 100 and current_id == last_id or state == -1"`).
+  > Common filter for all actions. If omitted, a built-in default is used per action.
 
-    > Used to select the channels to which reset operations (`--reset-*`) are applied.
+  * `-F, --channel-filter CONDITION` - Filter channels using a Python-like expression (for example: `"count < 100 and current_id == last_id or state == -1"`). If omitted, all existing channels except new ones are selected.
 
 * **Channel actions**
 
-  * `-D, --delete-channels` - Delete channels that are unavailable or meet specific conditions. By default, deletion is disabled.
+  > Only one action can be specified per invocation. Cannot combine `--delete-channels`, `--message-offset`, and reset options.
 
-  * `-M, --message-offset N` - Number of recent messages taken into account when assigning `current_id`.
+  * `-D, --delete-channels` - Delete channels matching the filter. If no filter is specified, deletes unavailable channels and channels without configuration. By default, deletion is disabled.
+
+  * `-M, --message-offset N` - Assign `current_id` to channels matching the filter based on `N` recent messages. If no filter is specified, applies to available channels excluding new ones.
 
 * **Channel reset options**
 
-  * `--reset-all` - Reset all channel fields to their default values (can be combined with `--reset-<field>` and `--channel-filter`).
+  > Reset options can be combined with each other, but not with `--delete-channels` or `--message-offset`.
+
+  * `--reset-all` - Reset all channel values to their defaults for filtered channels. Can be combined with `--reset-<field>`. Without a filter, applies to available non-new channels.
 
   * `--reset-count [N]` - Reset `count` to the specified value or to the default value (`0`).
 
@@ -240,13 +244,13 @@ python -m scripts.update_channels -h
 
 * Creates backup files for channel and URL lists if necessary (backup creation can be skipped using `--skip-backup`).
 
-* Selects channels based on the specified filter (`--channel-filter`), if provided.
+* Applies a common filter (`--channel-filter`) to any action: delete, assign, or reset. If no filter is specified, a built-in default filter is used for each action.
 
-* Deletes unavailable or flagged channels when the `--delete-channels` option is used.
+* Deletes channels matching the filter when the `--delete-channels` option is used. If no filter is specified, deletes unavailable channels and channels without configuration.
 
-* Resets channel field values to their defaults or to explicitly specified values (`--reset-*`).
+* Assigns `current_id` to channels matching the filter based on `N` recent messages (`--message-offset`). If no filter is specified, applies to available channels excluding new ones.
 
-* Assigns or updates the `current_id` field, taking the specified message offset into account (`--message-offset`).
+* Resets channel field values matching the filter to their defaults or to explicitly specified values (`--reset-*`). If no filter is specified, applies to available channels excluding new ones.
 
 * Saves the updated data back to `channels/current.json` and `channels/urls.txt`.
 

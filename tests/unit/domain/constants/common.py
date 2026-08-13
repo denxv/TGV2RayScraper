@@ -13,6 +13,9 @@ from core.constants.common import (
 from core.constants.formats import (
     FORMAT_CHANNEL_CHANGE,
 )
+from core.constants.messages.error import (
+    MESSAGE_ERROR_MULTIPLE_ACTIONS_SPECIFIED,
+)
 from core.constants.messages.info import (
     MESSAGE_INFO_CHANNEL_DELETE_SKIPPED,
 )
@@ -58,6 +61,7 @@ __all__ = [
     "DEFAULT_STATE",
     "FORMAT_CHANNEL_CHANGE",
     "LAST_POST_ID",
+    "MESSAGE_ERROR_MULTIPLE_ACTIONS_SPECIFIED",
     "MESSAGE_INFO_CHANNEL_DELETE_SKIPPED",
     "MESSAGE_OFFSET",
     "MESSAGE_WARNING_NO_CHANNELS_TO_DISPLAY",

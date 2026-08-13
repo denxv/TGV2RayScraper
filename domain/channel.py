@@ -18,6 +18,9 @@ from core.constants.common import (
 from core.constants.formats import (
     FORMAT_CHANNEL_CHANGE,
 )
+from core.constants.messages.error import (
+    MESSAGE_ERROR_MULTIPLE_ACTIONS_SPECIFIED,
+)
 from core.constants.messages.info import (
     MESSAGE_INFO_CHANNEL_DELETE_COMPLETED,
     MESSAGE_INFO_CHANNEL_DELETE_SKIPPED,
@@ -123,9 +126,12 @@ class ChannelUpdateResult:
 def assign_current_id_to_channels(
     channels: ChannelsDict,
     *,
+    channel_predicate: RecordPredicate | None = None,
     message_offset: int = MESSAGE_OFFSET_DEFAULT,
     dry_run: bool = False,
 ) -> ChannelsDict:
+    should_assign = channel_predicate or should_set_current_id
+
     updated_channels = deepcopy(
         x=channels,
     )
@@ -144,9 +150,7 @@ def assign_current_id_to_channels(
     channel_names_for_update = [
         name
         for name in updated_channels
-        if should_set_current_id(
-            channel_info=updated_channels[name],
-        )
+        if should_assign(updated_channels[name])
     ]
 
     for name in channel_names_for_update:
@@ -215,7 +219,11 @@ def assign_current_id_to_channels(
 )
 def delete_channels(
     channels: ChannelsDict,
+    *,
+    channel_predicate: RecordPredicate | None = None,
 ) -> ChannelsDict:
+    should_delete = channel_predicate or should_delete_channel
+
     remaining_channels = deepcopy(
         x=channels,
     )
@@ -228,9 +236,7 @@ def delete_channels(
             ),
         }
 
-        if should_delete_channel(
-            channel_info=normalized_info,
-        ):
+        if should_delete(normalized_info):
             log_debug_object(
                 obj=info,
                 title=TEMPLATE_TITLE_CHANNEL_DELETE.format(
@@ -419,35 +425,50 @@ def process_channels(
     channels: ChannelsDict,
     args: ArgsNamespace,
 ) -> ChannelsDict:
+    channel_overrides: ChannelInfo = {  # type: ignore[assignment]
+        key: value
+        for key in DEFAULT_CHANNEL_VALUES
+        if (value := getattr(args, f"reset_{key}", None)) is not None
+    }
+    channel_predicate = make_predicate(
+        condition=args.channel_filter,
+    )
+
+    action_count = sum((
+        args.delete_channels,
+        args.message_offset is not None,
+        bool(channel_overrides) or args.reset_all,
+    ))
+
+    if action_count > 1:
+        logger.error(
+            msg=MESSAGE_ERROR_MULTIPLE_ACTIONS_SPECIFIED,
+        )
+        return channels
+
     if args.delete_channels:
         channels = delete_channels(
             channels=channels,
+            channel_predicate=channel_predicate,
         )
     else:
         logger.info(
             msg=MESSAGE_INFO_CHANNEL_DELETE_SKIPPED,
         )
 
-    if args.message_offset:
+    if args.message_offset is not None:
         channels = assign_current_id_to_channels(
             channels=channels,
+            channel_predicate=channel_predicate,
             message_offset=args.message_offset,
             dry_run=args.dry_run,
         )
-
-    channel_overrides: ChannelInfo = {  # type: ignore[assignment]
-        key: value
-        for key in DEFAULT_CHANNEL_VALUES
-        if (value := getattr(args, f"reset_{key}", None)) is not None
-    }
 
     if channel_overrides or args.reset_all:  # type: ignore[unreachable]
         channels = reset_channels(
             channels=channels,
             channel_overrides=channel_overrides,
-            channel_predicate=make_predicate(
-                condition=args.channel_filter,
-            ),
+            channel_predicate=channel_predicate,
             dry_run=args.dry_run,
             reset_to_defaults=args.reset_all,
         )
@@ -463,6 +484,7 @@ def reset_channels(
     dry_run: bool = True,
     reset_to_defaults: bool = False,
 ) -> ChannelsDict:
+    should_reset = channel_predicate or should_set_current_id
     overrides: ChannelInfo = channel_overrides or {}    # type: ignore[assignment]
 
     if invalid_fields := set(overrides) - set(DEFAULT_CHANNEL_VALUES):
@@ -490,16 +512,10 @@ def reset_channels(
         )
         return updated_channels
 
-    channel_selector = (
-        channel_predicate
-        or should_set_current_id
-    )
     channel_names_to_reset = [
         name
         for name in updated_channels
-        if channel_selector(
-            updated_channels[name],
-        )
+        if should_reset(updated_channels[name])
     ]
 
     if dry_run:

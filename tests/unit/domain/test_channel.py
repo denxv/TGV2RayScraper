@@ -42,12 +42,14 @@ from domain.channel import (
     update_with_new_channels,
 )
 from domain.predicates import (
+    should_delete_channel,
     should_set_current_id,
 )
 from tests.unit.domain.constants.common import (
     DEFAULT_CHANNEL_VALUES,
     DEFAULT_LAST_ID,
     FORMAT_CHANNEL_CHANGE,
+    MESSAGE_ERROR_MULTIPLE_ACTIONS_SPECIFIED,
     MESSAGE_INFO_CHANNEL_DELETE_SKIPPED,
     MESSAGE_WARNING_NO_CHANNELS_TO_DISPLAY,
     TEMPLATE_DEBUG_CHANNEL_ASSIGNMENT_OFFSET_APPLIED,
@@ -120,6 +122,7 @@ def test_assign_current_id_to_channels_invalid_offset(
 
     updated_channels = assign_current_id_to_channels(
         channels=expected_channels,
+        channel_predicate=None,
         message_offset=invalid_offset,
     )
 
@@ -148,6 +151,7 @@ def test_assign_current_id_to_channels_various(
 ) -> None:
     updated_channels = assign_current_id_to_channels(
         channels=channels,
+        channel_predicate=should_set_current_id,
         message_offset=message_offset,
         dry_run=dry_run,
     )
@@ -221,6 +225,7 @@ def test_delete_channels(
 ) -> None:
     remaining_channels = delete_channels(
         channels=channels,
+        channel_predicate=should_delete_channel,
     )
 
     assert list(remaining_channels) == expected_keys_to_keep
@@ -424,7 +429,7 @@ def test_normalize_channel_names(
 def test_process_channels_calls(
     mock_logger: Mock,
     mocker: MockerFixture,
-    message_offset: int,
+    message_offset: int | None,
     *,
     dry_run: bool,
     delete_channels_flag: bool,
@@ -449,6 +454,12 @@ def test_process_channels_calls(
         wraps=reset_channels,
     )
 
+    action_count = sum((
+        delete_channels_flag,
+        message_offset is not None,
+        reset_all,
+    ))
+
     args = Namespace(
         channel_filter=None,
         dry_run=dry_run,
@@ -457,10 +468,29 @@ def test_process_channels_calls(
         reset_all=reset_all,
     )
 
+    channel_overrides = {
+        key: value
+        for key in DEFAULT_CHANNEL_VALUES
+        if (value := getattr(args, f"reset_{key}", None)) is not None
+    }
+
     result = process_channels(
         channels=channels,
         args=args,
     )
+
+    if action_count > 1:
+        assert result is channels
+
+        mock_logger.error.assert_any_call(
+            msg=MESSAGE_ERROR_MULTIPLE_ACTIONS_SPECIFIED,
+        )
+
+        mock_delete.assert_not_called()
+        mock_assign.assert_not_called()
+        mock_reset.assert_not_called()
+
+        return
 
     if delete_channels_flag or message_offset or reset_all:
         assert result is not channels
@@ -470,27 +500,23 @@ def test_process_channels_calls(
     if delete_channels_flag:
         mock_delete.assert_called_once_with(
             channels=channels,
+            channel_predicate=ANY,
         )
     else:
-        mock_delete.assert_not_called()
         mock_logger.info.assert_any_call(
             msg=MESSAGE_INFO_CHANNEL_DELETE_SKIPPED,
         )
+        mock_delete.assert_not_called()
 
-    if message_offset:
+    if message_offset is not None:
         mock_assign.assert_called_once_with(
             channels=ANY,
+            channel_predicate=ANY,
             message_offset=message_offset,
             dry_run=dry_run,
         )
     else:
         mock_assign.assert_not_called()
-
-    channel_overrides = {
-        key: value
-        for key in DEFAULT_CHANNEL_VALUES
-        if (value := getattr(args, f"reset_{key}", None)) is not None
-    }
 
     if channel_overrides or reset_all:
         mock_reset.assert_called_once_with(
@@ -527,6 +553,7 @@ def test_reset_channels(
         reset_to_defaults=reset_to_defaults,
     )
 
+    should_reset = channel_predicate or should_set_current_id
     overrides = channel_overrides or {}  # type: ignore[var-annotated]
 
     valid_overrides = {
@@ -544,16 +571,10 @@ def test_reset_channels(
         )
         return
 
-    channel_selector = (
-        channel_predicate
-        or should_set_current_id
-    )
     channel_names_to_reset = [
         name
         for name in channels
-        if channel_selector(
-            channels[name],
-        )
+        if should_reset(channels[name])
     ]
 
     if dry_run:

@@ -4,6 +4,7 @@ from core.typing import (
 
 __all__ = [
     "MESSAGE_ERROR_CONDITION_EMPTY",
+    "MESSAGE_ERROR_MULTIPLE_ACTIONS_SPECIFIED",
     "MESSAGE_ERROR_NO_FIELDS_PROVIDED",
     "MESSAGE_ERROR_NO_POSTS_FOUND",
     "MESSAGE_ERROR_PROXY_EMPTY",
@@ -13,6 +14,10 @@ __all__ = [
 
 MESSAGE_ERROR_CONDITION_EMPTY: MessageStr = (
     "The condition cannot be empty."
+)
+MESSAGE_ERROR_MULTIPLE_ACTIONS_SPECIFIED: MessageStr = (
+    "Cannot perform multiple actions simultaneously. "
+    "Expected exactly one: assign, delete or reset."
 )
 MESSAGE_ERROR_NO_FIELDS_PROVIDED: MessageStr = (
     "No fields were provided."

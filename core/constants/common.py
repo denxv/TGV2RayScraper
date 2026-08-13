@@ -8,6 +8,9 @@ from logging import (
 from pathlib import (
     Path,
 )
+from sys import (
+    maxsize,
+)
 from urllib.request import (
     getproxies,
 )
@@ -93,7 +96,7 @@ _ENV_PROXIES: dict[str, str] = getproxies()
 BASE64_BLOCK_SIZE: int = 4
 
 CHANNELS_BATCH_DEFAULT: int = 100
-CHANNELS_BATCH_MAX: int = 1000
+CHANNELS_BATCH_MAX: int = 1_000
 CHANNELS_BATCH_MIN: int = 1
 
 CHANNELS_CONCURRENCY_DEFAULT: int = 5
@@ -162,10 +165,10 @@ HTTP_TIMEOUT_MAX: float = 100.0
 HTTP_TIMEOUT_MIN: float = 0.1
 
 MESSAGE_OFFSET_DEFAULT: int = 50
-MESSAGE_OFFSET_MAX: int = 1000
+MESSAGE_OFFSET_MAX: int = maxsize
 MESSAGE_OFFSET_MIN: int = 1
 
-PORT_MAX: int = 65535
+PORT_MAX: int = 65_535
 PORT_MIN: int = 1
 
 POST_DEFAULT_ID: int = 0

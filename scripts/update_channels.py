@@ -153,6 +153,10 @@ def parse_args() -> ArgsNamespace:
 
     group_selection = parser.add_argument_group(
         "Channel selection options",
+        description=(
+            "Common filter for all actions. "
+            "If omitted, a built-in default is used per action."
+        ),
     )
     group_selection.add_argument(
         "-F", "--channel-filter",
@@ -160,7 +164,6 @@ def parse_args() -> ArgsNamespace:
         help=(
             "Filter channels using a Python-like condition. Example: "
             '"count < 100 and current_id == last_id or state == -1". '
-            "Only channels matching the condition will be selected. "
             "If omitted, all existing channels "
             "except new ones will be selected."
         ),
@@ -170,6 +173,11 @@ def parse_args() -> ArgsNamespace:
 
     group_actions = parser.add_argument_group(
         "Channel actions",
+        description=(
+            "Only one action can be specified per invocation. "
+            "Cannot combine --delete-channels, --message-offset, "
+            "and reset options."
+        ),
     )
     group_actions.add_argument(
         "-D", "--delete-channels",
@@ -177,16 +185,20 @@ def parse_args() -> ArgsNamespace:
         default=False,
         dest="delete_channels",
         help=(
-            "Delete channels that are unavailable or "
-            "meet specific conditions. By default, deletion is disabled."
+            "Delete channels matching the filter. "
+            "If no filter is specified, deletes unavailable channels "
+            "and channels without configuration. "
+            "By default, deletion is disabled."
         ),
     )
     group_actions.add_argument(
         "-M", "--message-offset",
         dest="message_offset",
         help=(
-            "Number of recent messages to include "
-            "when assigning 'current_id'."
+            "Assign 'current_id' to channels matching the filter "
+            "based on N recent messages. "
+            "If no filter is specified, applies to available channels "
+            "excluding new ones."
         ),
         metavar="N",
         type=lambda value: convert_number_in_range(
@@ -200,6 +212,10 @@ def parse_args() -> ArgsNamespace:
 
     group_reset = parser.add_argument_group(
         "Channel reset options",
+        description=(
+            "Reset options can be combined with each other, "
+            "but not with --delete-channels or --message-offset."
+        ),
     )
     group_reset.add_argument(
         "--reset-all",
@@ -207,10 +223,9 @@ def parse_args() -> ArgsNamespace:
         default=False,
         dest="reset_all",
         help=(
-            "Reset all channel values to their defaults. "
-            "Can be used together with --reset-<field> "
-            "to set specific values, and/or with --channel-filter "
-            "to select which channels are affected (default: disabled)."
+            "Reset all channel values to their defaults "
+            "for filtered channels. Can be combined with --reset-<field>. "
+            "Without a filter, applies to available non-new channels."
         ),
     )
     for field, default in DEFAULT_CHANNEL_VALUES.items():
@@ -229,6 +244,22 @@ def parse_args() -> ArgsNamespace:
         )
 
     args = parser.parse_args()
+
+    action_count = sum((
+        args.delete_channels,
+        args.message_offset is not None,
+        args.reset_all or any(
+            getattr(args, f"reset_{field}", None) is not None
+            for field in DEFAULT_CHANNEL_VALUES
+        ),
+    ))
+
+    if action_count > 1:
+        parser.error(
+            "Multiple actions cannot be combined. "
+            "Specify only one: "
+            "--delete-channels, --message-offset, or reset options.",
+        )
 
     set_console_level(
         logger=logger,
