@@ -109,6 +109,7 @@ from core.utils import (
 )
 from domain.channel import (
     normalize_channel_names,
+    normalize_channels,
 )
 
 __all__ = [
@@ -360,7 +361,7 @@ async def load_channels(
             ),
         )
 
-        normalized_channels = normalize_channel_names(
+        normalized_channels = normalize_channels(
             channels=loaded_channels,
         )
     except JSONDecodeError as e:
@@ -444,7 +445,7 @@ async def save_channels(
         ),
     )
 
-    normalized_channels = normalize_channel_names(
+    normalized_channels = normalize_channels(
         channels=channels,
     )
     normalized_channels_count = len(normalized_channels)

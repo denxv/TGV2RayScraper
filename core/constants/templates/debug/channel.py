@@ -3,7 +3,7 @@ from core.typing import (
 )
 
 __all__ = [
-    "TEMPLATE_DEBUG_CHANNEL_ASSIGNMENT_OFFSET_APPLIED",
+    "TEMPLATE_DEBUG_CHANNEL_CHANGES_SKIPPED_NO_CHANGES",
     "TEMPLATE_DEBUG_CHANNEL_EXTRACT_POST_ID_FAILED",
     "TEMPLATE_DEBUG_CHANNEL_EXTRACT_POST_ID_FETCHED",
     "TEMPLATE_DEBUG_CHANNEL_EXTRACT_POST_ID_FIRST_EXTRACTED",
@@ -25,7 +25,6 @@ __all__ = [
     "TEMPLATE_DEBUG_CHANNEL_IO_SAVE_URLS_WRITTEN",
     "TEMPLATE_DEBUG_CHANNEL_IO_SAVE_WRITTEN",
     "TEMPLATE_DEBUG_CHANNEL_MISSING_ADD_COMPLETED",
-    "TEMPLATE_DEBUG_CHANNEL_RESET_SKIPPED_NO_CHANGES",
     "TEMPLATE_DEBUG_CHANNEL_STATUS_RESULT",
     "TEMPLATE_DEBUG_CHANNEL_UPDATE_BATCH_COMPLETED",
     "TEMPLATE_DEBUG_CHANNEL_UPDATE_BATCH_STARTED",
@@ -40,9 +39,10 @@ __all__ = [
     "TEMPLATE_DEBUG_CHANNEL_UPDATE_UNAVAILABLE",
 ]
 
-TEMPLATE_DEBUG_CHANNEL_ASSIGNMENT_OFFSET_APPLIED: TemplateStr = (
-    "[channel.assignment.applied]: "
-    "message={message!r}"
+TEMPLATE_DEBUG_CHANNEL_CHANGES_SKIPPED_NO_CHANGES: TemplateStr = (
+    "[channel.changes.skipped]: "
+    "reset_to_defaults={reset_to_defaults!r}; "
+    "valid_overrides={valid_overrides!r}"
 )
 TEMPLATE_DEBUG_CHANNEL_EXTRACT_POST_ID_FAILED: TemplateStr = (
     "[channel.extract.post_id.failed]: "
@@ -154,11 +154,6 @@ TEMPLATE_DEBUG_CHANNEL_IO_SAVE_WRITTEN: TemplateStr = (
 TEMPLATE_DEBUG_CHANNEL_MISSING_ADD_COMPLETED: TemplateStr = (
     "[channel.update.added]: "
     "name={name!r}"
-)
-TEMPLATE_DEBUG_CHANNEL_RESET_SKIPPED_NO_CHANGES: TemplateStr = (
-    "[channel.reset.skipped]: "
-    "reset_to_defaults={reset_to_defaults!r}; "
-    "valid_overrides={valid_overrides!r}"
 )
 TEMPLATE_DEBUG_CHANNEL_STATUS_RESULT: TemplateStr = (
     "[channel.status.result]: "

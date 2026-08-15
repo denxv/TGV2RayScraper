@@ -192,7 +192,7 @@ python -m scripts.update_channels -h
 
   * `--debug` - Enable debug logging in the console. By default, the console displays logs at `INFO` level.
 
-  * `--no-dry-run` - Disable dry-run mode and allow modification of channel metadata, including assigning `current_id` and resetting fields (e.g. `count`, `last_id`, etc.). By default, dry-run mode is enabled.
+  * `--no-dry-run` - Disable dry-run mode and allow modifying channel metadata, including setting and resetting fields such as `count`, `last_id`, `current_id`, and `state`. By default, dry-run mode is enabled.
 
   * `--skip-backup` - Skip creating backup files for channel and Telegram URL lists. By default, backup is created.
 
@@ -202,7 +202,7 @@ python -m scripts.update_channels -h
 
   * `-U, --urls PATH` - Path to the input TXT file containing new channel URLs (default: `channels/urls.txt`).
 
-* **Channel selection**
+* **Channel selection options**
 
   > Common filter for all actions. If omitted, a built-in default is used per action.
 
@@ -210,29 +210,23 @@ python -m scripts.update_channels -h
 
 * **Channel actions**
 
-  > Only one action can be specified per invocation. Cannot combine `--delete-channels`, `--message-offset`, and reset options.
+  > Only one action can be specified per invocation. Deletion cannot be combined with reset/set options. Reset and set options can be combined with each other.
 
   * `-D, --delete-channels` - Delete channels matching the filter. If no filter is specified, deletes unavailable channels and channels without configuration. By default, deletion is disabled.
 
-  * `-M, --message-offset N` - Assign `current_id` to channels matching the filter based on `N` recent messages. If no filter is specified, applies to available channels excluding new ones.
+  * `--reset-all` - Reset all channel values to their defaults for filtered channels. Can be combined with `--set-<field>`. Without a filter, applies to available non-new channels.
 
-* **Channel reset options**
+  * `--set-count [N]` - Set `count` to the specified value or to the default value (`0`).
 
-  > Reset options can be combined with each other, but not with `--delete-channels` or `--message-offset`.
+  * `--set-current-id [N]` - Set `current_id` to the specified value or to the default value (`1`).
 
-  * `--reset-all` - Reset all channel values to their defaults for filtered channels. Can be combined with `--reset-<field>`. Without a filter, applies to available non-new channels.
+  * `--set-last-id [N]` - Set `last_id` to the specified value or to the default value (`-1`).
 
-  * `--reset-count [N]` - Reset `count` to the specified value or to the default value (`0`).
-
-  * `--reset-current-id [N]` - Reset `current_id` to the specified value or to the default value (`1`).
-
-  * `--reset-last-id [N]` - Reset `last_id` to the specified value or to the default value (`-1`).
-
-  * `--reset-state [N]` - Reset `state` to the specified value or to the default value (`0`).
+  * `--set-state [N]` - Set `state` to the specified value or to the default value (`0`).
 
 **The script performs the following actions:**
 
-* Displays `INFO` level logs in the console by default, debug output can be enabled using the `--debug` option.
+* Displays `INFO` level logs in the console by default; debug output can be enabled using the `--debug` option.
 
 * Logs detailed debug information and warnings to the file `logs/yyyy-mm-dd.log`.
 
@@ -244,20 +238,20 @@ python -m scripts.update_channels -h
 
 * Creates backup files for channel and URL lists if necessary (backup creation can be skipped using `--skip-backup`).
 
-* Applies a common filter (`--channel-filter`) to any action: delete, assign, or reset. If no filter is specified, a built-in default filter is used for each action.
+* Applies a common filter (`--channel-filter`) to any action: delete, reset, or set. If no filter is specified, a built-in default filter is used for each action.
 
 * Deletes channels matching the filter when the `--delete-channels` option is used. If no filter is specified, deletes unavailable channels and channels without configuration.
 
-* Assigns `current_id` to channels matching the filter based on `N` recent messages (`--message-offset`). If no filter is specified, applies to available channels excluding new ones.
+* Resets all channel fields to their default values when the `--reset-all` option is used. If no filter is specified, applies to available channels excluding new ones.
 
-* Resets channel field values matching the filter to their defaults or to explicitly specified values (`--reset-*`). If no filter is specified, applies to available channels excluding new ones.
+* Sets individual channel fields using the `--set-<field>` options. If no value is specified, the corresponding default value is used.
 
 * Saves the updated data back to `channels/current.json` and `channels/urls.txt`.
 
 **Example usage:**
 
 ```bash
-python -m scripts.update_channels -C channels/current.json -U channels/urls.txt -F "count < 100" --no-dry-run --reset-all
+python -m scripts.update_channels -C channels/current.json -U channels/urls.txt -F "count < 100" --set-current-id -100
 ```
 
 > You can add `uv run` before the `python` command to run it via `uv`.
@@ -481,7 +475,7 @@ python main.py -h
 **Example usage:**
 
 ```bash
-python main.py --debug --configs-batch 10 --channels-batch 50 --channels-concurrency 10 --proxy --retry-delay 1.5 --channel-filter "state == -1" --config-filter "host and port" --duplicate --reset-all --reset-count 0 --reverse --sort "host, port"
+python main.py --debug --configs-batch 10 --channels-batch 50 --channels-concurrency 10 --proxy --retry-delay 1.5 --channel-filter "state == -1" --config-filter "host and port" --duplicate --reset-all --set-count 0 --reverse --sort "host, port"
 ```
 
 > You can add `uv run` before the `python` command to run it through `uv`.
@@ -887,9 +881,11 @@ The file `channels/current.json` contains information about Telegram channels. E
 
   * `1` - default value, scanning starts from the very beginning of the channel (old messages).
 
-  * `< 0` - take the last `N` messages (new messages).
+  * `< 0` - scanning starts from the last `N` messages, where `N` is the absolute value of `current_id`.
 
     > Example: if `last_id = 500` and `current_id = -100`, scanning goes from message `≥ 400` to the last message `≤ 500`.
+
+    > A negative value can be set using `--set-current-id`. For example: `--set-current-id -100`.
 
 * `last_id` - the ID of the last message in the channel.
 

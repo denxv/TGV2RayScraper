@@ -24,7 +24,7 @@ from adapters.config import (
     fetch_and_write_configs,
 )
 from adapters.scraper import (
-    update_info,
+    update_channels_info,
 )
 from core.constants.common import (
     CHANNELS_BATCH_DEFAULT,
@@ -364,7 +364,7 @@ async def main() -> None:
                 ),
             )
 
-            await update_info(
+            await update_channels_info(
                 ctx=runtime_ctx,
                 channels=channels,
                 skip_update=parsed_args.skip_update,

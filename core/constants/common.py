@@ -8,9 +8,6 @@ from logging import (
 from pathlib import (
     Path,
 )
-from sys import (
-    maxsize,
-)
 from urllib.request import (
     getproxies,
 )
@@ -72,9 +69,6 @@ __all__ = [
     "HTTP_TIMEOUT_MIN",
     "INFO",
     "LOGGING_THEME",
-    "MESSAGE_OFFSET_DEFAULT",
-    "MESSAGE_OFFSET_MAX",
-    "MESSAGE_OFFSET_MIN",
     "PORT_MAX",
     "PORT_MIN",
     "POST_DEFAULT_ID",
@@ -117,7 +111,7 @@ CHANNEL_TABLE_PADDING: Padding = (1, 0, 1, 25)
 
 DEFAULT_COUNT: int = 0
 DEFAULT_CURRENT_ID: int = 1
-DEFAULT_LAST_ID: int = -1
+DEFAULT_LAST_ID: int = CHANNEL_STATE_UNAVAILABLE
 DEFAULT_STATE: int = 0
 
 DEFAULT_HELP_INDENT: int = 40
@@ -164,10 +158,6 @@ HTTP_TIMEOUT_DEFAULT: float = 30.0
 HTTP_TIMEOUT_MAX: float = 100.0
 HTTP_TIMEOUT_MIN: float = 0.1
 
-MESSAGE_OFFSET_DEFAULT: int = 50
-MESSAGE_OFFSET_MAX: int = maxsize
-MESSAGE_OFFSET_MIN: int = 1
-
 PORT_MAX: int = 65_535
 PORT_MIN: int = 1
 
@@ -195,14 +185,13 @@ CLI_SCRIPTS_CONFIG: dict[ScriptName, ScriptConfig] = {
     "update_channels": {
         "flags": sorted([
             *(
-                f"--reset-{field.replace('_', '-')}"
+                f"--set-{field.replace('_', '-')}"
                 for field in DEFAULT_CHANNEL_VALUES
             ),
             "--channel-filter",
             "--channels",
             "--debug",
             "--delete-channels",
-            "--message-offset",
             "--no-dry-run",
             "--reset-all",
             "--skip-backup",

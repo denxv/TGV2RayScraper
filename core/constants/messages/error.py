@@ -17,7 +17,7 @@ MESSAGE_ERROR_CONDITION_EMPTY: MessageStr = (
 )
 MESSAGE_ERROR_MULTIPLE_ACTIONS_SPECIFIED: MessageStr = (
     "Cannot perform multiple actions simultaneously. "
-    "Expected exactly one: assign, delete or reset."
+    "Expected exactly one: delete or reset/set."
 )
 MESSAGE_ERROR_NO_FIELDS_PROVIDED: MessageStr = (
     "No fields were provided."

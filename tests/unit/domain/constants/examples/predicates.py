@@ -36,10 +36,11 @@ from tests.unit.domain.constants.fixtures.channel import (
 __all__ = [
     "IS_CHANNEL_AVAILABLE_EXAMPLES",
     "IS_CHANNEL_FULLY_SCANNED_EXAMPLES",
+    "IS_CHANNEL_PENDING_UPDATE_EXAMPLES",
     "IS_NEW_CHANNEL_EXAMPLES",
     "MAKE_PREDICATE_EXAMPLES",
+    "SHOULD_APPLY_CHANGES_EXAMPLES",
     "SHOULD_DELETE_CHANNEL_EXAMPLES",
-    "SHOULD_SET_CURRENT_ID_EXAMPLES",
 ]
 
 IS_CHANNEL_AVAILABLE_EXAMPLES: tuple[
@@ -98,6 +99,61 @@ IS_CHANNEL_FULLY_SCANNED_EXAMPLES: tuple[
     (
         CHANNEL_MISSING_CURRENT_ID,
         False,
+        "missing_current_id",
+    ),
+    (
+        CHANNEL_MISSING_LAST_ID,
+        False,
+        "missing_last_id",
+    ),
+)
+
+IS_CHANNEL_PENDING_UPDATE_EXAMPLES: tuple[
+    tuple[
+        ChannelInfo,
+        bool,
+        str,
+    ],
+    ...,
+] = (
+    (
+        CHANNEL_BASE,
+        False,
+        "all_defaults",
+    ),
+    (
+        CHANNEL_BASE_SAMPLE_CURRENT_EQUAL_LAST,
+        False,
+        "current_equals_last",
+    ),
+    (
+        CHANNEL_BASE_SAMPLE_CURRENT_GT_LAST,
+        False,
+        "current_greater_than_last",
+    ),
+    (
+        CHANNEL_BASE_SAMPLE_CURRENT_LT_LAST,
+        True,
+        "current_less_than_last",
+    ),
+    (
+        {},  # type: ignore[typeddict-item]
+        False,
+        "empty_dict_defaults_used",
+    ),
+    (
+        CHANNEL_UNAVAILABLE,
+        False,
+        "last_id_is_default",
+    ),
+    (
+        CHANNEL_AVAILABLE,
+        True,
+        "last_id_is_not_default",
+    ),
+    (
+        CHANNEL_MISSING_CURRENT_ID,
+        True,
         "missing_current_id",
     ),
     (
@@ -258,6 +314,31 @@ MAKE_PREDICATE_EXAMPLES: tuple[
     ),
 )
 
+SHOULD_APPLY_CHANGES_EXAMPLES: tuple[
+    tuple[
+        ChannelInfo,
+        bool,
+        str,
+    ],
+    ...,
+] = (
+    (
+        CHANNEL_AVAILABLE,
+        True,
+        "available_existing_channel",
+    ),
+    (
+        CHANNEL_NEW,
+        False,
+        "new_channel",
+    ),
+    (
+        CHANNEL_UNAVAILABLE,
+        False,
+        "unavailable_channel",
+    ),
+)
+
 SHOULD_DELETE_CHANNEL_EXAMPLES: tuple[
     tuple[
         ChannelInfo,
@@ -362,85 +443,5 @@ SHOULD_DELETE_CHANNEL_EXAMPLES: tuple[
         CHANNEL_SCANNED_REMOVE_THRESHOLD,
         True,
         "remove_threshold_equal_ids",
-    ),
-)
-
-SHOULD_SET_CURRENT_ID_EXAMPLES: tuple[
-    tuple[
-        ChannelInfo,
-        bool,
-        str,
-    ],
-    ...,
-] = (
-    (
-        CHANNEL_AVAILABLE,
-        True,
-        "available_existing_channel",
-    ),
-    (
-        CHANNEL_NEW,
-        False,
-        "new_channel",
-    ),
-    (
-        CHANNEL_UNAVAILABLE,
-        False,
-        "unavailable_channel",
-    ),
-)
-
-SHOULD_UPDATE_CHANNEL_EXAMPLES: tuple[
-    tuple[
-        ChannelInfo,
-        bool,
-        str,
-    ],
-    ...,
-] = (
-    (
-        CHANNEL_BASE,
-        False,
-        "all_defaults",
-    ),
-    (
-        CHANNEL_BASE_SAMPLE_CURRENT_EQUAL_LAST,
-        False,
-        "current_equals_last",
-    ),
-    (
-        CHANNEL_BASE_SAMPLE_CURRENT_GT_LAST,
-        False,
-        "current_greater_than_last",
-    ),
-    (
-        CHANNEL_BASE_SAMPLE_CURRENT_LT_LAST,
-        True,
-        "current_less_than_last",
-    ),
-    (
-        {},  # type: ignore[typeddict-item]
-        False,
-        "empty_dict_defaults_used",
-    ),
-    (
-        CHANNEL_UNAVAILABLE,
-        False,
-        "last_id_is_default",
-    ),
-    (
-        CHANNEL_AVAILABLE,
-        True,
-        "last_id_is_not_default",
-    ),
-    (
-        CHANNEL_MISSING_CURRENT_ID,
-        True,
-        "missing_current_id",
-    ),
-    (
-        CHANNEL_MISSING_LAST_ID,
-        False,
-        "missing_last_id",
     ),
 )

@@ -26,11 +26,11 @@ from core.utils import (
 __all__ = [
     "is_channel_available",
     "is_channel_fully_scanned",
+    "is_channel_pending_update",
     "is_new_channel",
     "make_predicate",
+    "should_apply_changes",
     "should_delete_channel",
-    "should_set_current_id",
-    "should_update_channel",
 ]
 
 
@@ -69,6 +69,19 @@ def is_channel_fully_scanned(
             channel_info=channel_info,
         )
         and current_id >= last_id
+    )
+
+
+def is_channel_pending_update(
+    channel_info: ChannelInfo,
+) -> bool:
+    return (
+        is_channel_available(
+            channel_info=channel_info,
+        )
+        and not is_channel_fully_scanned(
+            channel_info=channel_info,
+        )
     )
 
 
@@ -117,6 +130,19 @@ def make_predicate(
     return predicate
 
 
+def should_apply_changes(
+    channel_info: ChannelInfo,
+) -> bool:
+    return (
+        not is_new_channel(
+            channel_info=channel_info,
+        )
+        and is_channel_available(
+            channel_info=channel_info,
+        )
+    )
+
+
 def should_delete_channel(
     channel_info: ChannelInfo,
 ) -> bool:
@@ -140,32 +166,6 @@ def should_delete_channel(
     return (
         count <= CHANNEL_REMOVE_THRESHOLD
         and is_channel_fully_scanned(
-            channel_info=channel_info,
-        )
-    )
-
-
-def should_set_current_id(
-    channel_info: ChannelInfo,
-) -> bool:
-    return (
-        not is_new_channel(
-            channel_info=channel_info,
-        )
-        and is_channel_available(
-            channel_info=channel_info,
-        )
-    )
-
-
-def should_update_channel(
-    channel_info: ChannelInfo,
-) -> bool:
-    return (
-        is_channel_available(
-            channel_info=channel_info,
-        )
-        and not is_channel_fully_scanned(
             channel_info=channel_info,
         )
     )

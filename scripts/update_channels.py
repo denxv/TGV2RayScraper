@@ -19,8 +19,6 @@ from core.constants.common import (
     DEFAULT_HELP_WIDTH,
     DEFAULT_PATH_CHANNELS,
     DEFAULT_PATH_URLS,
-    MESSAGE_OFFSET_MAX,
-    MESSAGE_OFFSET_MIN,
     SUPPRESS,
 )
 from core.constants.messages.error import (
@@ -42,7 +40,6 @@ from core.typing import (
 )
 from core.utils import (
     abs_path,
-    convert_number_in_range,
     normalize_condition,
     rel_path,
     validate_file_path,
@@ -57,15 +54,13 @@ def parse_args() -> ArgsNamespace:
     parser = ArgumentParser(
         add_help=False,
         description=(
-            "Backup channels, merge new URLs, "
-            "filter channels, reset fields, "
-            "delete unavailable channels, "
-            "and update 'current_id'."
+            "Backup channels, merge new URLs, and modify channels "
+            "by filter: set or reset fields, or delete unavailable channels."
         ),
         epilog=(
             "Example: PYTHONPATH=. python scripts/update_channels.py "
             "-C channels/current.json -U channels/urls.txt "
-            '-F "count < 100" --no-dry-run --reset-all'
+            '-F "count < 100" --set-current-id -100'
         ),
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
@@ -99,8 +94,8 @@ def parse_args() -> ArgsNamespace:
         dest="dry_run",
         help=(
             "Disable dry-run mode and allow modifying channel metadata, "
-            "including assigning 'current_id' and resetting fields "
-            "(e.g. count, last_id, etc.). "
+            "including setting and resetting fields such as "
+            "'count', 'last_id', 'current_id', and 'state'. "
             "By default, dry-run mode is enabled."
         ),
     )
@@ -175,8 +170,8 @@ def parse_args() -> ArgsNamespace:
         "Channel actions",
         description=(
             "Only one action can be specified per invocation. "
-            "Cannot combine --delete-channels, --message-offset, "
-            "and reset options."
+            "Deletion cannot be combined with reset/set options. "
+            "Reset and set options can be combined with each other."
         ),
     )
     group_actions.add_argument(
@@ -192,49 +187,23 @@ def parse_args() -> ArgsNamespace:
         ),
     )
     group_actions.add_argument(
-        "-M", "--message-offset",
-        dest="message_offset",
-        help=(
-            "Assign 'current_id' to channels matching the filter "
-            "based on N recent messages. "
-            "If no filter is specified, applies to available channels "
-            "excluding new ones."
-        ),
-        metavar="N",
-        type=lambda value: convert_number_in_range(
-            value=value,
-            min_value=MESSAGE_OFFSET_MIN,
-            max_value=MESSAGE_OFFSET_MAX,
-            as_int=True,
-            as_str=False,
-        ),
-    )
-
-    group_reset = parser.add_argument_group(
-        "Channel reset options",
-        description=(
-            "Reset options can be combined with each other, "
-            "but not with --delete-channels or --message-offset."
-        ),
-    )
-    group_reset.add_argument(
         "--reset-all",
         action="store_true",
         default=False,
         dest="reset_all",
         help=(
             "Reset all channel values to their defaults "
-            "for filtered channels. Can be combined with --reset-<field>. "
+            "for filtered channels. Can be combined with --set-<field>. "
             "Without a filter, applies to available non-new channels."
         ),
     )
     for field, default in DEFAULT_CHANNEL_VALUES.items():
-        group_reset.add_argument(
-            f"--reset-{field.replace('_', '-')}",
+        group_actions.add_argument(
+            f"--set-{field.replace('_', '-')}",
             const=default,
-            dest=f"reset_{field}",
+            dest=f"set_{field}",
             help=(
-                f"Reset '{field}' to the specified value. "
+                f"Set '{field}' to the specified value. "
                 "If no value is provided, the default value is used "
                 "(default: %(const)s)."
             ),
@@ -247,9 +216,8 @@ def parse_args() -> ArgsNamespace:
 
     action_count = sum((
         args.delete_channels,
-        args.message_offset is not None,
         args.reset_all or any(
-            getattr(args, f"reset_{field}", None) is not None
+            getattr(args, f"set_{field}", None) is not None
             for field in DEFAULT_CHANNEL_VALUES
         ),
     ))
@@ -257,8 +225,7 @@ def parse_args() -> ArgsNamespace:
     if action_count > 1:
         parser.error(
             "Multiple actions cannot be combined. "
-            "Specify only one: "
-            "--delete-channels, --message-offset, or reset options.",
+            "Specify either deletion or reset/set options.",
         )
 
     set_console_level(

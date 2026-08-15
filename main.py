@@ -34,8 +34,6 @@ from core.constants.common import (
     HTTP_RETRY_DELAY_MIN,
     HTTP_TIMEOUT_MAX,
     HTTP_TIMEOUT_MIN,
-    MESSAGE_OFFSET_MAX,
-    MESSAGE_OFFSET_MIN,
     SUPPRESS,
 )
 from core.constants.messages.error import (
@@ -241,18 +239,6 @@ def parse_args() -> ArgsNamespace:
     )
 
     parser.add_argument(
-        "--message-offset",
-        help=SUPPRESS,
-        type=lambda value: convert_number_in_range(
-            value=value,
-            min_value=MESSAGE_OFFSET_MIN,
-            max_value=MESSAGE_OFFSET_MAX,
-            as_int=True,
-            as_str=True,
-        ),
-    )
-
-    parser.add_argument(
         "--no-dry-run",
         action="store_true",
         help=SUPPRESS,
@@ -271,17 +257,6 @@ def parse_args() -> ArgsNamespace:
         action="store_true",
         help=SUPPRESS,
     )
-
-    for field in DEFAULT_CHANNEL_VALUES:
-        parser.add_argument(
-            f"--reset-{field.replace('_', '-')}",
-            help=SUPPRESS,
-            type=lambda value: convert_number_in_range(
-                value=value,
-                as_int=True,
-                as_str=True,
-            ),
-        )
 
     parser.add_argument(
         "--retries",
@@ -312,6 +287,17 @@ def parse_args() -> ArgsNamespace:
         action="store_true",
         help=SUPPRESS,
     )
+
+    for field in DEFAULT_CHANNEL_VALUES:
+        parser.add_argument(
+            f"--set-{field.replace('_', '-')}",
+            help=SUPPRESS,
+            type=lambda value: convert_number_in_range(
+                value=value,
+                as_int=True,
+                as_str=True,
+            ),
+        )
 
     parser.add_argument(
         "--skip-backup",

@@ -63,11 +63,11 @@ from domain.predicates import (
 )
 
 __all__ = [
-    "update_info",
+    "update_channels_info",
 ]
 
 
-async def _update_channel(
+async def _update_channel_info(
     ctx: HttpContext,
     *,
     channel_name: ChannelName,
@@ -144,7 +144,7 @@ async def _update_channel(
     return result
 
 
-async def update_info(
+async def update_channels_info(
     ctx: RuntimeContext,
     *,
     channels: ChannelsDict,
@@ -193,7 +193,7 @@ async def update_info(
 
             tasks = [
                 create_task(
-                    _update_channel(
+                    _update_channel_info(
                         ctx=ctx.http,
                         channel_name=name,
                         channel_info=channels[name],

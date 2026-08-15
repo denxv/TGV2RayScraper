@@ -7,9 +7,11 @@ from core.typing import (
     RecordPredicate,
 )
 from tests.unit.domain.constants.common import (
+    CHANNEL_FAILED_ATTEMPTS_THRESHOLD,
     CHANNEL_MIN_ID_DIFF,
     CHANNEL_STATE_AVAILABLE,
     CHANNEL_STATE_UNAVAILABLE,
+    DEFAULT_COUNT,
     DEFAULT_CURRENT_ID,
     DEFAULT_LAST_ID,
     DEFAULT_STATE,
@@ -25,117 +27,90 @@ from tests.unit.domain.constants.fixtures.channel import (
     CHANNEL_BASE_SAMPLE,
     CHANNEL_BASE_SAMPLE_CURRENT_EQUAL_LAST,
     CHANNEL_BASE_SAMPLE_CURRENT_GT_LAST,
-    CHANNEL_CURRENT_ID_BY_NAME,
-    CHANNEL_CURRENT_ID_BY_NAMES,
+    CHANNEL_BASE_SAMPLE_CURRENT_LT_LAST,
+    CHANNEL_DEFAULT_COUNT,
+    CHANNEL_DEFAULT_CURRENT_ID,
     CHANNEL_DEFAULT_LAST_ID,
+    CHANNEL_DEFAULT_STATE,
     CHANNEL_INFO_BY_NAME,
     CHANNEL_INFO_BY_NAMES,
+    CHANNEL_MISSING_COUNT,
+    CHANNEL_MISSING_CURRENT_ID,
     CHANNEL_MISSING_LAST_ID,
     CHANNEL_MISSING_STATE,
     CHANNEL_NAMES_SAMPLE,
     CHANNEL_NEGATIVE_CURRENT_ID,
     CHANNEL_NEW,
+    CHANNEL_REMOVED,
+    CHANNEL_UNAVAILABLE,
     CHANNEL_ZERO_CURRENT_ID,
     CHANNELS_FROM_NAMES_SAMPLE,
     CHANNELS_SAMPLE,
 )
 
 __all__ = [
-    "ASSIGN_CURRENT_ID_TO_CHANNELS_INVALID_OFFSET_EXAMPLES",
-    "ASSIGN_CURRENT_ID_TO_CHANNELS_VARIOUS_EXAMPLES",
+    "APPLY_CHANNEL_CHANGES_EXAMPLES",
     "DELETE_CHANNELS_EXAMPLES",
     "DIFF_CHANNEL_ID_EXAMPLES",
     "DISPLAY_CHANNEL_INFO_VARIOUS_EXAMPLES",
     "FORMAT_CHANNEL_STATUS_EXAMPLES",
     "GET_FILTERED_KEYS_EXAMPLES",
+    "GET_NORMALIZED_COUNT_EXAMPLES",
     "GET_NORMALIZED_CURRENT_ID_EXAMPLES",
+    "GET_NORMALIZED_LAST_ID_EXAMPLES",
+    "GET_NORMALIZED_STATE_EXAMPLES",
     "GET_SORTED_KEYS_EXAMPLES",
+    "NORMALIZE_CHANNELS_EXAMPLES",
+    "NORMALIZE_CHANNEL_EXAMPLES",
     "NORMALIZE_CHANNEL_NAMES_EXAMPLES",
     "PROCESS_CHANNELS_CALLS_EXAMPLES",
-    "RESET_CHANNELS_EXAMPLES",
     "SORT_CHANNEL_NAMES_EXAMPLES",
     "UPDATE_LAST_ID_AND_STATE_EXAMPLES",
     "UPDATE_WITH_NEW_CHANNELS_EXAMPLES",
 ]
 
-ASSIGN_CURRENT_ID_TO_CHANNELS_INVALID_OFFSET_EXAMPLES: tuple[
+APPLY_CHANNEL_CHANGES_EXAMPLES: tuple[
     tuple[
-        int | str,
+        ChannelInfo | None,
+        RecordPredicate | None,
         str,
     ],
     ...,
-] = (
+] = (  # type: ignore[assignment]
     (
-        -10,
-        "negative_offset",
+        {},
+        lambda channel: channel["current_id"] == channel["last_id"],
+        "empty_overrides_and_predicate",
     ),
     (
-        "abc",
-        "non_int_offset",
+        {},
+        None,
+        "empty_overrides_no_predicate",
     ),
     (
-        0,
-        "zero_offset",
-    ),
-)
-
-ASSIGN_CURRENT_ID_TO_CHANNELS_VARIOUS_EXAMPLES: tuple[
-    tuple[
-        ChannelsDict,
-        int,
-        bool,
-        dict[ChannelName, int | None],
-        str,
-    ],
-    ...,
-] = (
-    (
-        CHANNEL_INFO_BY_NAMES([
-            "channel_available",
-            "channel_new",
-            "channel_unavailable",
-        ]),
-        MESSAGE_OFFSET,
-        True,
-        CHANNEL_CURRENT_ID_BY_NAMES([
-            "channel_available",
-            "channel_new",
-            "channel_unavailable",
-        ]),
-        "mixed_dry_run",
+        None,
+        None,
+        "no_overrides_no_predicate",
     ),
     (
-        CHANNEL_INFO_BY_NAME(
-            "channel_new",
-        ),
-        MESSAGE_OFFSET,
-        False,
-        CHANNEL_CURRENT_ID_BY_NAME(
-            "channel_new",
-        ),
-        "new_channel",
-    ),
-    (
-        CHANNEL_INFO_BY_NAME(
-            "channel_available",
-        ),
-        MESSAGE_OFFSET,
-        False,
         {
-            "channel_available": NUM3 - MESSAGE_OFFSET,
+            "current_id": NUM1 + NUM2 + NUM3,
         },
-        "normal_channel",
+        lambda channel: channel["count"] > 0,  # type: ignore[operator]
+        "overrides_and_predicate",
     ),
     (
-        CHANNEL_INFO_BY_NAME(
-            "channel_unavailable",
-        ),
-        MESSAGE_OFFSET,
-        False,
-        CHANNEL_CURRENT_ID_BY_NAME(
-            "channel_unavailable",
-        ),
-        "unavailable_channel",
+        {
+            "count": NUM1 + NUM2 + NUM3,
+            "state": -NUM1,
+        },
+        None,
+        "overrides_only",
+    ),
+    (
+        None,
+        lambda channel: channel["state"] == 0,
+        "predicate_only",
     ),
 )
 
@@ -406,6 +381,7 @@ GET_FILTERED_KEYS_EXAMPLES: tuple[
         [
             "channel_base_current_lt_last",
             "channel_negative_current_id",
+            "channel_zero_current_id",
         ],
         "mixed_channels_some_update",
     ),
@@ -429,6 +405,44 @@ GET_FILTERED_KEYS_EXAMPLES: tuple[
     ),
 )
 
+GET_NORMALIZED_COUNT_EXAMPLES: tuple[
+    tuple[
+        ChannelInfo,
+        int,
+        str,
+    ],
+    ...,
+] = (
+    (
+        CHANNEL_DEFAULT_COUNT,
+        DEFAULT_COUNT,
+        "default_count",
+    ),
+    (
+        {},  # type: ignore[typeddict-item]
+        DEFAULT_COUNT,
+        "empty_dict",
+    ),
+    (
+        CHANNEL_MISSING_COUNT,
+        DEFAULT_COUNT,
+        "missing_count",
+    ),
+    (
+        {
+            **CHANNEL_BASE,
+            "count": -NUM1,
+        },
+        DEFAULT_COUNT,
+        "negative_count",
+    ),
+    (
+        CHANNEL_BASE_SAMPLE,
+        NUM1,
+        "positive_count",
+    ),
+)
+
 GET_NORMALIZED_CURRENT_ID_EXAMPLES: tuple[
     tuple[
         ChannelInfo,
@@ -438,52 +452,22 @@ GET_NORMALIZED_CURRENT_ID_EXAMPLES: tuple[
     ...,
 ] = (
     (
-        CHANNEL_BASE_SAMPLE_CURRENT_GT_LAST,
-        min(
-            NUM2,
-            NUM3,
-        ),
-        "current_gt_last",
-    ),
-    (
-        CHANNEL_ZERO_CURRENT_ID,
-        max(
-            DEFAULT_CURRENT_ID,
-            NUM3 + (NUM2 - NUM2),
-        ),
-        "current_zero",
-    ),
-    (
-        {},  # type: ignore[typeddict-item]
-        max(
-            DEFAULT_CURRENT_ID,
-            DEFAULT_LAST_ID,
-        ),
-        "empty_dict",
-    ),
-    (
-        CHANNEL_DEFAULT_LAST_ID,
-        DEFAULT_CURRENT_ID,
-        "last_default",
-    ),
-    (
         {
             **CHANNEL_BASE_SAMPLE,
-            "current_id": -(NUM3 * 2),
+            "current_id": DEFAULT_CURRENT_ID,
         },
-        max(
-            DEFAULT_CURRENT_ID,
-            NUM3 + -(NUM3 * 2),
-        ),
-        "negative_below_default",
+        DEFAULT_CURRENT_ID,
+        "absolute_current_at_default",
     ),
     (
-        CHANNEL_NEGATIVE_CURRENT_ID,
-        max(
-            DEFAULT_CURRENT_ID,
-            NUM3 + -NUM2,
-        ),
-        "negative_current",
+        CHANNEL_BASE_SAMPLE_CURRENT_EQUAL_LAST,
+        NUM3,
+        "absolute_current_equal_last",
+    ),
+    (
+        CHANNEL_BASE_SAMPLE_CURRENT_GT_LAST,
+        NUM2,
+        "absolute_current_gt_last_clamped",
     ),
     (
         CHANNEL_BASE_SAMPLE,
@@ -491,7 +475,208 @@ GET_NORMALIZED_CURRENT_ID_EXAMPLES: tuple[
             NUM2,
             NUM3,
         ),
-        "normal_case",
+        "absolute_current_lt_last",
+    ),
+    (
+        CHANNEL_DEFAULT_CURRENT_ID,
+        DEFAULT_CURRENT_ID,
+        "default_current_id",
+    ),
+    (
+        {
+            **CHANNEL_DEFAULT_LAST_ID,
+            "current_id": -NUM2,
+        },
+        DEFAULT_CURRENT_ID,
+        "default_last_id_with_negative_current",
+    ),
+    (
+        CHANNEL_DEFAULT_LAST_ID,
+        max(
+            NUM2,
+            DEFAULT_CURRENT_ID,
+        ),
+        "default_last_id_with_positive_current",
+    ),
+    (
+        {
+            **CHANNEL_DEFAULT_LAST_ID,
+            "current_id": NUM2 - NUM2,
+        },
+        DEFAULT_CURRENT_ID,
+        "default_last_id_with_zero_current",
+    ),
+    (
+        {},  # type: ignore[typeddict-item]
+        DEFAULT_CURRENT_ID,
+        "empty_dict",
+    ),
+    (
+        CHANNEL_MISSING_CURRENT_ID,
+        DEFAULT_CURRENT_ID,
+        "missing_current_id_with_default_last_id",
+    ),
+    (
+        {
+            **CHANNEL_BASE_SAMPLE,
+            "current_id": -(NUM3 * NUM3),
+        },
+        DEFAULT_CURRENT_ID,
+        "relative_negative_below_default_clamped",
+    ),
+    (
+        CHANNEL_NEGATIVE_CURRENT_ID,
+        max(
+            NUM3 - NUM2,
+            DEFAULT_CURRENT_ID,
+        ),
+        "relative_negative_current",
+    ),
+    (
+        {
+            **CHANNEL_BASE_SAMPLE,
+            "current_id": -(NUM3 - NUM2),
+        },
+        NUM2,
+        "relative_negative_resolves_to_different_value",
+    ),
+    (
+        CHANNEL_ZERO_CURRENT_ID,
+        max(
+            NUM3,
+            DEFAULT_CURRENT_ID,
+        ),
+        "relative_zero_current",
+    ),
+)
+
+GET_NORMALIZED_LAST_ID_EXAMPLES: tuple[
+    tuple[
+        ChannelInfo,
+        PostID,
+        str,
+    ],
+    ...,
+] = (
+    (
+        CHANNEL_DEFAULT_LAST_ID,
+        DEFAULT_LAST_ID,
+        "default_last_id",
+    ),
+    (
+        {},  # type: ignore[typeddict-item]
+        DEFAULT_LAST_ID,
+        "empty_dict",
+    ),
+    (
+        CHANNEL_MISSING_LAST_ID,
+        DEFAULT_LAST_ID,
+        "missing_last_id",
+    ),
+    (
+        {
+            **CHANNEL_BASE,
+            "last_id": -NUM3,
+        },
+        DEFAULT_LAST_ID,
+        "negative_last_id",
+    ),
+    (
+        CHANNEL_BASE_SAMPLE,
+        NUM3,
+        "positive_last_id",
+    ),
+    (
+        {
+            **CHANNEL_BASE,
+            "last_id": NUM3 - NUM3,
+        },
+        DEFAULT_LAST_ID,
+        "zero_last_id",
+    ),
+)
+
+GET_NORMALIZED_STATE_EXAMPLES: tuple[
+    tuple[
+        ChannelInfo,
+        int,
+        str,
+    ],
+    ...,
+] = (
+    (
+        CHANNEL_DEFAULT_STATE,
+        DEFAULT_STATE,
+        "default_state_with_default_last_id",
+    ),
+    (
+        {},  # type: ignore[typeddict-item]
+        DEFAULT_STATE,
+        "empty_dict",
+    ),
+    (
+        {
+            **CHANNEL_BASE_SAMPLE,
+            "state": NUM1 * NUM1,
+        },
+        CHANNEL_STATE_AVAILABLE,
+        "high_state_ignored_with_positive_last_id",
+    ),
+    (
+        CHANNEL_MISSING_STATE,
+        DEFAULT_STATE,
+        "missing_state_with_default_last_id",
+    ),
+    (
+        {
+            **CHANNEL_BASE_SAMPLE,
+            "state": -NUM1,
+        },
+        CHANNEL_STATE_AVAILABLE,
+        "negative_state_ignored_with_positive_last_id",
+    ),
+    (
+        {
+            **CHANNEL_DEFAULT_LAST_ID,
+            "state": -NUM1,
+        },
+        min(
+            -NUM1,
+            DEFAULT_STATE,
+        ),
+        "negative_state_with_default_last_id",
+    ),
+    (
+        CHANNEL_BASE_SAMPLE,
+        CHANNEL_STATE_AVAILABLE,
+        "positive_last_id_returns_available",
+    ),
+    (
+        {
+            **CHANNEL_DEFAULT_LAST_ID,
+            "state": NUM1,
+        },
+        min(
+            NUM1,
+            DEFAULT_STATE,
+        ),
+        "positive_state_above_default_with_default_last_id",
+    ),
+    (
+        CHANNEL_REMOVED,
+        min(
+            CHANNEL_FAILED_ATTEMPTS_THRESHOLD,
+            DEFAULT_STATE,
+        ),
+        "removed_state_with_default_last_id",
+    ),
+    (
+        CHANNEL_UNAVAILABLE,
+        min(
+            CHANNEL_STATE_UNAVAILABLE,
+            DEFAULT_STATE,
+        ),
+        "unavailable_state_with_default_last_id",
     ),
 )
 
@@ -510,6 +695,7 @@ GET_SORTED_KEYS_EXAMPLES: tuple[
         True,
         False,
         [
+            "channel_zero_current_id",
             "channel_available",
             "channel_base_current_lt_last",
             "channel_negative_current_id",
@@ -609,6 +795,26 @@ GET_SORTED_KEYS_EXAMPLES: tuple[
     ),
 )
 
+NORMALIZE_CHANNEL_EXAMPLES: tuple[
+    tuple[
+        ChannelInfo,
+        ChannelInfo,
+        str,
+    ],
+    ...,
+] = (
+    (
+        CHANNEL_BASE,
+        CHANNEL_BASE,
+        "default_values",
+    ),
+    (
+        {},  # type: ignore[typeddict-item]
+        CHANNEL_BASE,
+        "empty_channel_info",
+    ),
+)
+
 NORMALIZE_CHANNEL_NAMES_EXAMPLES: tuple[
     tuple[
         ChannelsDict,
@@ -688,9 +894,79 @@ NORMALIZE_CHANNEL_NAMES_EXAMPLES: tuple[
     ),
 )
 
+NORMALIZE_CHANNELS_EXAMPLES: tuple[
+    tuple[
+        ChannelsDict,
+        ChannelsDict,
+        str,
+    ],
+    ...,
+] = (
+    (
+        {
+            "CHANNEL_BASE_CURRENT_EQUAL_LAST": {
+                **CHANNEL_BASE_SAMPLE_CURRENT_EQUAL_LAST,
+            },
+            "channel_negative_current_ID": {
+                **CHANNEL_NEGATIVE_CURRENT_ID,
+            },
+            "channel_ZERO_current_id": {
+                **CHANNEL_ZERO_CURRENT_ID,
+            },
+        },
+        {
+            "channel_base_current_equal_last": {
+                **CHANNEL_BASE_SAMPLE_CURRENT_EQUAL_LAST,
+            },
+            "channel_negative_current_id": {
+                **CHANNEL_NEGATIVE_CURRENT_ID,
+                "current_id": NUM3 - NUM2,
+            },
+            "channel_zero_current_id": {
+                **CHANNEL_ZERO_CURRENT_ID,
+                "current_id": NUM3 - (NUM2 - NUM2),
+            },
+        },
+        "channel_names_and_values_normalized",
+    ),
+    (
+        CHANNEL_INFO_BY_NAMES([
+            "channel_base_current_equal_last",
+            "channel_base_current_lt_last",
+            "channel_negative_current_id",
+            "channel_new",
+            "channel_zero_current_id",
+        ]),
+        {
+            "channel_base_current_equal_last": {
+                **CHANNEL_BASE_SAMPLE_CURRENT_EQUAL_LAST,
+            },
+            "channel_base_current_lt_last": {
+                **CHANNEL_BASE_SAMPLE_CURRENT_LT_LAST,
+            },
+            "channel_negative_current_id": {
+                **CHANNEL_NEGATIVE_CURRENT_ID,
+                "current_id": NUM3 - NUM2,
+            },
+            "channel_new": {
+                **CHANNEL_NEW,
+            },
+            "channel_zero_current_id": {
+                **CHANNEL_ZERO_CURRENT_ID,
+                "current_id": NUM3 - (NUM2 - NUM2),
+            },
+        },
+        "channel_values_normalized",
+    ),
+    (
+        {},
+        {},
+        "no_channels",
+    ),
+)
+
 PROCESS_CHANNELS_CALLS_EXAMPLES: tuple[
     tuple[
-        int | None,
         bool,
         bool,
         bool,
@@ -699,133 +975,46 @@ PROCESS_CHANNELS_CALLS_EXAMPLES: tuple[
     ...,
 ] = (
     (
-        MESSAGE_OFFSET,
-        False,
-        False,
-        False,
-        "assign_only",
-    ),
-    (
-        MESSAGE_OFFSET,
-        True,
-        False,
-        False,
-        "assign_only_dry_run",
-    ),
-    (
-        MESSAGE_OFFSET,
         True,
         True,
         True,
         "conflict_all_dry_run",
     ),
     (
-        MESSAGE_OFFSET,
-        False,
-        False,
-        True,
-        "conflict_assign_and_reset",
-    ),
-    (
-        MESSAGE_OFFSET,
-        False,
-        True,
-        True,
-        "conflict_assign_delete_reset",
-    ),
-    (
-        MESSAGE_OFFSET,
-        False,
-        True,
-        False,
-        "conflict_delete_and_assign",
-    ),
-    (
-        None,
         False,
         True,
         True,
         "conflict_delete_and_reset",
     ),
     (
-        None,
         False,
         True,
         False,
         "delete_only",
     ),
     (
-        None,
         True,
         True,
         False,
         "delete_only_dry_run",
     ),
     (
-        None,
         False,
         False,
         False,
         "no_action",
     ),
     (
-        None,
         False,
         False,
         True,
         "reset_all_only",
     ),
     (
-        None,
         True,
         False,
         True,
         "reset_all_only_dry_run",
-    ),
-)
-
-RESET_CHANNELS_EXAMPLES: tuple[
-    tuple[
-        ChannelInfo | None,
-        RecordPredicate | None,
-        str,
-    ],
-    ...,
-] = (  # type: ignore[assignment]
-    (
-        {},
-        lambda channel: channel["current_id"] == channel["last_id"],
-        "empty_overrides_and_predicate",
-    ),
-    (
-        {},
-        None,
-        "empty_overrides_no_predicate",
-    ),
-    (
-        None,
-        None,
-        "no_overrides_no_predicate",
-    ),
-    (
-        {
-            "current_id": NUM1 + NUM2 + NUM3,
-        },
-        lambda channel: channel["count"] > 0,  # type: ignore[operator]
-        "overrides_and_predicate",
-    ),
-    (
-        {
-            "count": NUM1 + NUM2 + NUM3,
-            "state": -NUM1,
-        },
-        None,
-        "overrides_only",
-    ),
-    (
-        None,
-        lambda channel: channel["state"] == 0,
-        "predicate_only",
     ),
 )
 
