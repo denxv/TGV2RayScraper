@@ -31,6 +31,7 @@ from core.constants.common import (
     INFO,
 )
 from core.constants.formats import (
+    FORMAT_CHANNEL_CHANGE,
     FORMAT_LOG_DATE,
     FORMAT_LOG_FILEPATH,
     FORMAT_LOG_RECORD,
@@ -40,12 +41,20 @@ from core.constants.templates.debug.common import (
     TEMPLATE_DEBUG_FAILED_SERIALIZATION,
     TEMPLATE_DEBUG_PRETTY_OBJECT,
 )
+from core.constants.templates.title import (
+    TEMPLATE_TITLE_CHANNEL_CHANGES,
+)
 from core.terminal.console import (
     console,
+)
+from core.typing import (
+    ChannelInfo,
+    ChannelName,
 )
 
 __all__ = [
     "create_logger",
+    "log_channel_changes",
     "log_debug_object",
     "logger",
     "set_console_level",
@@ -126,6 +135,32 @@ def create_logger(
     )
 
     return logger
+
+
+def log_channel_changes(
+    *,
+    name: ChannelName,
+    before: ChannelInfo,
+    after: ChannelInfo,
+) -> None:
+    channel_changes = {
+        key: FORMAT_CHANNEL_CHANGE.format(
+            before=before.get(key),
+            after=after[key],  # type: ignore[literal-required]
+        )
+        for key in after
+        if before.get(key) != after[key]  # type: ignore[literal-required]
+    }
+
+    if not channel_changes:
+        return
+
+    log_debug_object(
+        obj=channel_changes,
+        title=TEMPLATE_TITLE_CHANNEL_CHANGES.format(
+            name=name,
+        ),
+    )
 
 
 def log_debug_object(

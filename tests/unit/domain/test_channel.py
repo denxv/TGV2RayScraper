@@ -52,18 +52,17 @@ from domain.predicates import (
 from tests.unit.domain.constants.common import (
     DEFAULT_CHANNEL_VALUES,
     DEFAULT_LAST_ID,
-    FORMAT_CHANNEL_CHANGE,
     MESSAGE_ERROR_MULTIPLE_ACTIONS_SPECIFIED,
     MESSAGE_INFO_CHANNEL_DELETE_SKIPPED,
     MESSAGE_WARNING_NO_CHANNELS_TO_DISPLAY,
     TEMPLATE_DEBUG_CHANNEL_CHANGES_SKIPPED_NO_CHANGES,
+    TEMPLATE_DEBUG_CHANNEL_CHANGES_SKIPPED_TARGETS,
     TEMPLATE_DEBUG_CHANNEL_MISSING_ADD_COMPLETED,
     TEMPLATE_ERROR_INVALID_OVERRIDE_FIELDS,
     TEMPLATE_INFO_CHANNEL_CHANGES_SKIPPED,
     TEMPLATE_INFO_CHANNEL_CHANGES_TOTAL,
     TEMPLATE_INFO_CHANNELS_STATUS_COMPLETED,
     TEMPLATE_INFO_CHANNELS_STATUS_STARTED,
-    TEMPLATE_TITLE_CHANNEL_CHANGES,
     TEMPLATE_TITLE_CHANNEL_DELETE,
 )
 from tests.unit.domain.constants.fixtures.channel import (
@@ -115,7 +114,7 @@ from tests.unit.domain.constants.test_cases.channel import (
     APPLY_CHANNEL_CHANGES_CASES,
 )
 def test_apply_channel_changes(
-    mock_log_debug_object: Mock,
+    mock_log_channel_changes: Mock,
     mock_logger: Mock,
     channel_overrides: ChannelInfo | None,
     channel_predicate: RecordPredicate | None,
@@ -163,6 +162,12 @@ def test_apply_channel_changes(
                 count=len(channel_names_to_update),
             ),
         )
+        mock_logger.debug.assert_called_with(
+            msg=TEMPLATE_DEBUG_CHANNEL_CHANGES_SKIPPED_TARGETS.format(
+                dry_run=dry_run,
+                channel_names=channel_names_to_update,
+            ),
+        )
         return
 
     mock_logger.info.assert_called_with(
@@ -171,20 +176,12 @@ def test_apply_channel_changes(
         ),
     )
 
-    mock_log_debug_object.assert_has_calls(
+    mock_log_channel_changes.assert_has_calls(
         calls=[
             call(
-                title=TEMPLATE_TITLE_CHANNEL_CHANGES.format(
-                    name=name,
-                ),
-                obj={
-                    key: FORMAT_CHANNEL_CHANGE.format(
-                        before=channels[name].get(key),
-                        after=result[name][key],  # type: ignore[literal-required]
-                    )
-                    for key in result[name]
-                    if channels[name].get(key) != result[name][key]  # type: ignore[literal-required]
-                },
+                name=name,
+                before=channels[name],
+                after=result[name],
             )
             for name in channel_names_to_update
         ],

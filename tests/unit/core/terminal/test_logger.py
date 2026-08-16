@@ -25,6 +25,7 @@ from rich.logging import (
 from core.terminal.logger import (
     MicrosecondFormatter,
     create_logger,
+    log_channel_changes,
     log_debug_object,
     logger,
     set_console_level,
@@ -34,11 +35,13 @@ from tests.unit.core.constants.common import (
     DEFAULT_JSON_INDENT,
     DEFAULT_LOGGER_NAME,
     DEFAULT_PATH_LOGS,
+    FORMAT_CHANNEL_CHANGE,
     FORMAT_LOG_DATE,
     FORMAT_LOG_FILEPATH,
     INFO,
     TEMPLATE_DEBUG_FAILED_SERIALIZATION,
     TEMPLATE_DEBUG_PRETTY_OBJECT,
+    TEMPLATE_TITLE_CHANNEL_CHANGES,
 )
 from tests.unit.core.constants.test_cases.terminal.logger import (
     LOG_DEBUG_OBJECT_ARGS,
@@ -47,6 +50,9 @@ from tests.unit.core.constants.test_cases.terminal.logger import (
     MICROSECOND_FORMATTER_CASES,
     SET_CONSOLE_LEVEL_ARGS,
     SET_CONSOLE_LEVEL_CASES,
+)
+from tests.unit.domain.constants.fixtures.channel import (
+    CHANNEL_BASE_SAMPLE,
 )
 
 
@@ -103,6 +109,52 @@ def test_create_logger_uses_correct_log_path(
         ),
         encoding="utf-8",
     )
+
+
+def test_log_channel_changes(
+    mock_log_debug_object: Mock,
+) -> None:
+    channel_name = "test_channel"
+    before = {
+        **CHANNEL_BASE_SAMPLE,
+    }
+    after = {
+        **CHANNEL_BASE_SAMPLE,
+        "count": -CHANNEL_BASE_SAMPLE.get("count"),
+        "state": -CHANNEL_BASE_SAMPLE.get("state"),
+    }
+
+    log_channel_changes(
+        name=channel_name,
+        before=before,
+        after=after,
+    )
+
+    mock_log_debug_object.assert_called_once_with(
+        obj={
+            key: FORMAT_CHANNEL_CHANGE.format(
+                before=before.get(key),
+                after=after[key],
+            )
+            for key in after
+            if before.get(key) != after[key]
+        },
+        title=TEMPLATE_TITLE_CHANNEL_CHANGES.format(
+            name=channel_name,
+        ),
+    )
+
+
+def test_log_channel_changes_no_changes(
+    mock_log_debug_object: Mock,
+) -> None:
+    log_channel_changes(
+        name="test_channel",
+        before=CHANNEL_BASE_SAMPLE,
+        after=CHANNEL_BASE_SAMPLE,
+    )
+
+    mock_log_debug_object.assert_not_called()
 
 
 def test_log_debug_object_failure(

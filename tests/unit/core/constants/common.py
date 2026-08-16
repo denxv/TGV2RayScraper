@@ -21,6 +21,7 @@ from core.constants.common import (
 from core.constants.formats import (
     FORMAT_BACKUP_DATE,
     FORMAT_BACKUP_FILENAME,
+    FORMAT_CHANNEL_CHANGE,
     FORMAT_LOG_DATE,
     FORMAT_LOG_FILEPATH,
     FORMAT_LOG_TIME,
@@ -39,6 +40,9 @@ from core.constants.templates.info.channel import (
 )
 from core.constants.templates.info.common import (
     TEMPLATE_INFO_FILE_BACKUP_COMPLETED,
+)
+from core.constants.templates.title import (
+    TEMPLATE_TITLE_CHANNEL_CHANGES,
 )
 
 __all__ = [
@@ -59,6 +63,7 @@ __all__ = [
     "DEFAULT_PROXY_URL",
     "FORMAT_BACKUP_DATE",
     "FORMAT_BACKUP_FILENAME",
+    "FORMAT_CHANNEL_CHANGE",
     "FORMAT_LOG_DATE",
     "FORMAT_LOG_FILEPATH",
     "FORMAT_LOG_TIME",
@@ -72,4 +77,5 @@ __all__ = [
     "TEMPLATE_ERROR_PARENT_DIRECTORY_NOT_EXIST",
     "TEMPLATE_INFO_CHANNEL_COUNT_DIFFERENCE",
     "TEMPLATE_INFO_FILE_BACKUP_COMPLETED",
+    "TEMPLATE_TITLE_CHANNEL_CHANGES",
 ]

@@ -16,9 +16,6 @@ from core.constants.common import (
     DEFAULT_STATE,
     POST_FIRST_ID,
 )
-from core.constants.formats import (
-    FORMAT_CHANNEL_CHANGE,
-)
 from core.constants.messages.error import (
     MESSAGE_ERROR_MULTIPLE_ACTIONS_SPECIFIED,
 )
@@ -34,7 +31,13 @@ from core.constants.messages.warning import (
 )
 from core.constants.templates.debug.channel import (
     TEMPLATE_DEBUG_CHANNEL_CHANGES_SKIPPED_NO_CHANGES,
+    TEMPLATE_DEBUG_CHANNEL_CHANGES_SKIPPED_TARGETS,
     TEMPLATE_DEBUG_CHANNEL_MISSING_ADD_COMPLETED,
+    TEMPLATE_DEBUG_CHANNEL_NORMALIZE_COMPLETED,
+    TEMPLATE_DEBUG_CHANNEL_NORMALIZE_NAMES_COMPLETED,
+    TEMPLATE_DEBUG_CHANNEL_NORMALIZE_NAMES_DUPLICATE,
+    TEMPLATE_DEBUG_CHANNEL_NORMALIZE_NAMES_STARTED,
+    TEMPLATE_DEBUG_CHANNEL_NORMALIZE_STARTED,
 )
 from core.constants.templates.error import (
     TEMPLATE_ERROR_INVALID_OVERRIDE_FIELDS,
@@ -46,7 +49,6 @@ from core.constants.templates.info.channel import (
     TEMPLATE_INFO_CHANNELS_STATUS_STARTED,
 )
 from core.constants.templates.title import (
-    TEMPLATE_TITLE_CHANNEL_CHANGES,
     TEMPLATE_TITLE_CHANNEL_DELETE,
 )
 from core.decorators import (
@@ -56,6 +58,7 @@ from core.terminal.console import (
     console,
 )
 from core.terminal.logger import (
+    log_channel_changes,
     log_debug_object,
     logger,
 )
@@ -166,6 +169,12 @@ def apply_channel_changes(
                 count=len(channel_names_to_update),
             ),
         )
+        logger.debug(
+            msg=TEMPLATE_DEBUG_CHANNEL_CHANGES_SKIPPED_TARGETS.format(
+                dry_run=dry_run,
+                channel_names=channel_names_to_update,
+            ),
+        )
         return updated_channels
 
     logger.info(
@@ -187,18 +196,10 @@ def apply_channel_changes(
             base_values | valid_overrides,
         )
 
-        log_debug_object(
-            obj={
-                key: FORMAT_CHANNEL_CHANGE.format(
-                    before=before.get(key),
-                    after=channel_info[key],  # type: ignore[literal-required]
-                )
-                for key in channel_info
-                if before.get(key) != channel_info[key]  # type: ignore[literal-required]
-            },
-            title=TEMPLATE_TITLE_CHANNEL_CHANGES.format(
-                name=name,
-            ),
+        log_channel_changes(
+            name=name,
+            before=before,
+            after=channel_info,
         )
 
     return updated_channels
@@ -459,30 +460,73 @@ def normalize_channel(
 def normalize_channel_names(
     channels: ChannelsDict,
 ) -> ChannelsDict:
-    normalized: ChannelsDict = {}
+    normalized_channels: ChannelsDict = {}
+
+    logger.debug(
+        msg=TEMPLATE_DEBUG_CHANNEL_NORMALIZE_NAMES_STARTED.format(
+            channels_count=len(channels),
+        ),
+    )
 
     for name, info in channels.items():
-        normalized.setdefault(
-            str(name).lower(),
-            info,
-        )
+        normalized_name = str(name).lower()
 
-    return normalized
+        if normalized_name in normalized_channels:
+            logger.debug(
+                msg=TEMPLATE_DEBUG_CHANNEL_NORMALIZE_NAMES_DUPLICATE.format(
+                    channel_name=name,
+                    normalized_channel_name=normalized_name,
+                ),
+            )
+            continue
+
+        normalized_channels[normalized_name] = info
+
+    logger.debug(
+        msg=TEMPLATE_DEBUG_CHANNEL_NORMALIZE_NAMES_COMPLETED.format(
+            channels_count=len(channels),
+            normalized_channels_count=len(normalized_channels),
+        ),
+    )
+
+    return normalized_channels
 
 
 def normalize_channels(
     channels: ChannelsDict,
 ) -> ChannelsDict:
+    logger.debug(
+        msg=TEMPLATE_DEBUG_CHANNEL_NORMALIZE_STARTED.format(
+            channels_count=len(channels),
+        ),
+    )
+
     channels_with_normalized_names = normalize_channel_names(
         channels=channels,
     )
 
-    return {
-        name: normalize_channel(
+    normalized_channels: ChannelsDict = {}
+
+    for name, info in channels_with_normalized_names.items():
+        normalized_info = normalize_channel(
             channel_info=info,
         )
-        for name, info in channels_with_normalized_names.items()
-    }
+
+        log_channel_changes(
+            name=name,
+            before=info,
+            after=normalized_info,
+        )
+
+        normalized_channels[name] = normalized_info
+
+    logger.debug(
+        msg=TEMPLATE_DEBUG_CHANNEL_NORMALIZE_COMPLETED.format(
+            channels_count=len(normalized_channels),
+        ),
+    )
+
+    return normalized_channels
 
 
 def process_channels(

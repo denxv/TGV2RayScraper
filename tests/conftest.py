@@ -28,6 +28,7 @@ from core.constants.common import (
 )
 from core.terminal.logger import (
     Logger,
+    log_channel_changes,
     log_debug_object,
 )
 
@@ -81,6 +82,27 @@ def mock_live(
 
 
 @pytest.fixture
+def mock_log_channel_changes(
+    mocker: MockerFixture,
+) -> Mock:
+    mock: Mock = mocker.Mock(
+        spec=log_channel_changes,
+    )
+
+    modules_to_patch = (
+        "domain.channel",
+    )
+
+    for module in modules_to_patch:
+        mocker.patch(
+            f"{module}.{log_channel_changes.__name__}",
+            mock,
+        )
+
+    return mock
+
+
+@pytest.fixture
 def mock_log_debug_object(
     mocker: MockerFixture,
 ) -> Mock:
@@ -89,6 +111,7 @@ def mock_log_debug_object(
     )
 
     modules_to_patch = (
+        "core.terminal.logger",
         "domain.channel",
     )
 

@@ -4,6 +4,7 @@ from core.typing import (
 
 __all__ = [
     "TEMPLATE_DEBUG_CHANNEL_CHANGES_SKIPPED_NO_CHANGES",
+    "TEMPLATE_DEBUG_CHANNEL_CHANGES_SKIPPED_TARGETS",
     "TEMPLATE_DEBUG_CHANNEL_EXTRACT_POST_ID_FAILED",
     "TEMPLATE_DEBUG_CHANNEL_EXTRACT_POST_ID_FETCHED",
     "TEMPLATE_DEBUG_CHANNEL_EXTRACT_POST_ID_FIRST_EXTRACTED",
@@ -25,6 +26,11 @@ __all__ = [
     "TEMPLATE_DEBUG_CHANNEL_IO_SAVE_URLS_WRITTEN",
     "TEMPLATE_DEBUG_CHANNEL_IO_SAVE_WRITTEN",
     "TEMPLATE_DEBUG_CHANNEL_MISSING_ADD_COMPLETED",
+    "TEMPLATE_DEBUG_CHANNEL_NORMALIZE_COMPLETED",
+    "TEMPLATE_DEBUG_CHANNEL_NORMALIZE_NAMES_COMPLETED",
+    "TEMPLATE_DEBUG_CHANNEL_NORMALIZE_NAMES_DUPLICATE",
+    "TEMPLATE_DEBUG_CHANNEL_NORMALIZE_NAMES_STARTED",
+    "TEMPLATE_DEBUG_CHANNEL_NORMALIZE_STARTED",
     "TEMPLATE_DEBUG_CHANNEL_STATUS_RESULT",
     "TEMPLATE_DEBUG_CHANNEL_UPDATE_BATCH_COMPLETED",
     "TEMPLATE_DEBUG_CHANNEL_UPDATE_BATCH_STARTED",
@@ -43,6 +49,11 @@ TEMPLATE_DEBUG_CHANNEL_CHANGES_SKIPPED_NO_CHANGES: TemplateStr = (
     "[channel.changes.skipped]: "
     "reset_to_defaults={reset_to_defaults!r}; "
     "valid_overrides={valid_overrides!r}"
+)
+TEMPLATE_DEBUG_CHANNEL_CHANGES_SKIPPED_TARGETS: TemplateStr = (
+    "[channel.changes.skipped.targets]: "
+    "dry_run={dry_run!r}; "
+    "channel_names={channel_names!r}"
 )
 TEMPLATE_DEBUG_CHANNEL_EXTRACT_POST_ID_FAILED: TemplateStr = (
     "[channel.extract.post_id.failed]: "
@@ -154,6 +165,28 @@ TEMPLATE_DEBUG_CHANNEL_IO_SAVE_WRITTEN: TemplateStr = (
 TEMPLATE_DEBUG_CHANNEL_MISSING_ADD_COMPLETED: TemplateStr = (
     "[channel.update.added]: "
     "name={name!r}"
+)
+TEMPLATE_DEBUG_CHANNEL_NORMALIZE_COMPLETED: TemplateStr = (
+    "[channel.normalize.completed]: "
+    "channels_count={channels_count!r}"
+)
+TEMPLATE_DEBUG_CHANNEL_NORMALIZE_NAMES_COMPLETED: TemplateStr = (
+    "[channel.normalize.names.completed]: "
+    "channels_count={channels_count!r}; "
+    "normalized_channels_count={normalized_channels_count!r}"
+)
+TEMPLATE_DEBUG_CHANNEL_NORMALIZE_NAMES_DUPLICATE: TemplateStr = (
+    "[channel.normalize.names.duplicate]: "
+    "channel_name={channel_name!r}; "
+    "normalized_channel_name={normalized_channel_name!r}"
+)
+TEMPLATE_DEBUG_CHANNEL_NORMALIZE_NAMES_STARTED: TemplateStr = (
+    "[channel.normalize.names.started]: "
+    "channels_count={channels_count!r}"
+)
+TEMPLATE_DEBUG_CHANNEL_NORMALIZE_STARTED: TemplateStr = (
+    "[channel.normalize.started]: "
+    "channels_count={channels_count!r}"
 )
 TEMPLATE_DEBUG_CHANNEL_STATUS_RESULT: TemplateStr = (
     "[channel.status.result]: "
