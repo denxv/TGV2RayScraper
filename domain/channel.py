@@ -16,18 +16,20 @@ from core.constants.common import (
     DEFAULT_STATE,
     POST_FIRST_ID,
 )
-from core.constants.messages.error import (
+from core.constants.locales import (
     MESSAGE_ERROR_MULTIPLE_ACTIONS_SPECIFIED,
-)
-from core.constants.messages.info import (
     MESSAGE_INFO_CHANNEL_DELETE_COMPLETED,
     MESSAGE_INFO_CHANNEL_DELETE_SKIPPED,
     MESSAGE_INFO_CHANNEL_DELETE_STARTED,
     MESSAGE_INFO_CHANNEL_UPDATE_COMPLETED,
     MESSAGE_INFO_CHANNEL_UPDATE_STARTED,
-)
-from core.constants.messages.warning import (
     MESSAGE_WARNING_NO_CHANNELS_TO_DISPLAY,
+    TEMPLATE_ERROR_INVALID_OVERRIDE_FIELDS,
+    TEMPLATE_INFO_CHANNEL_CHANGES_SKIPPED,
+    TEMPLATE_INFO_CHANNEL_CHANGES_TOTAL,
+    TEMPLATE_INFO_CHANNELS_STATUS_COMPLETED,
+    TEMPLATE_INFO_CHANNELS_STATUS_STARTED,
+    TEMPLATE_TITLE_CHANNEL_DELETE,
 )
 from core.constants.templates.debug.channel import (
     TEMPLATE_DEBUG_CHANNEL_CHANGES_SKIPPED_NO_CHANGES,
@@ -38,18 +40,6 @@ from core.constants.templates.debug.channel import (
     TEMPLATE_DEBUG_CHANNEL_NORMALIZE_NAMES_DUPLICATE,
     TEMPLATE_DEBUG_CHANNEL_NORMALIZE_NAMES_STARTED,
     TEMPLATE_DEBUG_CHANNEL_NORMALIZE_STARTED,
-)
-from core.constants.templates.error import (
-    TEMPLATE_ERROR_INVALID_OVERRIDE_FIELDS,
-)
-from core.constants.templates.info.channel import (
-    TEMPLATE_INFO_CHANNEL_CHANGES_SKIPPED,
-    TEMPLATE_INFO_CHANNEL_CHANGES_TOTAL,
-    TEMPLATE_INFO_CHANNELS_STATUS_COMPLETED,
-    TEMPLATE_INFO_CHANNELS_STATUS_STARTED,
-)
-from core.constants.templates.title import (
-    TEMPLATE_TITLE_CHANNEL_DELETE,
 )
 from core.decorators import (
     status,

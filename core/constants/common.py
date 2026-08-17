@@ -1,6 +1,9 @@
 from argparse import (
     SUPPRESS,
 )
+from locale import (
+    getlocale,
+)
 from logging import (
     DEBUG,
     INFO,
@@ -37,6 +40,7 @@ __all__ = [
     "CONFIGS_BATCH_DEFAULT",
     "CONFIGS_BATCH_MAX",
     "CONFIGS_BATCH_MIN",
+    "CURRENT_LANG",
     "DEBUG",
     "DEFAULT_CHANNEL_VALUES",
     "DEFAULT_COUNT",
@@ -44,6 +48,7 @@ __all__ = [
     "DEFAULT_HELP_INDENT",
     "DEFAULT_HELP_WIDTH",
     "DEFAULT_JSON_INDENT",
+    "DEFAULT_LANG",
     "DEFAULT_LAST_ID",
     "DEFAULT_LOGGER_NAME",
     "DEFAULT_PATH_CHANNELS",
@@ -51,6 +56,7 @@ __all__ = [
     "DEFAULT_PATH_CONFIGS_EXPORT",
     "DEFAULT_PATH_CONFIGS_IMPORT",
     "DEFAULT_PATH_CONFIGS_RAW",
+    "DEFAULT_PATH_LOCALES",
     "DEFAULT_PATH_LOGS",
     "DEFAULT_PATH_PROJECT",
     "DEFAULT_PATH_URLS",
@@ -119,6 +125,9 @@ DEFAULT_HELP_WIDTH: int = 150
 DEFAULT_JSON_INDENT: int = 4
 DEFAULT_LOGGER_NAME: str = "TGV2RayScraper"
 
+DEFAULT_LANG: str = "en"
+CURRENT_LANG: str = (getlocale()[0] or DEFAULT_LANG).partition("_")[0]
+
 DEFAULT_PATH_PROJECT: Path = (Path(__file__).parent / "../../").resolve()
 
 DEFAULT_PATH_CHANNELS: Path = (
@@ -135,6 +144,9 @@ DEFAULT_PATH_CONFIGS_IMPORT: Path = (
 )
 DEFAULT_PATH_CONFIGS_RAW: Path = (
     DEFAULT_PATH_PROJECT / "configs/v2ray-raw.txt"
+)
+DEFAULT_PATH_LOCALES: Path = (
+    DEFAULT_PATH_PROJECT / "locales"
 )
 DEFAULT_PATH_LOGS: Path = (
     DEFAULT_PATH_PROJECT / "logs"

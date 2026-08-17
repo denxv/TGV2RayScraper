@@ -52,13 +52,9 @@ from core.constants.common import (
     HTTP_TIMEOUT_MIN,
     SUPPRESS,
 )
-from core.constants.messages.error import (
+from core.constants.locales import (
     MESSAGE_ERROR_UNEXPECTED_FAILURE,
-)
-from core.constants.messages.info import (
     MESSAGE_INFO_PROGRAM_EXIT,
-)
-from core.constants.templates.error import (
     TEMPLATE_ERROR_PROXY_AUTH_OR_PROTOCOL,
     TEMPLATE_ERROR_PROXY_NETWORK,
 )

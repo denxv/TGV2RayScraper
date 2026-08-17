@@ -36,17 +36,11 @@ from core.constants.common import (
     HTTP_TIMEOUT_MIN,
     SUPPRESS,
 )
-from core.constants.messages.error import (
+from core.constants.locales import (
     MESSAGE_ERROR_UNEXPECTED_FAILURE,
-)
-from core.constants.messages.info import (
     MESSAGE_INFO_PROGRAM_EXIT,
-)
-from core.constants.templates.error import (
     TEMPLATE_ERROR_FAILED_SCRIPT_EXECUTION,
     TEMPLATE_ERROR_UNKNOWN_SCRIPT_NAMES,
-)
-from core.constants.templates.info.common import (
     TEMPLATE_INFO_SCRIPT_COMPLETED,
     TEMPLATE_INFO_SCRIPT_STARTED,
 )

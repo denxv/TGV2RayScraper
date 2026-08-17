@@ -21,10 +21,8 @@ from core.constants.common import (
     DEFAULT_PATH_URLS,
     SUPPRESS,
 )
-from core.constants.messages.error import (
+from core.constants.locales import (
     MESSAGE_ERROR_UNEXPECTED_FAILURE,
-)
-from core.constants.messages.info import (
     MESSAGE_INFO_PROGRAM_EXIT,
 )
 from core.context import (

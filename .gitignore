@@ -32,6 +32,10 @@
 !docs/
 !docs/**
 
+# Localization files.
+!locales/
+!locales/*.json
+
 # Keep the logs directory in the tree, but ignore its contents.
 # .gitkeep preserves the empty directory in git.
 !logs/

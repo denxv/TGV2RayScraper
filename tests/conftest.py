@@ -23,14 +23,16 @@ from pytest_mock import (
     MockerFixture,
 )
 
-from core.constants.common import (
-    DEFAULT_LOGGER_NAME,
+from core.constants import (
+    common as _common,
 )
 from core.terminal.logger import (
     Logger,
     log_channel_changes,
     log_debug_object,
 )
+
+_common.CURRENT_LANG = _common.DEFAULT_LANG
 
 
 def _create_file(
@@ -225,7 +227,7 @@ def pytest_collection_modifyitems(
 
 @pytest.fixture(autouse=True)
 def reset_logger() -> None:
-    getLogger(DEFAULT_LOGGER_NAME).handlers.clear()
+    getLogger(_common.DEFAULT_LOGGER_NAME).handlers.clear()
 
 
 @pytest.fixture

@@ -546,6 +546,10 @@ All dev-dependencies are listed in [`requirements-dev.txt`](requirements-dev.txt
 
   * **constants/** - static data, patterns, string templates and configuration limits
 
+    * **locales/** - localization loading and validation
+
+      * `__init__.py` - loads locale data from JSON files, validates translation keys and types, and checks placeholder consistency
+
     * **messages/** - text constants for logging, split by levels
 
       * `error.py` - error messages
@@ -637,6 +641,12 @@ All dev-dependencies are listed in [`requirements-dev.txt`](requirements-dev.txt
   * `config.py` - config logic: normalization (base64 decoding for SS/SSR/VMess), filtering via `asteval`, deduplication by fields, sorting
 
   * `predicates.py` - predicates and conditions: checking channel availability/freshness, safe execution of Python expressions via `asteval.Interpreter`
+
+* **locales/** - localized application strings in JSON format
+
+  * `en.json` - the source locale and reference set of strings corresponding to the application constants
+
+  * `ru.json` - the Russian locale containing translations of the strings from `en.json` while preserving the original keys and placeholders
 
 * **logs/** - automatically created script execution logs
 

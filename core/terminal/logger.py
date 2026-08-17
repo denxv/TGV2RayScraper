@@ -41,9 +41,6 @@ from core.constants.templates.debug.common import (
     TEMPLATE_DEBUG_FAILED_SERIALIZATION,
     TEMPLATE_DEBUG_PRETTY_OBJECT,
 )
-from core.constants.templates.title import (
-    TEMPLATE_TITLE_CHANNEL_CHANGES,
-)
 from core.terminal.console import (
     console,
 )
@@ -143,6 +140,10 @@ def log_channel_changes(
     before: ChannelInfo,
     after: ChannelInfo,
 ) -> None:
+    from core.constants.locales import (  # noqa: PLC0415
+        TEMPLATE_TITLE_CHANNEL_CHANGES,
+    )
+
     channel_changes = {
         key: FORMAT_CHANNEL_CHANGE.format(
             before=before.get(key),

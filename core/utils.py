@@ -38,19 +38,10 @@ from core.constants.formats import (
     FORMAT_BACKUP_FILENAME,
     FORMAT_BASE64_PADDING,
 )
-from core.constants.messages.error import (
+from core.constants.locales import (
     MESSAGE_ERROR_CONDITION_EMPTY,
     MESSAGE_ERROR_NO_FIELDS_PROVIDED,
     MESSAGE_ERROR_PROXY_EMPTY,
-)
-from core.constants.patterns.common import (
-    PATTERN_CONFIG_FIELD,
-    PATTERN_PARAM_SEPARATOR,
-)
-from core.constants.patterns.proxy import (
-    PATTERN_PROXY_URL,
-)
-from core.constants.templates.error import (
     TEMPLATE_ERROR_DETECTED_DUPLICATE_FIELD,
     TEMPLATE_ERROR_EXPECTED_FILE,
     TEMPLATE_ERROR_EXPECTED_STRING,
@@ -61,9 +52,14 @@ from core.constants.templates.error import (
     TEMPLATE_ERROR_PARENT_DIRECTORY_NOT_EXIST,
     TEMPLATE_ERROR_PROXY_INVALID_FORMAT,
     TEMPLATE_ERROR_PROXY_INVALID_PORT,
-)
-from core.constants.templates.info.common import (
     TEMPLATE_INFO_FILE_BACKUP_COMPLETED,
+)
+from core.constants.patterns.common import (
+    PATTERN_CONFIG_FIELD,
+    PATTERN_PARAM_SEPARATOR,
+)
+from core.constants.patterns.proxy import (
+    PATTERN_PROXY_URL,
 )
 from core.terminal.logger import (
     logger,

@@ -10,11 +10,11 @@ from adapters.channel import (
 from core.constants.common import (
     DEFAULT_CURRENT_ID,
 )
-from core.constants.messages.info import (
+from core.constants.locales import (
     MESSAGE_INFO_CHANNEL_UPDATE_SKIPPED,
-)
-from core.constants.messages.warning import (
     MESSAGE_WARNING_NO_CHANNELS_TO_UPDATE,
+    TEMPLATE_INFO_CHANNELS_UPDATE_COMPLETED,
+    TEMPLATE_INFO_CHANNELS_UPDATE_STARTED,
 )
 from core.constants.templates.debug.channel import (
     TEMPLATE_DEBUG_CHANNEL_UPDATE_BATCH_COMPLETED,
@@ -27,10 +27,6 @@ from core.constants.templates.debug.channel import (
     TEMPLATE_DEBUG_CHANNEL_UPDATE_STARTED,
     TEMPLATE_DEBUG_CHANNEL_UPDATE_STATE_UPDATED,
     TEMPLATE_DEBUG_CHANNEL_UPDATE_UNAVAILABLE,
-)
-from core.constants.templates.info.channel import (
-    TEMPLATE_INFO_CHANNELS_UPDATE_COMPLETED,
-    TEMPLATE_INFO_CHANNELS_UPDATE_STARTED,
 )
 from core.context import (
     HttpContext,

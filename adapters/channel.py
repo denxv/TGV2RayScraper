@@ -36,15 +36,17 @@ from core.constants.formats import (
     FORMAT_TG_CHANNEL_URL,
     FORMAT_TG_CHANNEL_URL_WITH_AFTER,
 )
-from core.constants.messages.error import (
+from core.constants.locales import (
     MESSAGE_ERROR_NO_POSTS_FOUND,
-)
-from core.constants.messages.info import (
     MESSAGE_INFO_BACKUP_SKIPPED,
     MESSAGE_INFO_CHANNEL_LOAD_COMPLETED,
     MESSAGE_INFO_CHANNEL_LOAD_STARTED,
     MESSAGE_INFO_CHANNEL_SAVE_COMPLETED,
     MESSAGE_INFO_CHANNEL_SAVE_STARTED,
+    TEMPLATE_ERROR_HTTP_FETCH_FAILED_AFTER_RETRIES,
+    TEMPLATE_ERROR_HTTP_FETCH_RETRY_EXHAUSTED,
+    TEMPLATE_ERROR_HTTP_FETCH_RETRY_LOOP_BROKEN,
+    TEMPLATE_INFO_CHANNEL_SAVE_COMPLETED,
 )
 from core.constants.patterns.telegram import (
     PATTERN_TG_CHANNEL_NAME,
@@ -76,14 +78,6 @@ from core.constants.templates.debug.common import (
     TEMPLATE_DEBUG_HTTP_FETCH_ATTEMPT_STARTED,
     TEMPLATE_DEBUG_HTTP_FETCH_SUCCESS,
     TEMPLATE_DEBUG_HTTP_FETCH_WITH_RETRY_STARTED,
-)
-from core.constants.templates.error import (
-    TEMPLATE_ERROR_HTTP_FETCH_FAILED_AFTER_RETRIES,
-    TEMPLATE_ERROR_HTTP_FETCH_RETRY_EXHAUSTED,
-    TEMPLATE_ERROR_HTTP_FETCH_RETRY_LOOP_BROKEN,
-)
-from core.constants.templates.info.channel import (
-    TEMPLATE_INFO_CHANNEL_SAVE_COMPLETED,
 )
 from core.context import (
     HttpContext,

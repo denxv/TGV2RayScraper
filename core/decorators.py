@@ -2,7 +2,7 @@ from functools import (
     wraps,
 )
 
-from core.constants.templates.info.channel import (
+from core.constants.locales import (
     TEMPLATE_INFO_CHANNEL_COUNT_DIFFERENCE,
 )
 from core.terminal.logger import (

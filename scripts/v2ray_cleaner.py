@@ -22,10 +22,8 @@ from core.constants.common import (
     DEFAULT_PATH_CONFIGS_RAW,
     SUPPRESS,
 )
-from core.constants.messages.error import (
+from core.constants.locales import (
     MESSAGE_ERROR_UNEXPECTED_FAILURE,
-)
-from core.constants.messages.info import (
     MESSAGE_INFO_PROGRAM_EXIT,
 )
 from core.constants.patterns.v2ray.registry import (
