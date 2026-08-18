@@ -405,7 +405,7 @@ def run_script(
         ),
     )
 
-    if subprocess_run(
+    if subprocess_run(  # noqa: S603
         args=arguments,
         check=False,
     ).returncode:
