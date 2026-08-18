@@ -22,8 +22,31 @@ from core.constants.common import (
     SUPPRESS,
 )
 from core.constants.locales import (
+    CLI_UPDATE_CHANNELS_CHANNEL_ACTIONS_DELETE_CHANNELS,
+    CLI_UPDATE_CHANNELS_CHANNEL_ACTIONS_GROUP_DESCRIPTION,
+    CLI_UPDATE_CHANNELS_CHANNEL_ACTIONS_GROUP_TITLE,
+    CLI_UPDATE_CHANNELS_CHANNEL_ACTIONS_RESET_ALL,
+    CLI_UPDATE_CHANNELS_CHANNEL_ACTIONS_SET_FIELD_METAVAR,
+    CLI_UPDATE_CHANNELS_CHANNEL_ACTIONS_SET_FIELD_TEMPLATE,
+    CLI_UPDATE_CHANNELS_CHANNEL_SELECTION_FILTER,
+    CLI_UPDATE_CHANNELS_CHANNEL_SELECTION_FILTER_METAVAR,
+    CLI_UPDATE_CHANNELS_CHANNEL_SELECTION_GROUP_DESCRIPTION,
+    CLI_UPDATE_CHANNELS_CHANNEL_SELECTION_GROUP_TITLE,
+    CLI_UPDATE_CHANNELS_DESCRIPTION,
+    CLI_UPDATE_CHANNELS_EPILOG,
+    CLI_UPDATE_CHANNELS_GLOBAL_OPTIONS_DEBUG,
+    CLI_UPDATE_CHANNELS_GLOBAL_OPTIONS_GROUP_TITLE,
+    CLI_UPDATE_CHANNELS_GLOBAL_OPTIONS_NO_DRY_RUN,
+    CLI_UPDATE_CHANNELS_GLOBAL_OPTIONS_SKIP_BACKUP,
+    CLI_UPDATE_CHANNELS_INPUT_FILES_CHANNELS_METAVAR,
+    CLI_UPDATE_CHANNELS_INPUT_FILES_CHANNELS_TEMPLATE,
+    CLI_UPDATE_CHANNELS_INPUT_FILES_GROUP_TITLE,
+    CLI_UPDATE_CHANNELS_INPUT_FILES_URLS_METAVAR,
+    CLI_UPDATE_CHANNELS_INPUT_FILES_URLS_TEMPLATE,
+    MESSAGE_ERROR_MULTIPLE_ACTIONS_SPECIFIED,
     MESSAGE_ERROR_UNEXPECTED_FAILURE,
     MESSAGE_INFO_PROGRAM_EXIT,
+    TEMPLATE_TITLE_CLI_PARSED_ARGUMENTS,
 )
 from core.context import (
     IOContext,
@@ -51,15 +74,8 @@ from domain.channel import (
 def parse_args() -> ArgsNamespace:
     parser = ArgumentParser(
         add_help=False,
-        description=(
-            "Backup channels, merge new URLs, and modify channels "
-            "by filter: set or reset fields, or delete unavailable channels."
-        ),
-        epilog=(
-            "Example: PYTHONPATH=. python scripts/update_channels.py "
-            "-C channels/current.json -U channels/urls.txt "
-            '-F "count < 100" --set-current-id -100'
-        ),
+        description=CLI_UPDATE_CHANNELS_DESCRIPTION,
+        epilog=CLI_UPDATE_CHANNELS_EPILOG,
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
             max_help_position=DEFAULT_HELP_INDENT,
@@ -73,139 +89,107 @@ def parse_args() -> ArgsNamespace:
     )
 
     group_global = parser.add_argument_group(
-        "Global options",
+        title=CLI_UPDATE_CHANNELS_GLOBAL_OPTIONS_GROUP_TITLE,
     )
     group_global.add_argument(
         "--debug",
         action="store_true",
         default=False,
         dest="debug",
-        help=(
-            "Enable debug logging in console. "
-            "By default, console shows INFO level logs."
-        ),
+        help=CLI_UPDATE_CHANNELS_GLOBAL_OPTIONS_DEBUG,
     )
     group_global.add_argument(
         "--no-dry-run",
         action="store_false",
         default=True,
         dest="dry_run",
-        help=(
-            "Disable dry-run mode and allow modifying channel metadata, "
-            "including setting and resetting fields such as "
-            "'count', 'last_id', 'current_id', and 'state'. "
-            "By default, dry-run mode is enabled."
-        ),
+        help=CLI_UPDATE_CHANNELS_GLOBAL_OPTIONS_NO_DRY_RUN,
     )
     group_global.add_argument(
         "--skip-backup",
         action="store_true",
         default=False,
         dest="skip_backup",
-        help=(
-            "Skip creating backup files for channel and Telegram URL lists. "
-            "By default, backup is created."
-        ),
+        help=CLI_UPDATE_CHANNELS_GLOBAL_OPTIONS_SKIP_BACKUP,
     )
 
-    group_files = parser.add_argument_group(
-        "Input files",
+    group_input_files = parser.add_argument_group(
+        title=CLI_UPDATE_CHANNELS_INPUT_FILES_GROUP_TITLE,
     )
-    group_files.add_argument(
+    group_input_files.add_argument(
         "-C", "--channels",
         default=abs_path(
             path=DEFAULT_PATH_CHANNELS,
         ),
         dest="channels_path",
-        help=(
-            "Path to the input JSON file containing the list of channels "
-            f"(default: {rel_path(DEFAULT_PATH_CHANNELS)})."
+        help=CLI_UPDATE_CHANNELS_INPUT_FILES_CHANNELS_TEMPLATE.format(
+            default=rel_path(
+                path=DEFAULT_PATH_CHANNELS,
+            ),
         ),
-        metavar="PATH",
+        metavar=CLI_UPDATE_CHANNELS_INPUT_FILES_CHANNELS_METAVAR,
         type=lambda path: validate_file_path(
             path=path,
             must_be_file=True,
         ),
     )
-    group_files.add_argument(
+    group_input_files.add_argument(
         "-U", "--urls",
         default=abs_path(
             path=DEFAULT_PATH_URLS,
         ),
         dest="urls_path",
-        help=(
-            "Path to the input TXT file containing new channel URLs "
-            f"(default: {rel_path(DEFAULT_PATH_URLS)})."
+        help=CLI_UPDATE_CHANNELS_INPUT_FILES_URLS_TEMPLATE.format(
+            default=rel_path(
+                path=DEFAULT_PATH_URLS,
+            ),
         ),
-        metavar="PATH",
+        metavar=CLI_UPDATE_CHANNELS_INPUT_FILES_URLS_METAVAR,
         type=lambda path: validate_file_path(
             path=path,
             must_be_file=True,
         ),
     )
 
-    group_selection = parser.add_argument_group(
-        "Channel selection options",
-        description=(
-            "Common filter for all actions. "
-            "If omitted, a built-in default is used per action."
-        ),
+    group_channel_selection = parser.add_argument_group(
+        title=CLI_UPDATE_CHANNELS_CHANNEL_SELECTION_GROUP_TITLE,
+        description=CLI_UPDATE_CHANNELS_CHANNEL_SELECTION_GROUP_DESCRIPTION,
     )
-    group_selection.add_argument(
+    group_channel_selection.add_argument(
         "-F", "--channel-filter",
         dest="channel_filter",
-        help=(
-            "Filter channels using a Python-like condition. Example: "
-            '"count < 100 and current_id == last_id or state == -1". '
-            "If omitted, all existing channels "
-            "except new ones will be selected."
-        ),
-        metavar="CONDITION",
+        help=CLI_UPDATE_CHANNELS_CHANNEL_SELECTION_FILTER,
+        metavar=CLI_UPDATE_CHANNELS_CHANNEL_SELECTION_FILTER_METAVAR,
         type=normalize_condition,
     )
 
-    group_actions = parser.add_argument_group(
-        "Channel actions",
-        description=(
-            "Only one action can be specified per invocation. "
-            "Deletion cannot be combined with reset/set options. "
-            "Reset and set options can be combined with each other."
-        ),
+    group_channel_actions = parser.add_argument_group(
+        title=CLI_UPDATE_CHANNELS_CHANNEL_ACTIONS_GROUP_TITLE,
+        description=CLI_UPDATE_CHANNELS_CHANNEL_ACTIONS_GROUP_DESCRIPTION,
     )
-    group_actions.add_argument(
+    group_channel_actions.add_argument(
         "-D", "--delete-channels",
         action="store_true",
         default=False,
         dest="delete_channels",
-        help=(
-            "Delete channels matching the filter. "
-            "If no filter is specified, deletes unavailable channels "
-            "and channels without configuration. "
-            "By default, deletion is disabled."
-        ),
+        help=CLI_UPDATE_CHANNELS_CHANNEL_ACTIONS_DELETE_CHANNELS,
     )
-    group_actions.add_argument(
+    group_channel_actions.add_argument(
         "--reset-all",
         action="store_true",
         default=False,
         dest="reset_all",
-        help=(
-            "Reset all channel values to their defaults "
-            "for filtered channels. Can be combined with --set-<field>. "
-            "Without a filter, applies to available non-new channels."
-        ),
+        help=CLI_UPDATE_CHANNELS_CHANNEL_ACTIONS_RESET_ALL,
     )
     for field, default in DEFAULT_CHANNEL_VALUES.items():
-        group_actions.add_argument(
+        group_channel_actions.add_argument(
             f"--set-{field.replace('_', '-')}",
             const=default,
             dest=f"set_{field}",
-            help=(
-                f"Set '{field}' to the specified value. "
-                "If no value is provided, the default value is used "
-                "(default: %(const)s)."
+            help=CLI_UPDATE_CHANNELS_CHANNEL_ACTIONS_SET_FIELD_TEMPLATE.format(
+                field=field,
             ),
-            metavar="N",
+            metavar=CLI_UPDATE_CHANNELS_CHANNEL_ACTIONS_SET_FIELD_METAVAR,
             nargs="?",
             type=type(default),
         )
@@ -222,8 +206,7 @@ def parse_args() -> ArgsNamespace:
 
     if action_count > 1:
         parser.error(
-            "Multiple actions cannot be combined. "
-            "Specify either deletion or reset/set options.",
+            message=MESSAGE_ERROR_MULTIPLE_ACTIONS_SPECIFIED,
         )
 
     set_console_level(
@@ -233,7 +216,11 @@ def parse_args() -> ArgsNamespace:
 
     log_debug_object(
         obj=args,
-        title="Parsed command-line arguments",
+        title=TEMPLATE_TITLE_CLI_PARSED_ARGUMENTS.format(
+            name=rel_path(
+                path=__file__,
+            ),
+        ),
     )
 
     return args

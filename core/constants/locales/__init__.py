@@ -12,6 +12,7 @@ from string import (
 from core.constants import (
     common as _common,
 )
+from core.constants.cli import *
 from core.constants.messages.error import *
 from core.constants.messages.info import *
 from core.constants.messages.warning import *
@@ -23,7 +24,6 @@ from core.constants.templates.info.channel import *
 from core.constants.templates.info.common import *
 from core.constants.templates.info.config import *
 from core.constants.templates.title import *
-from core.constants.templates.warning import *
 from core.terminal.logger import (
     logger,
 )
@@ -31,7 +31,10 @@ from core.terminal.logger import (
 _SOURCE: dict[str, str] = {
     name: value
     for name, value in globals().items()
-    if not name.startswith("_") and name.isupper()
+    if (
+        name.isupper()
+        and not name.startswith("_")
+    )
 }
 
 
@@ -161,18 +164,24 @@ if _common.CURRENT_LANG != _common.DEFAULT_LANG:
 
 
 if __name__ == "__main__":
-    logger.info(
-        msg=dumps(
-            obj={
-                name: value
-                for name, value in globals().items()
-                if (
-                    not name.startswith("_")
-                    and name.isupper()
-                )
-            },
-            default=str,
-            ensure_ascii=False,
-            indent=_common.DEFAULT_JSON_INDENT,
-        ),
+    constants_json = dumps(
+        obj={
+            name: value
+            for name, value in sorted(
+                globals().items(),
+            )
+            if (
+                name.isupper()
+                and not name.startswith("_")
+            )
+        },
+        default=str,
+        ensure_ascii=False,
+        indent=_common.DEFAULT_JSON_INDENT,
     )
+
+    logger.debug(
+        msg=constants_json,
+    )
+
+    print(constants_json)  # noqa: T201

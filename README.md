@@ -396,7 +396,7 @@ python -m scripts.v2ray_cleaner -h
 
   * `--export [PATH]` - Path to the output JSON file for exporting parsed configs for later reuse without re-parsing raw input (default: `configs/v2ray.json`).
 
-* **Filter / Sort**
+* **Configuration processing**
 
   * `-D, --duplicate [FIELDS]` - Remove duplicates by specified fields (default: `"protocol, host, port"`).
 
@@ -600,7 +600,7 @@ All dev-dependencies are listed in [`requirements-dev.txt`](requirements-dev.txt
 
       * `title.py` - title templates for log objects
 
-      * `warning.py` - warning templates
+    * `cli.py` - CLI help text and argument descriptions
 
     * `common.py` - base constants: batch/concurrency limits, paths, timeouts, default channel values, XPath selectors, `rich` colors
 

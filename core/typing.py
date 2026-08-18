@@ -40,6 +40,7 @@ __all__ = [
     "CLIFlags",
     "CLIParam",
     "CLIParams",
+    "CLIStr",
     "Callable",
     "ChannelInfo",
     "ChannelName",
@@ -127,6 +128,7 @@ BatchSize: TypeAlias = int
 ChannelName: TypeAlias = str
 CLIFlag: TypeAlias = str
 CLIParam: TypeAlias = str
+CLIStr: TypeAlias = str
 ConditionStr: TypeAlias = str
 ConfigField: TypeAlias = str
 DefaultPostID: TypeAlias = int

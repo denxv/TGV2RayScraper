@@ -37,12 +37,20 @@ from core.constants.common import (
     SUPPRESS,
 )
 from core.constants.locales import (
+    CLI_MAIN_DESCRIPTION,
+    CLI_MAIN_EPILOG,
+    CLI_MAIN_GLOBAL_OPTIONS_DEBUG,
+    CLI_MAIN_GLOBAL_OPTIONS_GROUP_TITLE,
+    CLI_MAIN_GLOBAL_OPTIONS_HELP_SCRIPTS,
+    CLI_MAIN_GLOBAL_OPTIONS_HELP_SCRIPTS_METAVAR,
     MESSAGE_ERROR_UNEXPECTED_FAILURE,
     MESSAGE_INFO_PROGRAM_EXIT,
     TEMPLATE_ERROR_FAILED_SCRIPT_EXECUTION,
     TEMPLATE_ERROR_UNKNOWN_SCRIPT_NAMES,
     TEMPLATE_INFO_SCRIPT_COMPLETED,
     TEMPLATE_INFO_SCRIPT_STARTED,
+    TEMPLATE_TITLE_CLI_PARSED_ARGUMENTS,
+    TEMPLATE_TITLE_CLI_SCRIPT_LAUNCH_ARGUMENTS,
 )
 from core.terminal.console import (
     console,
@@ -64,6 +72,7 @@ from core.utils import (
     convert_number_in_range,
     normalize_condition,
     normalize_valid_fields,
+    rel_path,
     validate_file_path,
     validate_proxy_url,
 )
@@ -72,14 +81,8 @@ from core.utils import (
 def parse_args() -> ArgsNamespace:
     parser = ArgumentParser(
         add_help=False,
-        description=(
-            "Run the complete proxy configuration collection "
-            "and processing pipeline."
-        ),
-        epilog=(
-            "Show help for all internal scripts used in the pipeline. "
-            "Example: python %(prog)s --help-scripts"
-        ),
+        description=CLI_MAIN_DESCRIPTION,
+        epilog=CLI_MAIN_EPILOG,
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
             max_help_position=DEFAULT_HELP_INDENT,
@@ -88,29 +91,20 @@ def parse_args() -> ArgsNamespace:
     )
 
     group_global = parser.add_argument_group(
-        "Global options",
+        title=CLI_MAIN_GLOBAL_OPTIONS_GROUP_TITLE,
     )
     group_global.add_argument(
         "-D", "--debug",
         action="store_true",
         dest="debug",
-        help=(
-            "Enable debug logging in console. "
-            "By default, console shows INFO level logs."
-        ),
+        help=CLI_MAIN_GLOBAL_OPTIONS_DEBUG,
     )
     group_global.add_argument(
         "-H", "--help-scripts",
         const=list(CLI_SCRIPTS_CONFIG),
         dest="help_scripts",
-        help=(
-            "Display help information for internal pipeline scripts. "
-            "Specify script names as a comma-separated list. "
-            'Example: "scraper, v2ray_cleaner, update_channels". '
-            "If used without value (e.g., '-H'), "
-            "help is shown for all scripts. "
-        ),
-        metavar="NAMES",
+        help=CLI_MAIN_GLOBAL_OPTIONS_HELP_SCRIPTS,
+        metavar=CLI_MAIN_GLOBAL_OPTIONS_HELP_SCRIPTS_METAVAR,
         nargs="?",
         type=parse_script_names,
     )
@@ -349,7 +343,11 @@ def parse_args() -> ArgsNamespace:
 
     log_debug_object(
         obj=args,
-        title="Parsed command-line arguments",
+        title=TEMPLATE_TITLE_CLI_PARSED_ARGUMENTS.format(
+            name=rel_path(
+                path=__file__,
+            ),
+        ),
     )
 
     return args
@@ -402,7 +400,9 @@ def run_script(
 
     log_debug_object(
         obj=arguments,
-        title="Script launch arguments",
+        title=TEMPLATE_TITLE_CLI_SCRIPT_LAUNCH_ARGUMENTS.format(
+            name=script_name,
+        ),
     )
 
     if subprocess_run(

@@ -23,8 +23,33 @@ from core.constants.common import (
     SUPPRESS,
 )
 from core.constants.locales import (
+    CLI_V2RAY_CLEANER_CONFIG_PROCESSING_DUPLICATE,
+    CLI_V2RAY_CLEANER_CONFIG_PROCESSING_DUPLICATE_METAVAR,
+    CLI_V2RAY_CLEANER_CONFIG_PROCESSING_FILTER,
+    CLI_V2RAY_CLEANER_CONFIG_PROCESSING_FILTER_METAVAR,
+    CLI_V2RAY_CLEANER_CONFIG_PROCESSING_GROUP_TITLE,
+    CLI_V2RAY_CLEANER_CONFIG_PROCESSING_REVERSE,
+    CLI_V2RAY_CLEANER_CONFIG_PROCESSING_SORT,
+    CLI_V2RAY_CLEANER_CONFIG_PROCESSING_SORT_METAVAR,
+    CLI_V2RAY_CLEANER_DESCRIPTION,
+    CLI_V2RAY_CLEANER_EPILOG,
+    CLI_V2RAY_CLEANER_GLOBAL_OPTIONS_DEBUG,
+    CLI_V2RAY_CLEANER_GLOBAL_OPTIONS_GROUP_TITLE,
+    CLI_V2RAY_CLEANER_GLOBAL_OPTIONS_SKIP_NORMALIZE,
+    CLI_V2RAY_CLEANER_INPUT_FILES_CONFIGS_RAW_METAVAR,
+    CLI_V2RAY_CLEANER_INPUT_FILES_CONFIGS_RAW_TEMPLATE,
+    CLI_V2RAY_CLEANER_INPUT_FILES_GROUP_TITLE,
+    CLI_V2RAY_CLEANER_INPUT_FILES_IMPORT_METAVAR,
+    CLI_V2RAY_CLEANER_INPUT_FILES_IMPORT_TEMPLATE,
+    CLI_V2RAY_CLEANER_OUTPUT_FILES_CONFIGS_CLEAN_METAVAR,
+    CLI_V2RAY_CLEANER_OUTPUT_FILES_CONFIGS_CLEAN_TEMPLATE,
+    CLI_V2RAY_CLEANER_OUTPUT_FILES_EXPORT_METAVAR,
+    CLI_V2RAY_CLEANER_OUTPUT_FILES_EXPORT_TEMPLATE,
+    CLI_V2RAY_CLEANER_OUTPUT_FILES_GROUP_TITLE,
     MESSAGE_ERROR_UNEXPECTED_FAILURE,
     MESSAGE_INFO_PROGRAM_EXIT,
+    TEMPLATE_TITLE_CLI_PARSED_ARGUMENTS,
+    TEMPLATE_TITLE_COMPILED_URL_PATTERNS_BY_V2RAY_PROTOCOL,
 )
 from core.constants.patterns.v2ray.registry import (
     PATTERNS_V2RAY_URLS_BY_PROTOCOL,
@@ -55,17 +80,8 @@ from domain.config import (
 def parse_args() -> ArgsNamespace:
     parser = ArgumentParser(
         add_help=False,
-        description=(
-            "Utility for deduplicating, filtering, normalizing, "
-            "and sorting proxy configuration entries."
-        ),
-        epilog=(
-            "Example: PYTHONPATH=. python scripts/v2ray_cleaner.py "
-            "-I configs/v2ray-raw.txt -O configs/v2ray-clean.txt "
-            "-F \"re_search(r'speedtest|google', host)\" --reverse "
-            '-D "host, port" -S "protocol, host, port" '
-            "--import configs/v2ray.json --export"
-        ),
+        description=CLI_V2RAY_CLEANER_DESCRIPTION,
+        epilog=CLI_V2RAY_CLEANER_EPILOG,
         formatter_class=lambda prog: HelpFormatter(
             prog=prog,
             max_help_position=DEFAULT_HELP_INDENT,
@@ -79,31 +95,25 @@ def parse_args() -> ArgsNamespace:
     )
 
     group_global = parser.add_argument_group(
-        "Global options",
+        title=CLI_V2RAY_CLEANER_GLOBAL_OPTIONS_GROUP_TITLE,
     )
     group_global.add_argument(
         "--debug",
         action="store_true",
         default=False,
         dest="debug",
-        help=(
-            "Enable debug logging in console. "
-            "By default, console shows INFO level logs."
-        ),
+        help=CLI_V2RAY_CLEANER_GLOBAL_OPTIONS_DEBUG,
     )
     group_global.add_argument(
         "--skip-normalize",
         action="store_true",
         default=False,
         dest="skip_normalize",
-        help=(
-            "Skip config normalization to preserve their original structure. "
-            "By default, normalization is enabled."
-        ),
+        help=CLI_V2RAY_CLEANER_GLOBAL_OPTIONS_SKIP_NORMALIZE,
     )
 
     group_input_files = parser.add_argument_group(
-        "Input files",
+        title=CLI_V2RAY_CLEANER_INPUT_FILES_GROUP_TITLE,
     )
     group_input_files.add_argument(
         "-I", "--configs-raw",
@@ -111,11 +121,12 @@ def parse_args() -> ArgsNamespace:
             path=DEFAULT_PATH_CONFIGS_RAW,
         ),
         dest="configs_raw_path",
-        help=(
-            "Path to the input TXT file with raw V2Ray configs for parsing "
-            f"(default: {rel_path(DEFAULT_PATH_CONFIGS_RAW)})."
+        help=CLI_V2RAY_CLEANER_INPUT_FILES_CONFIGS_RAW_TEMPLATE.format(
+            default=rel_path(
+                path=DEFAULT_PATH_CONFIGS_RAW,
+            ),
         ),
-        metavar="PATH",
+        metavar=CLI_V2RAY_CLEANER_INPUT_FILES_CONFIGS_RAW_METAVAR,
         type=lambda path: validate_file_path(
             path=path,
             must_be_file=True,
@@ -127,12 +138,12 @@ def parse_args() -> ArgsNamespace:
             path=DEFAULT_PATH_CONFIGS_IMPORT,
         ),
         dest="import_path",
-        help=(
-            "Path to the input JSON file with already parsed configs. "
-            "If empty or invalid, raw configs will be parsed instead "
-            f"(default: {rel_path(DEFAULT_PATH_CONFIGS_IMPORT)})."
+        help=CLI_V2RAY_CLEANER_INPUT_FILES_IMPORT_TEMPLATE.format(
+            default=rel_path(
+                path=DEFAULT_PATH_CONFIGS_IMPORT,
+            ),
         ),
-        metavar="PATH",
+        metavar=CLI_V2RAY_CLEANER_INPUT_FILES_IMPORT_METAVAR,
         nargs="?",
         type=lambda path: validate_file_path(
             path=path,
@@ -141,7 +152,7 @@ def parse_args() -> ArgsNamespace:
     )
 
     group_output_files = parser.add_argument_group(
-        "Output files",
+        title=CLI_V2RAY_CLEANER_OUTPUT_FILES_GROUP_TITLE,
     )
     group_output_files.add_argument(
         "-O", "--configs-clean",
@@ -149,11 +160,12 @@ def parse_args() -> ArgsNamespace:
             path=DEFAULT_PATH_CONFIGS_CLEAN,
         ),
         dest="configs_clean_path",
-        help=(
-            "Path to the output TXT file for cleaned and processed configs "
-            f"(default: {rel_path(DEFAULT_PATH_CONFIGS_CLEAN)})."
+        help=CLI_V2RAY_CLEANER_OUTPUT_FILES_CONFIGS_CLEAN_TEMPLATE.format(
+            default=rel_path(
+                path=DEFAULT_PATH_CONFIGS_CLEAN,
+            ),
         ),
-        metavar="PATH",
+        metavar=CLI_V2RAY_CLEANER_OUTPUT_FILES_CONFIGS_CLEAN_METAVAR,
         type=lambda path: validate_file_path(
             path=path,
             must_be_file=False,
@@ -165,12 +177,12 @@ def parse_args() -> ArgsNamespace:
             path=DEFAULT_PATH_CONFIGS_EXPORT,
         ),
         dest="export_path",
-        help=(
-            "Path to the output JSON file for exporting parsed configs "
-            "for later reuse without re-parsing raw input "
-            f"(default: {rel_path(DEFAULT_PATH_CONFIGS_EXPORT)})."
+        help=CLI_V2RAY_CLEANER_OUTPUT_FILES_EXPORT_TEMPLATE.format(
+            default=rel_path(
+                path=DEFAULT_PATH_CONFIGS_EXPORT,
+            ),
         ),
-        metavar="PATH",
+        metavar=CLI_V2RAY_CLEANER_OUTPUT_FILES_EXPORT_METAVAR,
         nargs="?",
         type=lambda path: validate_file_path(
             path=path,
@@ -178,53 +190,38 @@ def parse_args() -> ArgsNamespace:
         ),
     )
 
-    group_filter_sort = parser.add_argument_group(
-        "Filter / Sort",
+    group_config_processing = parser.add_argument_group(
+        title=CLI_V2RAY_CLEANER_CONFIG_PROCESSING_GROUP_TITLE,
     )
-    group_filter_sort.add_argument(
+    group_config_processing.add_argument(
         "-D", "--duplicate",
         const="protocol, host, port",
         dest="duplicate",
-        help=(
-            "Remove duplicate entries by specified comma-separated fields. "
-            "If used without value (e.g., '-D'), "
-            "the default fields are '%(const)s'. "
-            "If omitted, duplicates are not removed."
-        ),
-        metavar="FIELDS",
+        help=CLI_V2RAY_CLEANER_CONFIG_PROCESSING_DUPLICATE,
+        metavar=CLI_V2RAY_CLEANER_CONFIG_PROCESSING_DUPLICATE_METAVAR,
         nargs="?",
         type=parse_valid_fields,
     )
-    group_filter_sort.add_argument(
+    group_config_processing.add_argument(
         "-F", "--config-filter",
         dest="config_filter",
-        help=(
-            "Filter entries using a Python-like condition. "
-            "Example: \"host == '1.1.1.1' and port > 1000\". "
-            "Only matching entries are kept. "
-            "If omitted, no filtering is applied."
-        ),
-        metavar="CONDITION",
+        help=CLI_V2RAY_CLEANER_CONFIG_PROCESSING_FILTER,
+        metavar=CLI_V2RAY_CLEANER_CONFIG_PROCESSING_FILTER_METAVAR,
         type=normalize_condition,
     )
-    group_filter_sort.add_argument(
+    group_config_processing.add_argument(
         "-R", "--reverse",
         action="store_true",
         default=False,
         dest="reverse",
-        help="Sort in descending order (only applies with --sort).",
+        help=CLI_V2RAY_CLEANER_CONFIG_PROCESSING_REVERSE,
     )
-    group_filter_sort.add_argument(
+    group_config_processing.add_argument(
         "-S", "--sort",
         const="protocol",
         dest="sort",
-        help=(
-            "Sort entries by comma-separated fields. "
-            "If used without value (e.g., '-S'), "
-            "the default fields are '%(const)s'. "
-            "If omitted, entries are not sorted."
-        ),
-        metavar="FIELDS",
+        help=CLI_V2RAY_CLEANER_CONFIG_PROCESSING_SORT,
+        metavar=CLI_V2RAY_CLEANER_CONFIG_PROCESSING_SORT_METAVAR,
         nargs="?",
         type=parse_valid_fields,
     )
@@ -238,7 +235,20 @@ def parse_args() -> ArgsNamespace:
 
     log_debug_object(
         obj=args,
-        title="Parsed command-line arguments",
+        title=TEMPLATE_TITLE_CLI_PARSED_ARGUMENTS.format(
+            name=rel_path(
+                path=__file__,
+            ),
+        ),
+    )
+    log_debug_object(
+        obj=PATTERNS_V2RAY_URLS_BY_PROTOCOL,
+        title=TEMPLATE_TITLE_COMPILED_URL_PATTERNS_BY_V2RAY_PROTOCOL.format(
+            count=sum(
+                len(patterns)
+                for patterns in PATTERNS_V2RAY_URLS_BY_PROTOCOL.values()
+            ),
+        ),
     )
 
     return args
@@ -251,11 +261,6 @@ async def main() -> None:
         io_ctx = IOContext(
             configs_clean_path=parsed_args.configs_clean_path,
             configs_raw_path=parsed_args.configs_raw_path,
-        )
-
-        log_debug_object(
-            obj=PATTERNS_V2RAY_URLS_BY_PROTOCOL,
-            title="Compiled URL regex patterns by V2Ray protocol",
         )
 
         configs = await load_configs(
