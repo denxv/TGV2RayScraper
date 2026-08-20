@@ -13,6 +13,8 @@ from pathlib import (
 )
 
 from core.typing import (
+    ArgsNamespace,
+    ChannelInfo,
     Iterable,
     Sized,
 )
@@ -36,6 +38,7 @@ __all__ = [
     "CONVERT_NUMBER_IN_RANGE_VALID_EXAMPLES",
     "FLAG_NAME_ROUNDTRIP_EXAMPLES",
     "GET_BATCHES_COUNT_EXAMPLES",
+    "GET_CHANNEL_OVERRIDES_EXAMPLES",
     "NORMALIZE_CONDITION_INVALID_EXAMPLES",
     "NORMALIZE_CONDITION_VALID_EXAMPLES",
     "NORMALIZE_SCALAR_EXAMPLES",
@@ -694,6 +697,48 @@ GET_BATCHES_COUNT_EXAMPLES: tuple[
         0,
         3,
         "zero_size_fallback_to_one",
+    ),
+)
+
+GET_CHANNEL_OVERRIDES_EXAMPLES: tuple[
+    tuple[
+        ArgsNamespace,
+        ChannelInfo,
+        str,
+    ],
+    ...,
+] = (
+    (
+        Namespace(
+            set_current_id=1,
+            set_last_id=-1,
+        ),
+        {  # type: ignore[typeddict-item]
+            "current_id": 1,
+            "last_id": -1,
+        },
+        "current_and_last_id_overrides",
+    ),
+    (
+        Namespace(
+            set_current_id=1,
+        ),
+        {  # type: ignore[typeddict-item]
+            "current_id": 1,
+        },
+        "current_id_override",
+    ),
+    (
+        Namespace(),
+        {},  # type: ignore[typeddict-item]
+        "no_overrides",
+    ),
+    (
+        Namespace(
+            set_unknown=0,
+        ),
+        {},  # type: ignore[typeddict-item]
+        "unknown_override",
     ),
 )
 

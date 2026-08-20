@@ -271,7 +271,10 @@ async def main() -> None:
 
         processed_configs = process_configs(
             configs=configs,  # type: ignore[arg-type]
-            args=parsed_args,
+            config_filter=parsed_args.config_filter,
+            duplicate_fields=parsed_args.duplicate,
+            sort_fields=parsed_args.sort,
+            reverse=parsed_args.reverse,
         )
 
         await save_configs(

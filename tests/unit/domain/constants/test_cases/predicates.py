@@ -1,6 +1,7 @@
 import pytest
 
 from tests.unit.domain.constants.examples.predicates import (
+    HAS_MULTIPLE_CHANNEL_ACTIONS_EXAMPLES,
     IS_CHANNEL_AVAILABLE_EXAMPLES,
     IS_CHANNEL_FULLY_SCANNED_EXAMPLES,
     IS_CHANNEL_PENDING_UPDATE_EXAMPLES,
@@ -11,6 +12,8 @@ from tests.unit.domain.constants.examples.predicates import (
 )
 
 __all__ = [
+    "HAS_MULTIPLE_CHANNEL_ACTIONS_ARGS",
+    "HAS_MULTIPLE_CHANNEL_ACTIONS_CASES",
     "IS_CHANNEL_AVAILABLE_ARGS",
     "IS_CHANNEL_AVAILABLE_CASES",
     "IS_CHANNEL_FULLY_SCANNED_ARGS",
@@ -26,6 +29,35 @@ __all__ = [
     "SHOULD_DELETE_CHANNEL_ARGS",
     "SHOULD_DELETE_CHANNEL_CASES",
 ]
+
+HAS_MULTIPLE_CHANNEL_ACTIONS_ARGS: tuple[
+    str,
+    ...,
+] = (
+    "has_overrides",
+    "reset_to_defaults",
+    "should_delete",
+    "expected",
+)
+HAS_MULTIPLE_CHANNEL_ACTIONS_CASES: tuple[
+    object,
+    ...,
+] = tuple(
+    pytest.param(
+        has_overrides,
+        reset_to_defaults,
+        should_delete,
+        expected,
+        id=case_id,
+    )
+    for (
+        has_overrides,
+        reset_to_defaults,
+        should_delete,
+        expected,
+        case_id,
+    ) in HAS_MULTIPLE_CHANNEL_ACTIONS_EXAMPLES
+)
 
 IS_CHANNEL_AVAILABLE_ARGS: tuple[
     str,

@@ -15,6 +15,7 @@ from tests.unit.core.constants.examples.utils import (
     CONVERT_NUMBER_IN_RANGE_VALID_EXAMPLES,
     FLAG_NAME_ROUNDTRIP_EXAMPLES,
     GET_BATCHES_COUNT_EXAMPLES,
+    GET_CHANNEL_OVERRIDES_EXAMPLES,
     NORMALIZE_CONDITION_INVALID_EXAMPLES,
     NORMALIZE_CONDITION_VALID_EXAMPLES,
     NORMALIZE_SCALAR_EXAMPLES,
@@ -56,6 +57,8 @@ __all__ = [
     "FLAG_NAME_ROUNDTRIP_CASES",
     "GET_BATCHES_COUNT_ARGS",
     "GET_BATCHES_COUNT_CASES",
+    "GET_CHANNEL_OVERRIDES_ARGS",
+    "GET_CHANNEL_OVERRIDES_CASES",
     "NORMALIZE_CONDITION_INVALID_ARGS",
     "NORMALIZE_CONDITION_INVALID_CASES",
     "NORMALIZE_CONDITION_VALID_ARGS",
@@ -404,6 +407,29 @@ GET_BATCHES_COUNT_CASES: tuple[
         expected,
         case_id,
     ) in GET_BATCHES_COUNT_EXAMPLES
+)
+
+GET_CHANNEL_OVERRIDES_ARGS: tuple[
+    str,
+    ...,
+] = (
+    "args",
+    "expected",
+)
+GET_CHANNEL_OVERRIDES_CASES: tuple[
+    object,
+    ...,
+] = tuple(
+    pytest.param(
+        args,
+        expected,
+        id=case_id,
+    )
+    for (
+        args,
+        expected,
+        case_id,
+    ) in GET_CHANNEL_OVERRIDES_EXAMPLES
 )
 
 NORMALIZE_CONDITION_INVALID_ARGS: tuple[

@@ -27,6 +27,7 @@ from re import (
 
 from core.constants.common import (
     BASE64_BLOCK_SIZE,
+    DEFAULT_CHANNEL_VALUES,
     DEFAULT_PATH_PROJECT,
     DEFAULT_VALUE_MAX,
     DEFAULT_VALUE_MIN,
@@ -37,6 +38,7 @@ from core.constants.formats import (
     FORMAT_BACKUP_DATE,
     FORMAT_BACKUP_FILENAME,
     FORMAT_BASE64_PADDING,
+    FORMAT_CHANNEL_SET_DEST,
 )
 from core.constants.locales import (
     MESSAGE_ERROR_CONDITION_EMPTY,
@@ -69,6 +71,7 @@ from core.typing import (
     ArgsNamespace,
     AttrName,
     B64String,
+    ChannelInfo,
     CLIFlag,
     CLIFlags,
     CLIParams,
@@ -102,6 +105,7 @@ __all__ = [
     "convert_number_in_range",
     "flag_to_name",
     "get_batches_count",
+    "get_channel_overrides",
     "make_backup",
     "name_to_flag",
     "normalize_scalar",
@@ -251,6 +255,24 @@ def get_batches_count(
     size: int = 1,
 ) -> int:
     return ceil(len(items) / max(size, 1))
+
+
+def get_channel_overrides(
+    args: ArgsNamespace,
+) -> ChannelInfo:
+    return {  # type: ignore[return-value]
+        field: value
+        for field in DEFAULT_CHANNEL_VALUES
+        if (
+            value := getattr(
+                args,
+                FORMAT_CHANNEL_SET_DEST.format(
+                    field=field,
+                ),
+                None,
+            )
+        ) is not None
+    }
 
 
 def make_backup(

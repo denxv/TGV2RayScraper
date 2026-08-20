@@ -21,6 +21,10 @@ from core.constants.common import (
     DEFAULT_PATH_URLS,
     SUPPRESS,
 )
+from core.constants.formats import (
+    FORMAT_CHANNEL_SET_DEST,
+    FORMAT_CHANNEL_SET_OPTION,
+)
 from core.constants.locales import (
     CLI_UPDATE_CHANNELS_CHANNEL_ACTIONS_DELETE_CHANNELS,
     CLI_UPDATE_CHANNELS_CHANNEL_ACTIONS_GROUP_DESCRIPTION,
@@ -61,6 +65,7 @@ from core.typing import (
 )
 from core.utils import (
     abs_path,
+    get_channel_overrides,
     normalize_condition,
     rel_path,
     validate_file_path,
@@ -68,6 +73,9 @@ from core.utils import (
 from domain.channel import (
     process_channels,
     update_with_new_channels,
+)
+from domain.predicates import (
+    has_multiple_channel_actions,
 )
 
 
@@ -183,9 +191,13 @@ def parse_args() -> ArgsNamespace:
     )
     for field, default in DEFAULT_CHANNEL_VALUES.items():
         group_channel_actions.add_argument(
-            f"--set-{field.replace('_', '-')}",
+            FORMAT_CHANNEL_SET_OPTION.format(
+                field=field.replace("_", "-"),
+            ),
             const=default,
-            dest=f"set_{field}",
+            dest=FORMAT_CHANNEL_SET_DEST.format(
+                field=field,
+            ),
             help=CLI_UPDATE_CHANNELS_CHANNEL_ACTIONS_SET_FIELD_TEMPLATE.format(
                 field=field,
             ),
@@ -195,19 +207,6 @@ def parse_args() -> ArgsNamespace:
         )
 
     args = parser.parse_args()
-
-    action_count = sum((
-        args.delete_channels,
-        args.reset_all or any(
-            getattr(args, f"set_{field}", None) is not None
-            for field in DEFAULT_CHANNEL_VALUES
-        ),
-    ))
-
-    if action_count > 1:
-        parser.error(
-            message=MESSAGE_ERROR_MULTIPLE_ACTIONS_SPECIFIED,
-        )
 
     set_console_level(
         logger=logger,
@@ -222,6 +221,19 @@ def parse_args() -> ArgsNamespace:
             ),
         ),
     )
+
+    if has_multiple_channel_actions(
+        has_overrides=bool(
+            get_channel_overrides(
+                args=args,
+            ),
+        ),
+        reset_to_defaults=args.reset_all,
+        should_delete=args.delete_channels,
+    ):
+        parser.error(
+            message=MESSAGE_ERROR_MULTIPLE_ACTIONS_SPECIFIED,
+        )
 
     return args
 
@@ -245,7 +257,13 @@ async def main() -> None:
         )
         current_channels = process_channels(
             channels=current_channels,
-            args=parsed_args,
+            channel_filter=parsed_args.channel_filter,
+            channel_overrides=get_channel_overrides(
+                args=parsed_args,
+            ),
+            dry_run=parsed_args.dry_run,
+            reset_to_defaults=parsed_args.reset_all,
+            should_delete=parsed_args.delete_channels,
         )
 
         await save_channels_and_urls(

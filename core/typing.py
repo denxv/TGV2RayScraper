@@ -88,6 +88,7 @@ __all__ = [
     "SortKey",
     "SortKeys",
     "T",
+    "TableStr",
     "TemplateStr",
     "TypeAlias",
     "TypeVar",
@@ -143,6 +144,7 @@ ProtocolName: TypeAlias = str
 RegexPattern: TypeAlias = str
 RegexTarget: TypeAlias = object
 ScriptName: TypeAlias = str
+TableStr: TypeAlias = str
 TemplateStr: TypeAlias = str
 URL: TypeAlias = str
 

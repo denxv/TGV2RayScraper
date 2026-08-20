@@ -16,6 +16,7 @@ from core.constants.cli import *
 from core.constants.messages.error import *
 from core.constants.messages.info import *
 from core.constants.messages.warning import *
+from core.constants.tables import *
 from core.constants.templates.debug import (
     common as _debug,
 )
@@ -163,7 +164,7 @@ if _common.CURRENT_LANG != _common.DEFAULT_LANG:
     )
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     constants_json = dumps(
         obj={
             name: value

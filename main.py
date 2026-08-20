@@ -36,6 +36,10 @@ from core.constants.common import (
     HTTP_TIMEOUT_MIN,
     SUPPRESS,
 )
+from core.constants.formats import (
+    FORMAT_CHANNEL_SET_DEST,
+    FORMAT_CHANNEL_SET_OPTION,
+)
 from core.constants.locales import (
     CLI_MAIN_DESCRIPTION,
     CLI_MAIN_EPILOG,
@@ -43,6 +47,7 @@ from core.constants.locales import (
     CLI_MAIN_GLOBAL_OPTIONS_GROUP_TITLE,
     CLI_MAIN_GLOBAL_OPTIONS_HELP_SCRIPTS,
     CLI_MAIN_GLOBAL_OPTIONS_HELP_SCRIPTS_METAVAR,
+    MESSAGE_ERROR_MULTIPLE_ACTIONS_SPECIFIED,
     MESSAGE_ERROR_UNEXPECTED_FAILURE,
     MESSAGE_INFO_PROGRAM_EXIT,
     TEMPLATE_ERROR_FAILED_SCRIPT_EXECUTION,
@@ -70,11 +75,15 @@ from core.typing import (
 from core.utils import (
     collect_args,
     convert_number_in_range,
+    get_channel_overrides,
     normalize_condition,
     normalize_valid_fields,
     rel_path,
     validate_file_path,
     validate_proxy_url,
+)
+from domain.predicates import (
+    has_multiple_channel_actions,
 )
 
 
@@ -111,12 +120,14 @@ def parse_args() -> ArgsNamespace:
 
     parser.add_argument(
         "--channel-filter",
+        dest="channel_filter",
         help=SUPPRESS,
         type=normalize_condition,
     )
 
     parser.add_argument(
         "--channels",
+        dest="channels_path",
         help=SUPPRESS,
         type=lambda path: validate_file_path(
             path=path,
@@ -126,6 +137,7 @@ def parse_args() -> ArgsNamespace:
 
     parser.add_argument(
         "--channels-batch",
+        dest="channels_batch",
         help=SUPPRESS,
         type=lambda value: convert_number_in_range(
             value=value,
@@ -138,6 +150,7 @@ def parse_args() -> ArgsNamespace:
 
     parser.add_argument(
         "--channels-concurrency",
+        dest="channels_concurrency",
         help=SUPPRESS,
         type=lambda value: convert_number_in_range(
             value=value,
@@ -150,12 +163,14 @@ def parse_args() -> ArgsNamespace:
 
     parser.add_argument(
         "--config-filter",
+        dest="config_filter",
         help=SUPPRESS,
         type=normalize_condition,
     )
 
     parser.add_argument(
         "--configs-batch",
+        dest="configs_batch",
         help=SUPPRESS,
         type=lambda value: convert_number_in_range(
             value=value,
@@ -168,6 +183,7 @@ def parse_args() -> ArgsNamespace:
 
     parser.add_argument(
         "--configs-clean",
+        dest="configs_clean",
         help=SUPPRESS,
         type=lambda path: validate_file_path(
             path=path,
@@ -177,6 +193,7 @@ def parse_args() -> ArgsNamespace:
 
     parser.add_argument(
         "--configs-raw",
+        dest="configs_raw",
         help=SUPPRESS,
         type=lambda path: validate_file_path(
             path=path,
@@ -186,6 +203,7 @@ def parse_args() -> ArgsNamespace:
 
     parser.add_argument(
         "--delete-channels",
+        dest="delete_channels",
         action="store_true",
         help=SUPPRESS,
     )
@@ -193,6 +211,7 @@ def parse_args() -> ArgsNamespace:
     parser.add_argument(
         "--duplicate",
         const="",
+        dest="duplicate",
         help=SUPPRESS,
         nargs="?",
         type=normalize_valid_fields,
@@ -201,6 +220,7 @@ def parse_args() -> ArgsNamespace:
     parser.add_argument(
         "--export",
         const=DEFAULT_PATH_CONFIGS_EXPORT,
+        dest="export",
         help=SUPPRESS,
         nargs="?",
         type=lambda path: validate_file_path(
@@ -218,6 +238,7 @@ def parse_args() -> ArgsNamespace:
     parser.add_argument(
         "--import",
         const=DEFAULT_PATH_CONFIGS_IMPORT,
+        dest="import",
         help=SUPPRESS,
         nargs="?",
         type=lambda path: validate_file_path(
@@ -229,12 +250,14 @@ def parse_args() -> ArgsNamespace:
     parser.add_argument(
         "--no-dry-run",
         action="store_true",
+        dest="no_dry_run",
         help=SUPPRESS,
     )
 
     parser.add_argument(
         "--proxy",
         const=DEFAULT_PROXY_URL,
+        dest="proxy",
         help=SUPPRESS,
         nargs="?",
         type=validate_proxy_url,
@@ -243,11 +266,13 @@ def parse_args() -> ArgsNamespace:
     parser.add_argument(
         "--reset-all",
         action="store_true",
+        dest="reset_all",
         help=SUPPRESS,
     )
 
     parser.add_argument(
         "--retries",
+        dest="retries",
         help=SUPPRESS,
         type=lambda value: convert_number_in_range(
             value=value,
@@ -260,6 +285,7 @@ def parse_args() -> ArgsNamespace:
 
     parser.add_argument(
         "--retry-delay",
+        dest="retry_delay",
         help=SUPPRESS,
         type=lambda value: convert_number_in_range(
             value=value,
@@ -273,12 +299,18 @@ def parse_args() -> ArgsNamespace:
     parser.add_argument(
         "--reverse",
         action="store_true",
+        dest="reverse",
         help=SUPPRESS,
     )
 
     for field in DEFAULT_CHANNEL_VALUES:
         parser.add_argument(
-            f"--set-{field.replace('_', '-')}",
+            FORMAT_CHANNEL_SET_OPTION.format(
+                field=field.replace("_", "-"),
+            ),
+            dest=FORMAT_CHANNEL_SET_DEST.format(
+                field=field,
+            ),
             help=SUPPRESS,
             type=lambda value: convert_number_in_range(
                 value=value,
@@ -290,24 +322,28 @@ def parse_args() -> ArgsNamespace:
     parser.add_argument(
         "--skip-backup",
         action="store_true",
+        dest="skip_backup",
         help=SUPPRESS,
     )
 
     parser.add_argument(
         "--skip-normalize",
         action="store_true",
+        dest="skip_normalize",
         help=SUPPRESS,
     )
 
     parser.add_argument(
         "--skip-update",
         action="store_true",
+        dest="skip_update",
         help=SUPPRESS,
     )
 
     parser.add_argument(
         "--sort",
         const="",
+        dest="sort",
         help=SUPPRESS,
         nargs="?",
         type=normalize_valid_fields,
@@ -315,6 +351,7 @@ def parse_args() -> ArgsNamespace:
 
     parser.add_argument(
         "--time-out",
+        dest="time_out",
         help=SUPPRESS,
         type=lambda value: convert_number_in_range(
             value=value,
@@ -327,6 +364,7 @@ def parse_args() -> ArgsNamespace:
 
     parser.add_argument(
         "--urls",
+        dest="urls",
         help=SUPPRESS,
         type=lambda path: validate_file_path(
             path=path,
@@ -349,6 +387,19 @@ def parse_args() -> ArgsNamespace:
             ),
         ),
     )
+
+    if has_multiple_channel_actions(
+        has_overrides=bool(
+            get_channel_overrides(
+                args=args,
+            ),
+        ),
+        reset_to_defaults=args.reset_all,
+        should_delete=args.delete_channels,
+    ):
+        parser.error(
+            message=MESSAGE_ERROR_MULTIPLE_ACTIONS_SPECIFIED,
+        )
 
     return args
 
@@ -405,10 +456,12 @@ def run_script(
         ),
     )
 
-    if subprocess_run(  # noqa: S603
+    result = subprocess_run(  # noqa: S603
         args=arguments,
         check=False,
-    ).returncode:
+    )
+
+    if result.returncode != 0:
         raise RuntimeError(
             TEMPLATE_ERROR_FAILED_SCRIPT_EXECUTION.format(
                 name=script_name,

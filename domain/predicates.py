@@ -24,6 +24,7 @@ from core.utils import (
 )
 
 __all__ = [
+    "has_multiple_channel_actions",
     "is_channel_available",
     "is_channel_fully_scanned",
     "is_channel_pending_update",
@@ -32,6 +33,20 @@ __all__ = [
     "should_apply_changes",
     "should_delete_channel",
 ]
+
+
+def has_multiple_channel_actions(
+    *,
+    has_overrides: bool,
+    reset_to_defaults: bool,
+    should_delete: bool,
+) -> bool:
+    actions: tuple[bool, ...] = (
+        should_delete,
+        has_overrides or reset_to_defaults,
+    )
+
+    return sum(actions) > 1
 
 
 def is_channel_available(

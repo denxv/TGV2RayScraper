@@ -56,15 +56,16 @@ from core.terminal.renderers import (
     render_channel_status,
 )
 from core.typing import (
-    ArgsNamespace,
     ChannelInfo,
     ChannelName,
     ChannelNames,
     ChannelsDict,
+    ConditionStr,
     PostID,
     RecordPredicate,
 )
 from domain.predicates import (
+    has_multiple_channel_actions,
     is_channel_pending_update,
     make_predicate,
     should_apply_changes,
@@ -120,7 +121,7 @@ def apply_channel_changes(
     reset_to_defaults: bool = False,
 ) -> ChannelsDict:
     should_apply = channel_predicate or should_apply_changes
-    overrides: ChannelInfo = channel_overrides or {}    # type: ignore[assignment]
+    overrides: ChannelInfo = channel_overrides or {}  # type: ignore[assignment]
 
     if invalid_fields := set(overrides) - set(DEFAULT_CHANNEL_VALUES):
         raise ValueError(
@@ -521,29 +522,28 @@ def normalize_channels(
 
 def process_channels(
     channels: ChannelsDict,
-    args: ArgsNamespace,
+    *,
+    channel_filter: ConditionStr | None = None,
+    channel_overrides: ChannelInfo | None = None,
+    dry_run: bool = True,
+    reset_to_defaults: bool = False,
+    should_delete: bool = False,
 ) -> ChannelsDict:
-    channel_overrides: ChannelInfo = {  # type: ignore[assignment]
-        key: value
-        for key in DEFAULT_CHANNEL_VALUES
-        if (value := getattr(args, f"set_{key}", None)) is not None
-    }
     channel_predicate = make_predicate(
-        condition=args.channel_filter,
+        condition=channel_filter,
     )
 
-    action_count = sum((
-        args.delete_channels,
-        bool(channel_overrides) or args.reset_all,
-    ))
-
-    if action_count > 1:
+    if has_multiple_channel_actions(
+        has_overrides=bool(channel_overrides),
+        reset_to_defaults=reset_to_defaults,
+        should_delete=should_delete,
+    ):
         logger.error(
             msg=MESSAGE_ERROR_MULTIPLE_ACTIONS_SPECIFIED,
         )
         return channels
 
-    if args.delete_channels:
+    if should_delete:
         channels = delete_channels(
             channels=channels,
             channel_predicate=channel_predicate,
@@ -553,13 +553,13 @@ def process_channels(
             msg=MESSAGE_INFO_CHANNEL_DELETE_SKIPPED,
         )
 
-    if channel_overrides or args.reset_all:  # type: ignore[unreachable]
+    if channel_overrides or reset_to_defaults:
         channels = apply_channel_changes(
             channels=channels,
             channel_overrides=channel_overrides,
             channel_predicate=channel_predicate,
-            dry_run=args.dry_run,
-            reset_to_defaults=args.reset_all,
+            dry_run=dry_run,
+            reset_to_defaults=reset_to_defaults,
         )
 
     return channels

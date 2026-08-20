@@ -169,3 +169,11 @@ def render_config_extract(
             pad=CHANNEL_TABLE_PADDING,
         ),
     )
+
+
+if __name__ == "__main__":  # pragma: no cover
+    console.print(
+        create_extract_table(),
+        create_status_table(),
+        create_updates_table(),
+    )

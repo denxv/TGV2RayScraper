@@ -22,6 +22,9 @@ from rich.table import (
 from core.constants.common import (
     PROGRESS_REMOVE_DELAY_DEFAULT,
 )
+from core.constants.templates.common import (
+    TEMPLATE_PROGRESS_DESCRIPTION,
+)
 from core.terminal.console import (
     console,
 )
@@ -102,3 +105,18 @@ def progress_update_task(
         advance=advance,
         **kwargs,  # type: ignore[arg-type]
     )
+
+
+if __name__ == "__main__":  # pragma: no cover
+    progress = create_extract_progress()
+
+    progress.add_task(
+        description=TEMPLATE_PROGRESS_DESCRIPTION.format(
+            name="channel_test",
+            found=12345,
+        ),
+        completed=1,
+        total=1,
+    )
+
+    console.print(progress)

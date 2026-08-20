@@ -34,6 +34,7 @@ from tests.unit.domain.constants.fixtures.channel import (
 )
 
 __all__ = [
+    "HAS_MULTIPLE_CHANNEL_ACTIONS_EXAMPLES",
     "IS_CHANNEL_AVAILABLE_EXAMPLES",
     "IS_CHANNEL_FULLY_SCANNED_EXAMPLES",
     "IS_CHANNEL_PENDING_UPDATE_EXAMPLES",
@@ -42,6 +43,74 @@ __all__ = [
     "SHOULD_APPLY_CHANGES_EXAMPLES",
     "SHOULD_DELETE_CHANNEL_EXAMPLES",
 ]
+
+HAS_MULTIPLE_CHANNEL_ACTIONS_EXAMPLES: tuple[
+    tuple[
+        bool,
+        bool,
+        bool,
+        bool,
+        str,
+    ],
+    ...,
+] = (
+    (
+        True,
+        True,
+        True,
+        True,
+        "all_actions",
+    ),
+    (
+        False,
+        False,
+        True,
+        False,
+        "delete_only",
+    ),
+    (
+        False,
+        False,
+        False,
+        False,
+        "no_actions",
+    ),
+    (
+        True,
+        False,
+        True,
+        True,
+        "overrides_and_delete",
+    ),
+    (
+        True,
+        True,
+        False,
+        False,
+        "overrides_and_reset",
+    ),
+    (
+        True,
+        False,
+        False,
+        False,
+        "overrides_only",
+    ),
+    (
+        False,
+        True,
+        True,
+        True,
+        "reset_and_delete",
+    ),
+    (
+        False,
+        True,
+        False,
+        False,
+        "reset_only",
+    ),
+)
 
 IS_CHANNEL_AVAILABLE_EXAMPLES: tuple[
     tuple[

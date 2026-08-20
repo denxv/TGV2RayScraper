@@ -988,14 +988,14 @@ PROCESS_CHANNELS_CALLS_EXAMPLES: tuple[
     ),
     (
         False,
-        True,
         False,
+        True,
         "delete_only",
     ),
     (
         True,
-        True,
         False,
+        True,
         "delete_only_dry_run",
     ),
     (
@@ -1006,14 +1006,14 @@ PROCESS_CHANNELS_CALLS_EXAMPLES: tuple[
     ),
     (
         False,
-        False,
         True,
+        False,
         "reset_all_only",
     ),
     (
         True,
-        False,
         True,
+        False,
         "reset_all_only_dry_run",
     ),
 )

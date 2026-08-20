@@ -24,6 +24,7 @@ from core.constants.formats import (
 from core.constants.locales import (
     MESSAGE_ERROR_SSR_MISSING_BASE64,
     MESSAGE_WARNING_CHANNEL_DEDUPLICATION_SKIPPED,
+    MESSAGE_WARNING_CONFIG_SORT_SKIPPED,
     TEMPLATE_ERROR_CONFIG_MISSING_REQUIRED_FIELDS,
     TEMPLATE_ERROR_CONFIG_URL_PARSE_FAILED,
     TEMPLATE_ERROR_VMESS_JSON_DECODE_FAILED,
@@ -57,7 +58,6 @@ from core.terminal.logger import (
     logger,
 )
 from core.typing import (
-    ArgsNamespace,
     ConditionStr,
     ConfigFields,
     SortKeys,
@@ -535,27 +535,30 @@ def normalize_vmess_base64(
 def process_configs(
     configs: V2RayConfigs,
     *,
-    args: ArgsNamespace,
+    config_filter: ConditionStr | None = None,
+    duplicate_fields: ConfigFields | None = None,
+    sort_fields: ConfigFields | None = None,
+    reverse: bool = False,
 ) -> V2RayConfigs:
     _configs: V2RayConfigs = configs
 
-    if args.config_filter:
+    if config_filter:
         _configs = filter_by_condition(
             configs=_configs,
-            condition=args.config_filter,
+            condition=config_filter,
         )
 
-    if args.duplicate:
+    if duplicate_fields:
         _configs = remove_duplicates_by_fields(
             configs=_configs,
-            fields=args.duplicate,
+            fields=duplicate_fields,
         )
 
-    if args.sort:
+    if sort_fields:
         _configs = sort_by_fields(
             configs=_configs,
-            fields=args.sort,
-            reverse=args.reverse,
+            fields=sort_fields,
+            reverse=reverse,
         )
 
     return _configs
@@ -633,6 +636,9 @@ def sort_by_fields(
     )
 
     if not fields:
+        logger.warning(
+            msg=MESSAGE_WARNING_CONFIG_SORT_SKIPPED,
+        )
         return configs
 
     def sort_key(

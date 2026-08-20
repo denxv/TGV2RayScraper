@@ -606,6 +606,8 @@ All dev-dependencies are listed in [`requirements-dev.txt`](requirements-dev.txt
 
     * `formats.py` - formats for dates, times, log file names, backups and URL assembly
 
+    * `tables.py` - table titles and column labels for `rich` tables
+
   * **terminal/** - command-line interface components based on `rich`
 
     * `console.py` - global console with custom color theme for logging

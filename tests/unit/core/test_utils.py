@@ -15,6 +15,8 @@ from unittest.mock import (
 import pytest
 
 from core.typing import (
+    ArgsNamespace,
+    ChannelInfo,
     Iterable,
     Sized,
 )
@@ -27,6 +29,7 @@ from core.utils import (
     convert_number_in_range,
     flag_to_name,
     get_batches_count,
+    get_channel_overrides,
     make_backup,
     name_to_flag,
     normalize_condition,
@@ -77,6 +80,8 @@ from tests.unit.core.constants.test_cases.utils import (
     FLAG_NAME_ROUNDTRIP_CASES,
     GET_BATCHES_COUNT_ARGS,
     GET_BATCHES_COUNT_CASES,
+    GET_CHANNEL_OVERRIDES_ARGS,
+    GET_CHANNEL_OVERRIDES_CASES,
     NORMALIZE_CONDITION_INVALID_ARGS,
     NORMALIZE_CONDITION_INVALID_CASES,
     NORMALIZE_CONDITION_VALID_ARGS,
@@ -377,6 +382,22 @@ def test_get_batches_count(
     )
 
     assert isinstance(result, int)
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    GET_CHANNEL_OVERRIDES_ARGS,
+    GET_CHANNEL_OVERRIDES_CASES,
+)
+def test_get_channel_overrides(
+    args: ArgsNamespace,
+    expected: ChannelInfo,
+) -> None:
+    result = get_channel_overrides(
+        args=args,
+    )
+
+    assert isinstance(result, dict)
     assert result == expected
 
 

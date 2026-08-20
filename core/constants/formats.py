@@ -7,6 +7,8 @@ __all__ = [
     "FORMAT_BACKUP_FILENAME",
     "FORMAT_BASE64_PADDING",
     "FORMAT_CHANNEL_CHANGE",
+    "FORMAT_CHANNEL_SET_DEST",
+    "FORMAT_CHANNEL_SET_OPTION",
     "FORMAT_CONFIG_NAME",
     "FORMAT_CONFIG_SSR_BODY",
     "FORMAT_CONFIG_URL",
@@ -39,6 +41,12 @@ FORMAT_CHANNEL_CHANGE: FormatStr = (
     "{before}"
     " -> "
     "{after}"
+)
+FORMAT_CHANNEL_SET_DEST: FormatStr = (
+    "set_{field}"
+)
+FORMAT_CHANNEL_SET_OPTION: FormatStr = (
+    "--set-{field}"
 )
 FORMAT_CONFIG_NAME: FormatStr = (
     "{protocol}"

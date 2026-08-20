@@ -1,6 +1,3 @@
-from argparse import (
-    Namespace,
-)
 from unittest.mock import (
     ANY,
     Mock,
@@ -46,6 +43,7 @@ from domain.channel import (
     update_with_new_channels,
 )
 from domain.predicates import (
+    has_multiple_channel_actions,
     should_apply_changes,
     should_delete_channel,
 )
@@ -513,8 +511,8 @@ def test_process_channels_calls(
     mocker: MockerFixture,
     *,
     dry_run: bool,
-    delete_channels_flag: bool,
     reset_all: bool,
+    should_delete: bool,
 ) -> None:
     channels = CHANNEL_INFO_BY_NAMES([
         "channel_available",
@@ -531,30 +529,20 @@ def test_process_channels_calls(
         wraps=delete_channels,
     )
 
-    action_count = sum((
-        delete_channels_flag,
-        reset_all,
-    ))
-
-    args = Namespace(
-        channel_filter=None,
-        dry_run=dry_run,
-        delete_channels=delete_channels_flag,
-        reset_all=reset_all,
-    )
-
-    channel_overrides = {
-        key: value
-        for key in DEFAULT_CHANNEL_VALUES
-        if (value := getattr(args, f"set_{key}", None)) is not None
-    }
-
     result = process_channels(
         channels=channels,
-        args=args,
+        channel_filter=None,
+        channel_overrides=None,
+        dry_run=dry_run,
+        reset_to_defaults=reset_all,
+        should_delete=should_delete,
     )
 
-    if action_count > 1:
+    if has_multiple_channel_actions(
+        has_overrides=False,
+        reset_to_defaults=reset_all,
+        should_delete=should_delete,
+    ):
         assert result is channels
 
         mock_logger.error.assert_any_call(
@@ -566,12 +554,12 @@ def test_process_channels_calls(
 
         return
 
-    if delete_channels_flag or reset_all:
+    if should_delete or reset_all:
         assert result is not channels
     else:
         assert result is channels
 
-    if delete_channels_flag:
+    if should_delete:
         mock_delete.assert_called_once_with(
             channels=channels,
             channel_predicate=ANY,
@@ -582,10 +570,10 @@ def test_process_channels_calls(
         )
         mock_delete.assert_not_called()
 
-    if channel_overrides or reset_all:
+    if reset_all:
         mock_apply.assert_called_once_with(
             channels=ANY,
-            channel_overrides=channel_overrides,
+            channel_overrides=ANY,
             channel_predicate=ANY,
             dry_run=dry_run,
             reset_to_defaults=reset_all,

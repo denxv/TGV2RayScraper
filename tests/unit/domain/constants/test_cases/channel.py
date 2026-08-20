@@ -409,8 +409,8 @@ PROCESS_CHANNELS_CALLS_ARGS: tuple[
     ...,
 ] = (
     "dry_run",
-    "delete_channels_flag",
     "reset_all",
+    "should_delete",
 )
 PROCESS_CHANNELS_CALLS_CASES: tuple[
     object,
@@ -418,14 +418,14 @@ PROCESS_CHANNELS_CALLS_CASES: tuple[
 ] = tuple(
     pytest.param(
         dry_run,
-        delete_channels_flag,
         reset_all,
+        should_delete,
         id=case_id,
     )
     for (
         dry_run,
-        delete_channels_flag,
         reset_all,
+        should_delete,
         case_id,
     ) in PROCESS_CHANNELS_CALLS_EXAMPLES
 )

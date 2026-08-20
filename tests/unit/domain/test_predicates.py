@@ -6,6 +6,7 @@ from core.typing import (
     Record,
 )
 from domain.predicates import (
+    has_multiple_channel_actions,
     is_channel_available,
     is_channel_fully_scanned,
     is_channel_pending_update,
@@ -15,6 +16,8 @@ from domain.predicates import (
     should_delete_channel,
 )
 from tests.unit.domain.constants.test_cases.predicates import (
+    HAS_MULTIPLE_CHANNEL_ACTIONS_ARGS,
+    HAS_MULTIPLE_CHANNEL_ACTIONS_CASES,
     IS_CHANNEL_AVAILABLE_ARGS,
     IS_CHANNEL_AVAILABLE_CASES,
     IS_CHANNEL_FULLY_SCANNED_ARGS,
@@ -30,6 +33,26 @@ from tests.unit.domain.constants.test_cases.predicates import (
     SHOULD_DELETE_CHANNEL_ARGS,
     SHOULD_DELETE_CHANNEL_CASES,
 )
+
+
+@pytest.mark.parametrize(
+    HAS_MULTIPLE_CHANNEL_ACTIONS_ARGS,
+    HAS_MULTIPLE_CHANNEL_ACTIONS_CASES,
+)
+def test_has_multiple_channel_actions(
+    *,
+    has_overrides: bool,
+    reset_to_defaults: bool,
+    should_delete: bool,
+    expected: bool,
+) -> None:
+    result = has_multiple_channel_actions(
+        has_overrides=has_overrides,
+        reset_to_defaults=reset_to_defaults,
+        should_delete=should_delete,
+    )
+
+    assert result is expected
 
 
 @pytest.mark.parametrize(

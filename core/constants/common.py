@@ -15,6 +15,9 @@ from urllib.request import (
     getproxies,
 )
 
+from core.constants.formats import (
+    FORMAT_CHANNEL_SET_OPTION,
+)
 from core.typing import (
     ChannelInfo,
     Padding,
@@ -197,7 +200,9 @@ CLI_SCRIPTS_CONFIG: dict[ScriptName, ScriptConfig] = {
     "update_channels": {
         "flags": sorted([
             *(
-                f"--set-{field.replace('_', '-')}"
+                FORMAT_CHANNEL_SET_OPTION.format(
+                    field=field.replace("_", "-"),
+                )
                 for field in DEFAULT_CHANNEL_VALUES
             ),
             "--channel-filter",
