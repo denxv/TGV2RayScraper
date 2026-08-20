@@ -5,6 +5,7 @@ requires-python = ">=3.10"
 dependencies = [
     "aiofiles",
     "asteval",
+    "babel",
     "httpx[socks]",
     "lxml",
     "rich",

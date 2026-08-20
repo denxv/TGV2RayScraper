@@ -490,6 +490,8 @@ The project requires the following Python libraries (works with Python 3.10+):
 
 * **asteval** – safe evaluation of Python expressions (used for filtering channels and configurations)
 
+* **babel** – internationalization, current user locale detection, and cross-platform locale support
+
 * **httpx[socks]** – modern HTTP client with async support and SOCKS proxy capabilities (includes `socksio` dependency)
 
 * **lxml** – parsing and processing HTML/XML

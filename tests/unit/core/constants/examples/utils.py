@@ -65,7 +65,9 @@ ABS_PATH_ABSOLUTE_EXAMPLES: tuple[
         "home_path",
     ),
     (
-        "/etc/default",
+        str(
+            Path("/etc/default").resolve(),
+        ),
         "etc_default",
     ),
     (

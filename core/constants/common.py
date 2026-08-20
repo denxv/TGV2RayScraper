@@ -1,9 +1,6 @@
 from argparse import (
     SUPPRESS,
 )
-from locale import (
-    getlocale,
-)
 from logging import (
     DEBUG,
     INFO,
@@ -13,6 +10,11 @@ from pathlib import (
 )
 from urllib.request import (
     getproxies,
+)
+
+from babel import (
+    Locale,
+    UnknownLocaleError,
 )
 
 from core.constants.formats import (
@@ -94,6 +96,18 @@ __all__ = [
     "XPATH_TG_MESSAGES_TEXT",
 ]
 
+
+def _get_current_lang() -> str:
+    try:
+        return Locale.default().language or DEFAULT_LANG
+    except (
+        TypeError,
+        ValueError,
+        UnknownLocaleError,
+    ):
+        return DEFAULT_LANG
+
+
 _ENV_PROXIES: dict[str, str] = getproxies()
 
 BASE64_BLOCK_SIZE: int = 4
@@ -129,7 +143,7 @@ DEFAULT_JSON_INDENT: int = 4
 DEFAULT_LOGGER_NAME: str = "TGV2RayScraper"
 
 DEFAULT_LANG: str = "en"
-CURRENT_LANG: str = (getlocale()[0] or DEFAULT_LANG).partition("_")[0]
+CURRENT_LANG: str = _get_current_lang()
 
 DEFAULT_PATH_PROJECT: Path = (Path(__file__).parent / "../../").resolve()
 
