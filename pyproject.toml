@@ -1,6 +1,6 @@
 [project]
 name = "TGV2RayScraper"
-version = "1.9.0"
+version = "1.9.1"
 requires-python = ">=3.10"
 dependencies = [
     "aiofiles",
