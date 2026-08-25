@@ -965,12 +965,6 @@
         "last_id": -1,
         "state": 0
     },
-    "vpn_amneziya_hiddify": {
-        "count": 0,
-        "current_id": 1,
-        "last_id": -1,
-        "state": 0
-    },
     "vpn_click": {
         "count": 0,
         "current_id": 1,
