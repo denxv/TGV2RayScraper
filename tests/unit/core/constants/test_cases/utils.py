@@ -20,6 +20,7 @@ from tests.unit.core.constants.examples.utils import (
     NORMALIZE_CONDITION_VALID_EXAMPLES,
     NORMALIZE_SCALAR_EXAMPLES,
     NORMALIZE_VALID_FIELDS_VALID_EXAMPLES,
+    PARSE_CONFIG_NAME_FORMAT_INVALID_EXAMPLES,
     PARSE_VALID_FIELDS_INVALID_EXAMPLES,
     RE_FULLMATCH_AND_SEARCH_EXAMPLES,
     REL_PATH_EXAMPLES,
@@ -67,6 +68,8 @@ __all__ = [
     "NORMALIZE_SCALAR_CASES",
     "NORMALIZE_VALID_FIELDS_VALID_ARGS",
     "NORMALIZE_VALID_FIELDS_VALID_CASES",
+    "PARSE_CONFIG_NAME_FORMAT_INVALID_ARGS",
+    "PARSE_CONFIG_NAME_FORMAT_INVALID_CASES",
     "PARSE_VALID_FIELDS_INVALID_ARGS",
     "PARSE_VALID_FIELDS_INVALID_CASES",
     "REL_PATH_ARGS",
@@ -539,6 +542,26 @@ NORMALIZE_VALID_FIELDS_VALID_CASES: tuple[
         expected,
         case_id,
     ) in NORMALIZE_VALID_FIELDS_VALID_EXAMPLES
+)
+
+PARSE_CONFIG_NAME_FORMAT_INVALID_ARGS: tuple[
+    str,
+    ...,
+] = (
+    "invalid_input",
+)
+PARSE_CONFIG_NAME_FORMAT_INVALID_CASES: tuple[
+    object,
+    ...,
+] = tuple(
+    pytest.param(
+        invalid_input,
+        id=case_id,
+    )
+    for (
+        invalid_input,
+        case_id,
+    ) in PARSE_CONFIG_NAME_FORMAT_INVALID_EXAMPLES
 )
 
 PARSE_VALID_FIELDS_INVALID_ARGS: tuple[

@@ -92,6 +92,7 @@ __all__ = [
     "TELEGRAM_POST_PAGE_SIZE",
     "TEXT_LENGTH_NAME",
     "TEXT_LENGTH_NUMBER",
+    "VMESS_TO_CONFIG_FIELD_MAPPING",
     "XPATH_POST_IDS",
     "XPATH_TG_MESSAGES_TEXT",
 ]
@@ -247,6 +248,7 @@ CLI_SCRIPTS_CONFIG: dict[ScriptName, ScriptConfig] = {
     "v2ray_cleaner": {
         "flags": [
             "--config-filter",
+            "--config-name-format",
             "--configs-clean",
             "--configs-raw",
             "--debug",
@@ -258,6 +260,15 @@ CLI_SCRIPTS_CONFIG: dict[ScriptName, ScriptConfig] = {
             "--sort",
         ],
     },
+}
+
+VMESS_TO_CONFIG_FIELD_MAPPING: dict[str, str] = {
+    "scy": "method",
+    "id": "uuid",
+    "add": "host",
+    "port": "port",
+    "path": "path",
+    "ps": "name",
 }
 
 DEFAULT_PROXY_URL: str = (

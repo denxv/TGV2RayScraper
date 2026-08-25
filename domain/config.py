@@ -7,15 +7,18 @@ from json import (
 )
 from urllib.parse import (
     parse_qsl,
+    quote,
     unquote,
     urlencode,
 )
 
 from core.constants.common import (
     DEFAULT_JSON_INDENT,
+    VMESS_TO_CONFIG_FIELD_MAPPING,
 )
 from core.constants.formats import (
-    FORMAT_CONFIG_NAME,
+    FORMAT_CONFIG_NAME_DEFAULT,
+    FORMAT_CONFIG_NAME_PARSER,
     FORMAT_CONFIG_SSR_BODY,
     FORMAT_CONFIG_URL,
     FORMAT_CONFIG_URL_BODY,
@@ -52,6 +55,7 @@ from core.constants.patterns.v2ray.url import (
     PATTERN_URL_SSR_PLAIN,
 )
 from core.constants.templates.debug.config import (
+    TEMPLATE_DEBUG_CONFIG_NORMALIZE_NAME_FORMAT_FAILED,
     TEMPLATE_DEBUG_CONFIG_UNEXPECTED_FAILURE,
 )
 from core.terminal.logger import (
@@ -60,6 +64,9 @@ from core.terminal.logger import (
 from core.typing import (
     ConditionStr,
     ConfigFields,
+    ConfigURLGenerator,
+    FormatStr,
+    JSONDefault,
     SortKeys,
     V2RayConfig,
     V2RayConfigRaw,
@@ -79,6 +86,8 @@ from domain.predicates import (
 __all__ = [
     "ConfigExtractionResult",
     "filter_by_condition",
+    "format_config_name",
+    "iter_formatted_config_urls",
     "line_to_configs",
     "normalize_config",
     "normalize_config_base64",
@@ -97,6 +106,25 @@ class ConfigExtractionResult:
     channel_name: str
     total_found: int
     new_found: int
+
+
+def _dumps_config(
+    config: V2RayConfig | V2RayConfigRaw,
+    *,
+    default: JSONDefault = str,
+    ensure_ascii: bool = False,
+    indent: int = DEFAULT_JSON_INDENT,
+    sort_keys: bool = True,
+    **kwargs: object,
+) -> str:
+    return dumps(
+        obj=config,
+        default=default,
+        ensure_ascii=ensure_ascii,
+        indent=indent,
+        sort_keys=sort_keys,
+        **kwargs,  # type: ignore[arg-type]
+    )
 
 
 def filter_by_condition(
@@ -130,6 +158,72 @@ def filter_by_condition(
     return filtered_configs
 
 
+def format_config_name(
+    config: V2RayConfig | V2RayConfigRaw,
+    *,
+    format_string: FormatStr | None = None,
+) -> str:
+    config_name = str(config.get("name", ""))
+
+    if not config or format_string is None:
+        return config_name
+
+    for _format_string in (
+        format_string,
+        FORMAT_CONFIG_NAME_DEFAULT,
+    ):
+        try:
+            return FORMAT_CONFIG_NAME_PARSER.format(
+                _format_string,
+                **config,
+            )
+        except (  # noqa: PERF203
+            IndexError,
+            KeyError,
+            TypeError,
+            ValueError,
+        ) as e:
+            logger.debug(
+                msg=TEMPLATE_DEBUG_CONFIG_NORMALIZE_NAME_FORMAT_FAILED.format(
+                    exc_type=type(e).__name__,
+                    exc_msg=str(e),
+                    format_string=_format_string,
+                    config=_dumps_config(
+                        config=config,
+                    ),
+                ),
+            )
+
+    return config_name
+
+
+def iter_formatted_config_urls(
+    configs: V2RayConfigs | V2RayConfigsRaw,
+) -> ConfigURLGenerator:
+    for config in configs:
+        url = config.get("url")
+
+        if not (url and isinstance(url, str)):
+            continue
+
+        name = config.get("name")
+        protocol = config.get("protocol")
+
+        if name and protocol not in (
+            "ssr",
+            "vmess",
+        ):
+            url = FORMAT_CONFIG_URL.format(
+                url=url,
+                name=quote(
+                    string=str(name),
+                    safe="%",
+                ),
+            )
+
+        yield url
+
+
 def line_to_configs(
     line: str,
 ) -> V2RayConfigRawIterator:
@@ -138,8 +232,9 @@ def line_to_configs(
             default="",
         )
         for url_match in PATTERN_V2RAY_URL_DETECTOR.finditer(
-            string=unquote(
+            string=quote(
                 string=line.strip(),
+                safe="%",
             ),
         )
         for pattern in PATTERNS_V2RAY_URLS_BY_PROTOCOL.get(
@@ -147,30 +242,36 @@ def line_to_configs(
             (),
         )
         for config_match in pattern.finditer(
-            string=url_match.group("url"),
+            string=unquote(
+                string=url_match.group("url"),
+            ),
         )
     )
 
 
 def normalize_config(
     config: V2RayConfigRaw,
+    *,
+    format_string: FormatStr | None = None,
 ) -> V2RayConfig:
     _config: V2RayConfig = dict(config)
 
     if config.get("base64"):
         _config = normalize_config_base64(
             config=config,
+            format_string=format_string,
         )
     else:
         _config.pop("base64", None)
 
-    protocol = _config.get("protocol", "")
+    protocol = _config.get("protocol", "v2ray")
 
     if not all(
         _config.get(key)
         for key in (
             "host",
             "port",
+            "protocol",
             "url",
         )
     ):
@@ -185,6 +286,7 @@ def normalize_config(
                     for key in (
                         "host",
                         "port",
+                        "protocol",
                         "url",
                     )
                     if not (value := _config.get(key))
@@ -196,45 +298,31 @@ def normalize_config(
         _config["port"] = int(port)
 
     if isinstance(params := _config.get("params"), str):
-        _config.update({
-            "params": dict(
-                parse_qsl(
-                    qs=params.replace("+", "%2B"),
-                    keep_blank_values=True,
-                ),
+        _config["params"] = dict(
+            parse_qsl(
+                qs=params.replace("+", "%2B"),
+                keep_blank_values=True,
             ),
-        })
-
-    if (
-        not (
-            protocol in (
-                "ssr",
-                "vmess",
-            )
-            and _config.get("name", "")
         )
+
+    if protocol in (
+        "ssr",
+        "vmess",
     ):
-        _config["name"] = FORMAT_CONFIG_NAME.format_map({
-            key: _config.get(key, "*")
-            for key in (
-                "protocol",
-                "host",
-                "port",
-            )
-        })
-        _config["url"] = FORMAT_CONFIG_URL.format_map({
-            key: _config.get(key, "*")
-            for key in (
-                "url",
-                "name",
-            )
-        })
+        return _config
+
+    _config["name"] = format_config_name(
+        config=_config,
+        format_string=format_string,
+    )
 
     return _config
 
 
 def normalize_config_base64(
     config: V2RayConfigRaw,
+    *,
+    format_string: FormatStr | None = None,
 ) -> V2RayConfig:
     normalizers = {
         "ss": normalize_ss_base64,
@@ -242,16 +330,23 @@ def normalize_config_base64(
         "vmess": normalize_vmess_base64,
     }
 
-    if normalizer := normalizers.get(
+    normalizer = normalizers.get(
         config.get("protocol", ""),
-    ):
-        return normalizer(config)
+    )
 
-    return dict(config)
+    if normalizer is None:
+        return dict(config)
+
+    return normalizer(
+        config=config,
+        format_string=format_string,
+    )
 
 
 def normalize_configs(
     configs: V2RayConfigsRaw,
+    *,
+    format_string: FormatStr | None = None,
 ) -> V2RayConfigs:
     total_before = len(configs)
     logger.info(
@@ -267,6 +362,7 @@ def normalize_configs(
             normalized_configs.append(
                 normalize_config(
                     config=_config,
+                    format_string=format_string,
                 ),
             )
         except Exception as e:  # noqa: PERF203
@@ -274,12 +370,8 @@ def normalize_configs(
                 msg=TEMPLATE_DEBUG_CONFIG_UNEXPECTED_FAILURE.format(
                     exc_type=type(e).__name__,
                     exc_msg=str(e),
-                    config=dumps(
-                        obj=_config,
-                        default=str,
-                        ensure_ascii=False,
-                        indent=DEFAULT_JSON_INDENT,
-                        sort_keys=True,
+                    config=_dumps_config(
+                        config=_config,
                     ),
                 ),
             )
@@ -297,6 +389,8 @@ def normalize_configs(
 
 def normalize_ss_base64(
     config: V2RayConfigRaw,
+    *,
+    format_string: FormatStr | None = None,  # noqa: ARG001
 ) -> V2RayConfig:
     if not (
         base64 := config.pop("base64", None)
@@ -304,24 +398,23 @@ def normalize_ss_base64(
         return dict(config)
 
     (
-        protocol,
         host,
         port,
         path,
         params,
+        name,
     ) = (
-        config.get(
-            key,
-            "ss" if key == "protocol" else "",
-        ).strip()
+        str(config.get(key, "")).strip()
         for key in (
-            "protocol",
             "host",
             "port",
             "path",
             "params",
+            "name",
         )
     )
+
+    protocol = config.get("protocol", "ss")
 
     url = FORMAT_CONFIG_URL_BODY.format(
         protocol=protocol,
@@ -329,6 +422,7 @@ def normalize_ss_base64(
             string=base64,
         ),
     )
+
     if host and port:
         url += FORMAT_CONFIG_URL_LOCATION.format(
             host=host,
@@ -336,6 +430,7 @@ def normalize_ss_base64(
         )
         url += path
         url += f"?{params}" if params else ""
+        url += f"#{name}"
 
     if not (
         ss := PATTERN_URL_SS.search(
@@ -349,10 +444,12 @@ def normalize_ss_base64(
         )
 
     _config: V2RayConfig = dict(config)
+
     _config.update(
         ss.groupdict(
             default="",
         ),
+        url=config.get("url", ""),
     )
 
     return _config
@@ -360,6 +457,8 @@ def normalize_ss_base64(
 
 def normalize_ssr_base64(
     config: V2RayConfigRaw,
+    *,
+    format_string: FormatStr | None = None,
 ) -> V2RayConfig:
     if not (
         base64 := config.pop("base64", None)
@@ -369,6 +468,7 @@ def normalize_ssr_base64(
         )
 
     protocol = config.get("protocol", "ssr")
+
     url = FORMAT_CONFIG_URL_BODY.format(
         protocol=protocol,
         body=b64decode_safe(
@@ -390,30 +490,34 @@ def normalize_ssr_base64(
     ssr_config = ssr.groupdict(
         default="",
     )
-    params = ssr_config.get("params", "")
+
+    params = str(ssr_config.get("params", ""))
 
     ssr_params = {
         key: b64decode_safe(
             string=value,
         )
         for key, value in parse_qsl(
-            qs=params.replace(
-                "+",
-                "%2B",
-            ),
+            qs=params.replace("+", "%2B"),
             keep_blank_values=True,
         )
     }
-    ssr_params.update({
-        "remarks": FORMAT_CONFIG_NAME.format_map({
-            key: ssr_config.get(key, "*")
-            for key in (
-                "protocol",
-                "host",
-                "port",
-            )
-        }),
-    })
+
+    _config: V2RayConfig = dict(config)
+
+    _config.update(
+        ssr_config,
+        params=ssr_params,
+        name=ssr_params.get("remarks", ""),
+    )
+
+    _config["name"] = format_config_name(
+        config=_config,
+        format_string=format_string,
+    )
+
+    ssr_params["remarks"] = str(_config["name"])
+
     ssr_config["params"] = urlencode({
         key: b64encode_safe(
             string=value,
@@ -435,28 +539,24 @@ def normalize_ssr_base64(
             )
         }),
     )
-    ssr_config.update({
-        "url": FORMAT_CONFIG_URL_BODY.format(
+
+    _config.update(
+        url=FORMAT_CONFIG_URL_BODY.format(
             protocol=protocol,
             body=base64,
         ),
-        "password": b64decode_safe(
+        password=b64decode_safe(
             string=ssr_config.get("password", ""),
         ),
-        "name": ssr_params.get("remarks", ""),
-    })
-
-    _config: V2RayConfig = dict(config)
-    _config.update({
-        **ssr_config,
-        "params": ssr_params,
-    })
+    )
 
     return _config
 
 
 def normalize_vmess_base64(
     config: V2RayConfigRaw,
+    *,
+    format_string: FormatStr | None = None,
 ) -> V2RayConfig:
     if not (
         base64 := config.pop("base64", None)
@@ -476,22 +576,35 @@ def normalize_vmess_base64(
             ),
         )
 
-    try:
-        protocol = config.get("protocol", "vmess")
+    protocol = config.get("protocol", "vmess")
 
+    try:
         vmess_config = loads(
             s=vmess.group("json"),
         )
-        vmess_config.update({
-            "ps": FORMAT_CONFIG_NAME.format(
-                protocol=protocol,
-                host=vmess_config.get("add", "255.255.255.255"),
-                port=vmess_config.get("port", "0"),
-            ),
-        })
+
+        _config: V2RayConfig = {
+            **{
+                target: vmess_config.get(source, "")
+                for source, target in VMESS_TO_CONFIG_FIELD_MAPPING.items()
+            },
+            "protocol": protocol,
+            "params": {
+                key: value
+                for key, value in vmess_config.items()
+                if key not in VMESS_TO_CONFIG_FIELD_MAPPING
+            },
+        }
+
+        _config["name"] = format_config_name(
+            config=_config,
+            format_string=format_string,
+        )
+
+        vmess_config["ps"] = _config["name"]
 
         base64 = b64encode_safe(
-            dumps(
+            string=dumps(
                 obj=vmess_config,
                 separators=(",", ":"),
             ),
@@ -503,33 +616,12 @@ def normalize_vmess_base64(
             ),
         ) from e
 
-    return {
-        "url": FORMAT_CONFIG_URL_BODY.format(
-            protocol=protocol,
-            body=base64,
-        ),
-        "protocol": protocol,
-        "method": vmess_config.get("scy", ""),
-        "uuid": vmess_config.get("id", ""),
-        "host": vmess_config.get("add", ""),
-        "port": vmess_config.get("port", ""),
-        "path": vmess_config.get("path", ""),
-        "params": {
-            key: vmess_config.get(key, "")
-            for key in (
-                "aid",
-                "fp",
-                "host",
-                "insecure",
-                "net",
-                "sni",
-                "tls",
-                "type",
-                "v",
-            )
-        },
-        "name": vmess_config.get("ps", ""),
-    }
+    _config["url"] = FORMAT_CONFIG_URL_BODY.format(
+        protocol=protocol,
+        body=base64,
+    )
+
+    return _config
 
 
 def process_configs(

@@ -43,6 +43,7 @@ __all__ = [
     "NORMALIZE_CONDITION_VALID_EXAMPLES",
     "NORMALIZE_SCALAR_EXAMPLES",
     "NORMALIZE_VALID_FIELDS_VALID_EXAMPLES",
+    "PARSE_CONFIG_NAME_FORMAT_INVALID_EXAMPLES",
     "PARSE_VALID_FIELDS_INVALID_EXAMPLES",
     "REL_PATH_EXAMPLES",
     "RE_FULLMATCH_AND_SEARCH_EXAMPLES",
@@ -940,6 +941,59 @@ NORMALIZE_VALID_FIELDS_VALID_EXAMPLES: tuple[
         "F1,F2 F3",
         "F1,F2,F3",
         "uppercase",
+    ),
+)
+
+PARSE_CONFIG_NAME_FORMAT_INVALID_EXAMPLES: tuple[
+    tuple[
+        object,
+        str,
+    ],
+    ...,
+] = (
+    (
+        "{}",
+        "empty_field",
+    ),
+    (
+        {
+            "format": "{protocol}",
+        },
+        "type_dict",
+    ),
+    (
+        123,
+        "type_int",
+    ),
+    (
+        [
+            "{protocol}",
+        ],
+        "type_list",
+    ),
+    (
+        None,
+        "type_none",
+    ),
+    (
+        "{foo",
+        "unclosed_field",
+    ),
+    (
+        "{",
+        "unclosed_opening_brace",
+    ),
+    (
+        "}",
+        "unopened_closing_brace",
+    ),
+    (
+        "foo}",
+        "unopened_field",
+    ),
+    (
+        "{ }",
+        "whitespace_field",
     ),
 )
 

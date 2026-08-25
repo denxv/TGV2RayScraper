@@ -12,8 +12,13 @@ __all__ = [
 ]
 
 PATTERN_CONFIG_FIELD: CompiledRegex = re_compile(
-    r"\w+(?:\.\w+)*",
+    r"\w+"
+    r"(?:"
+        r"\.\w+"
+    r")*",
 )
 PATTERN_PARAM_SEPARATOR: CompiledRegex = re_compile(
-    r"\s*,\s*|\s+",
+    r"\s*,\s*"
+    r"|"
+    r"\s+",
 )

@@ -5,6 +5,7 @@ from core.typing import (
 __all__ = [
     "TEMPLATE_ERROR_CONFIG_IMPORT_FAILED",
     "TEMPLATE_ERROR_CONFIG_MISSING_REQUIRED_FIELDS",
+    "TEMPLATE_ERROR_CONFIG_NAME_INVALID_FORMAT",
     "TEMPLATE_ERROR_CONFIG_URL_PARSE_FAILED",
     "TEMPLATE_ERROR_DETECTED_DUPLICATE_FIELD",
     "TEMPLATE_ERROR_EXPECTED_FILE",
@@ -36,6 +37,9 @@ TEMPLATE_ERROR_CONFIG_IMPORT_FAILED: TemplateStr = (
 TEMPLATE_ERROR_CONFIG_MISSING_REQUIRED_FIELDS: TemplateStr = (
     "Failed to process {protocol!r} configuration "
     "due to missing required fields: {fields!r}."
+)
+TEMPLATE_ERROR_CONFIG_NAME_INVALID_FORMAT: TemplateStr = (
+    "Invalid configuration name format: {format!r}."
 )
 TEMPLATE_ERROR_CONFIG_URL_PARSE_FAILED: TemplateStr = (
     "Failed to parse {protocol!r} configuration."

@@ -52,6 +52,7 @@ __all__ = [
     "ConditionStr",
     "ConfigField",
     "ConfigFields",
+    "ConfigURLGenerator",
     "DefaultPostID",
     "FileMode",
     "FilePath",
@@ -61,6 +62,7 @@ __all__ = [
     "Generator",
     "Iterable",
     "Iterator",
+    "JSONDefault",
     "Literal",
     "MaxValue",
     "MessageStr",
@@ -120,7 +122,7 @@ class ScriptConfig(TypedDict):
 
 ArgsNamespace: TypeAlias = Namespace
 AsyncHTTPClient: TypeAlias = AsyncClient
-CompiledRegex: TypeAlias = Pattern[str]
+CompiledRegex: TypeAlias = Pattern["RegexPattern"]
 
 AbsPath: TypeAlias = str
 AttrName: TypeAlias = str
@@ -172,7 +174,9 @@ SortKey: TypeAlias = tuple[int, "ScalarValue"]
 SortKeys: TypeAlias = tuple["SortKey", ...]
 
 CLIFlags: TypeAlias = Sequence["CLIFlag"]
+ConfigURLGenerator: TypeAlias = Generator[str, None, None]
 FileMode: TypeAlias = Literal["a", "w"]
+JSONDefault: TypeAlias = Callable[[object], object]
 RecordPredicate: TypeAlias = Callable[["Record"], bool]
 V2RayConfigRawIterator: TypeAlias = Iterator["V2RayConfigRaw"]
 

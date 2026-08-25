@@ -39,6 +39,7 @@ from core.constants.common import (
 from core.constants.formats import (
     FORMAT_CHANNEL_SET_DEST,
     FORMAT_CHANNEL_SET_OPTION,
+    FORMAT_CONFIG_NAME_DEFAULT,
 )
 from core.constants.locales import (
     CLI_MAIN_DESCRIPTION,
@@ -78,6 +79,7 @@ from core.utils import (
     get_channel_overrides,
     normalize_condition,
     normalize_valid_fields,
+    parse_config_name_format,
     rel_path,
     validate_file_path,
     validate_proxy_url,
@@ -166,6 +168,15 @@ def parse_args() -> ArgsNamespace:
         dest="config_filter",
         help=SUPPRESS,
         type=normalize_condition,
+    )
+
+    parser.add_argument(
+        "--config-name-format",
+        const=FORMAT_CONFIG_NAME_DEFAULT,
+        dest="config_name_format",
+        help=SUPPRESS,
+        nargs="?",
+        type=parse_config_name_format,
     )
 
     parser.add_argument(

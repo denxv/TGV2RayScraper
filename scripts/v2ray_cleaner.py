@@ -22,12 +22,17 @@ from core.constants.common import (
     DEFAULT_PATH_CONFIGS_RAW,
     SUPPRESS,
 )
+from core.constants.formats import (
+    FORMAT_CONFIG_NAME_DEFAULT,
+)
 from core.constants.locales import (
     CLI_V2RAY_CLEANER_CONFIG_PROCESSING_DUPLICATE,
     CLI_V2RAY_CLEANER_CONFIG_PROCESSING_DUPLICATE_METAVAR,
     CLI_V2RAY_CLEANER_CONFIG_PROCESSING_FILTER,
     CLI_V2RAY_CLEANER_CONFIG_PROCESSING_FILTER_METAVAR,
     CLI_V2RAY_CLEANER_CONFIG_PROCESSING_GROUP_TITLE,
+    CLI_V2RAY_CLEANER_CONFIG_PROCESSING_NAME_FORMAT,
+    CLI_V2RAY_CLEANER_CONFIG_PROCESSING_NAME_FORMAT_METAVAR,
     CLI_V2RAY_CLEANER_CONFIG_PROCESSING_REVERSE,
     CLI_V2RAY_CLEANER_CONFIG_PROCESSING_SORT,
     CLI_V2RAY_CLEANER_CONFIG_PROCESSING_SORT_METAVAR,
@@ -68,6 +73,7 @@ from core.typing import (
 from core.utils import (
     abs_path,
     normalize_condition,
+    parse_config_name_format,
     parse_valid_fields,
     rel_path,
     validate_file_path,
@@ -210,6 +216,15 @@ def parse_args() -> ArgsNamespace:
         type=normalize_condition,
     )
     group_config_processing.add_argument(
+        "-N", "--config-name-format",
+        const=FORMAT_CONFIG_NAME_DEFAULT,
+        dest="config_name_format",
+        help=CLI_V2RAY_CLEANER_CONFIG_PROCESSING_NAME_FORMAT,
+        metavar=CLI_V2RAY_CLEANER_CONFIG_PROCESSING_NAME_FORMAT_METAVAR,
+        nargs="?",
+        type=parse_config_name_format,
+    )
+    group_config_processing.add_argument(
         "-R", "--reverse",
         action="store_true",
         default=False,
@@ -265,6 +280,7 @@ async def main() -> None:
 
         configs = await load_configs(
             ctx=io_ctx,
+            format_string=parsed_args.config_name_format,
             import_path=parsed_args.import_path,
             skip_normalize=parsed_args.skip_normalize,
         )

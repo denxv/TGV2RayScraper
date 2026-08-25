@@ -214,4 +214,9 @@ def set_console_level(
         )
 
 
-logger = create_logger()
+logger = create_logger(
+    console=console,
+    console_level=INFO,
+    file_level=DEBUG,
+    name=DEFAULT_LOGGER_NAME,
+)

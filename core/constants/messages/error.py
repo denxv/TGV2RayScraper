@@ -4,6 +4,7 @@ from core.typing import (
 
 __all__ = [
     "MESSAGE_ERROR_CONDITION_EMPTY",
+    "MESSAGE_ERROR_CONFIG_NAME_EMPTY_FIELD",
     "MESSAGE_ERROR_MULTIPLE_ACTIONS_SPECIFIED",
     "MESSAGE_ERROR_NO_FIELDS_PROVIDED",
     "MESSAGE_ERROR_NO_POSTS_FOUND",
@@ -14,6 +15,9 @@ __all__ = [
 
 MESSAGE_ERROR_CONDITION_EMPTY: MessageStr = (
     "The condition cannot be empty."
+)
+MESSAGE_ERROR_CONFIG_NAME_EMPTY_FIELD: MessageStr = (
+    "Configuration name format contains an empty field '{}'."
 )
 MESSAGE_ERROR_MULTIPLE_ACTIONS_SPECIFIED: MessageStr = (
     "Cannot perform multiple actions simultaneously. "

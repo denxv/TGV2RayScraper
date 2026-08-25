@@ -1,3 +1,7 @@
+from string import (
+    Formatter,
+)
+
 from core.typing import (
     FormatStr,
 )
@@ -9,7 +13,8 @@ __all__ = [
     "FORMAT_CHANNEL_CHANGE",
     "FORMAT_CHANNEL_SET_DEST",
     "FORMAT_CHANNEL_SET_OPTION",
-    "FORMAT_CONFIG_NAME",
+    "FORMAT_CONFIG_NAME_DEFAULT",
+    "FORMAT_CONFIG_NAME_PARSER",
     "FORMAT_CONFIG_SSR_BODY",
     "FORMAT_CONFIG_URL",
     "FORMAT_CONFIG_URL_BODY",
@@ -48,12 +53,15 @@ FORMAT_CHANNEL_SET_DEST: FormatStr = (
 FORMAT_CHANNEL_SET_OPTION: FormatStr = (
     "--set-{field}"
 )
-FORMAT_CONFIG_NAME: FormatStr = (
+FORMAT_CONFIG_NAME_DEFAULT: FormatStr = (
     "{protocol}"
     "-"
     "{host}"
     "-"
     "{port}"
+)
+FORMAT_CONFIG_NAME_PARSER: Formatter = (
+    Formatter()
 )
 FORMAT_CONFIG_SSR_BODY: FormatStr = (
     "{host}"

@@ -1,3 +1,5 @@
+# ruff: noqa: E501
+
 from core.constants.patterns.v2ray.registry import (
     PATTERNS_V2RAY_URLS_BY_PROTOCOL,
 )
@@ -24,23 +26,6 @@ __all__ = [
     "V2RAY_URL_PATTERNS_VALID_EXAMPLES",
 ]
 
-_BASE_INVALID: tuple[
-    tuple[
-        str,
-        str,
-    ],
-    ...,
-] = (
-    (
-        "",
-        "empty",
-    ),
-    (
-        "random text",
-        "no_match",
-    ),
-)
-
 _BROKEN: tuple[
     tuple[
         str,
@@ -50,11 +35,10 @@ _BROKEN: tuple[
 ] = tuple(
     (
         f"{name}://@@@",
-        f"broken_{name}_format",
+        f"protocol_{name}_broken_format",
     )
     for name in PATTERNS_V2RAY_URLS_BY_PROTOCOL
 )
-
 _INCOMPLETE: tuple[
     tuple[
         str,
@@ -64,12 +48,11 @@ _INCOMPLETE: tuple[
 ] = tuple(
     (
         f"{name}://",
-        f"incomplete_{name}",
+        f"protocol_{name}_incomplete",
     )
     for name in PATTERNS_V2RAY_URLS_BY_PROTOCOL
 )
-
-_WRONG_SCHEMES: tuple[
+_INVALID_BASE64: tuple[
     tuple[
         str,
         str,
@@ -77,14 +60,148 @@ _WRONG_SCHEMES: tuple[
     ...,
 ] = tuple(
     (
-        f"{scheme}://example.com",
-        f"wrong_scheme_{scheme}",
+        f"{name}://! $ % &",
+        f"protocol_{name}_invalid_base64",
     )
-    for scheme in (
-        "ftp",
-        "http",
-        "https",
+    for name in PATTERNS_V2RAY_URLS_BY_PROTOCOL
+    if name in (
+        "ss",
+        "ssr",
+        "vmess",
     )
+)
+_INVALID_HOSTS: tuple[
+    tuple[
+        str,
+        str,
+    ],
+    ...,
+] = tuple(
+    (
+        url_template.format(
+            name=name,
+        ),
+        f"protocol_{name}_empty_host",
+    )
+    for name, url_template in (
+        *(
+            (
+                name,
+                "{name}://data@:443",
+            )
+            for name in PATTERNS_V2RAY_URLS_BY_PROTOCOL
+            if name not in (
+                "ss",
+                "ssr",
+                "tuic",
+            )
+        ),
+        (
+            "ss",
+            "{name}://method:password@:8388",
+        ),
+        (
+            "ssr",
+            "{name}://:443:origin:method:obfs:cGFzc3dvcmQ=",
+        ),
+        (
+            "tuic",
+            "{name}://uuid:password@:443",
+        ),
+    )
+)
+_INVALID_PORTS: tuple[
+    tuple[
+        str,
+        str,
+    ],
+    ...,
+] = tuple(
+    (
+        url_template.format(
+            name=name,
+            port=port,
+        ),
+        f"protocol_{name}_port_{case_id}",
+    )
+    for name, url_template in (
+        *(
+            (
+                name,
+                "{name}://data@example.com:{port}",
+            )
+            for name in PATTERNS_V2RAY_URLS_BY_PROTOCOL
+            if name not in (
+                "ss",
+                "ssr",
+                "tuic",
+            )
+        ),
+        (
+            "ss",
+            "{name}://method:password@example.com:{port}",
+        ),
+        (
+            "ssr",
+            "{name}://example.com:{port}:origin:method:obfs:password",
+        ),
+        (
+            "tuic",
+            "{name}://uuid:password@example.com:{port}",
+        ),
+    )
+    for port, case_id in (
+        (
+            "-1",
+            "negative",
+        ),
+        (
+            "abc",
+            "not_numeric",
+        ),
+    )
+)
+_INVALID_STRUCTURE: tuple[
+    tuple[
+        str,
+        str,
+    ],
+    ...,
+] = (
+    *(
+        (
+            url_template.format(
+                name=name,
+            ),
+            f"protocol_{name}_missing_port",
+        )
+        for name, url_template in (
+            *(
+                (
+                    name,
+                    "{name}://data@example.com",
+                )
+                for name in PATTERNS_V2RAY_URLS_BY_PROTOCOL
+                if name not in (
+                    "ss",
+                    "ssr",
+                    "tuic",
+                )
+            ),
+        )
+    ),
+    (
+        "ss://:password@example.com:8388",
+        "protocol_ss_missing_method",
+    ),
+    (
+        "ssr://example.com:443:origin:method:obfs:",
+        "protocol_ssr_missing_password",
+    ),
+    (
+        "tuic://:password@example.com:443",
+        "protocol_tuic_missing_uuid",
+    ),
 )
 
 V2RAY_URL_PATTERNS_INVALID_EXAMPLES: tuple[
@@ -93,13 +210,19 @@ V2RAY_URL_PATTERNS_INVALID_EXAMPLES: tuple[
         str,
     ],
     ...,
-] = (
-    *_BASE_INVALID,
-    *_BROKEN,
-    *_INCOMPLETE,
-    *_WRONG_SCHEMES,
+] = tuple(
+    sorted(
+        (
+            *_BROKEN,
+            *_INCOMPLETE,
+            *_INVALID_BASE64,
+            *_INVALID_HOSTS,
+            *_INVALID_PORTS,
+            *_INVALID_STRUCTURE,
+        ),
+        key=lambda case: case[-1],
+    ),
 )
-
 V2RAY_URL_PATTERNS_VALID_EXAMPLES: tuple[
     tuple[
         CompiledRegex,
@@ -114,13 +237,14 @@ V2RAY_URL_PATTERNS_VALID_EXAMPLES: tuple[
         "anytls://mypassword@example.com:443/api/v1?token=1&debug=true#protocol-anytls",
         {
             "url": "anytls://mypassword@example.com:443/api/v1?token=1&debug=true",
+            "body": "mypassword@example.com:443/api/v1?token=1&debug=true",
             "protocol": "anytls",
             "password": "mypassword",
             "host": "example.com",
             "port": "443",
             "path": "/api/v1",
             "params": "token=1&debug=true",
-            "name": "",
+            "name": "protocol-anytls",
         },
         "protocol_anytls_full",
     ),
@@ -129,13 +253,14 @@ V2RAY_URL_PATTERNS_VALID_EXAMPLES: tuple[
         "hy2://secretpassword@example.com:443/?debug=true#protocol-hy2",
         {
             "url": "hy2://secretpassword@example.com:443/?debug=true",
+            "body": "secretpassword@example.com:443/?debug=true",
             "protocol": "hy2",
             "password": "secretpassword",
             "host": "example.com",
             "port": "443",
             "path": "/",
             "params": "debug=true",
-            "name": "",
+            "name": "protocol-hy2",
         },
         "protocol_hy2_full_with_path_params",
     ),
@@ -144,13 +269,14 @@ V2RAY_URL_PATTERNS_VALID_EXAMPLES: tuple[
         "hysteria2://secretpass@host.local:8443?token=TOKEN#protocol-hysteria2",
         {
             "url": "hysteria2://secretpass@host.local:8443?token=TOKEN",
+            "body": "secretpass@host.local:8443?token=TOKEN",
             "protocol": "hysteria2",
             "password": "secretpass",
             "host": "host.local",
             "port": "8443",
             "path": None,
             "params": "token=TOKEN",
-            "name": "",
+            "name": "protocol-hysteria2",
         },
         "protocol_hysteria2_minimal_with_params",
     ),
@@ -159,13 +285,14 @@ V2RAY_URL_PATTERNS_VALID_EXAMPLES: tuple[
         "ss://YWVzLTI1Ni1nY206cGFzczEyMw==@server1.example.com:8388/api/v1?udp=true#protocol-ss-base64",
         {
             "url": "ss://YWVzLTI1Ni1nY206cGFzczEyMw==@server1.example.com:8388/api/v1?udp=true",
+            "body": "YWVzLTI1Ni1nY206cGFzczEyMw==@server1.example.com:8388/api/v1?udp=true",
             "protocol": "ss",
             "base64": "YWVzLTI1Ni1nY206cGFzczEyMw==",
             "host": "server1.example.com",
             "port": "8388",
             "path": "/api/v1",
             "params": "udp=true",
-            "name": "",
+            "name": "protocol-ss-base64",
         },
         "protocol_ss_base64_full_with_path_params",
     ),
@@ -174,13 +301,14 @@ V2RAY_URL_PATTERNS_VALID_EXAMPLES: tuple[
         "ss://YWVzLTI1Ni1nY206cGFzcw==@10.0.0.5:443#protocol-ss-base64",
         {
             "url": "ss://YWVzLTI1Ni1nY206cGFzcw==@10.0.0.5:443",
+            "body": "YWVzLTI1Ni1nY206cGFzcw==@10.0.0.5:443",
             "protocol": "ss",
             "base64": "YWVzLTI1Ni1nY206cGFzcw==",
             "host": "10.0.0.5",
             "port": "443",
             "path": None,
             "params": None,
-            "name": "",
+            "name": "protocol-ss-base64",
         },
         "protocol_ss_base64_minimal",
     ),
@@ -189,6 +317,7 @@ V2RAY_URL_PATTERNS_VALID_EXAMPLES: tuple[
         "ss://aes-256-gcm:pass123@server1.example.com:8388/api/v1?udp=true#protocol-ss",
         {
             "url": "ss://aes-256-gcm:pass123@server1.example.com:8388/api/v1?udp=true",
+            "body": "aes-256-gcm:pass123@server1.example.com:8388/api/v1?udp=true",
             "protocol": "ss",
             "method": "aes-256-gcm",
             "password": "pass123",
@@ -196,7 +325,7 @@ V2RAY_URL_PATTERNS_VALID_EXAMPLES: tuple[
             "port": "8388",
             "path": "/api/v1",
             "params": "udp=true",
-            "name": "",
+            "name": "protocol-ss",
         },
         "protocol_ss_full_with_path_params",
     ),
@@ -205,6 +334,7 @@ V2RAY_URL_PATTERNS_VALID_EXAMPLES: tuple[
         "ss://aes-256-gcm:pass123@server2.example.com:8388#protocol-ss",
         {
             "url": "ss://aes-256-gcm:pass123@server2.example.com:8388",
+            "body": "aes-256-gcm:pass123@server2.example.com:8388",
             "protocol": "ss",
             "method": "aes-256-gcm",
             "password": "pass123",
@@ -212,7 +342,7 @@ V2RAY_URL_PATTERNS_VALID_EXAMPLES: tuple[
             "port": "8388",
             "path": None,
             "params": None,
-            "name": "",
+            "name": "protocol-ss",
         },
         "protocol_ss_minimal_no_path_no_params",
     ),
@@ -221,8 +351,9 @@ V2RAY_URL_PATTERNS_VALID_EXAMPLES: tuple[
         "ssr://c2VydmVyOjQ0Mzp0Y3A6YWVzLTI1Ni1jZmI6b3Blbjp0ZXN0cGFzc3dvcmQ=#protocol-ssr-base64",
         {
             "url": "ssr://c2VydmVyOjQ0Mzp0Y3A6YWVzLTI1Ni1jZmI6b3Blbjp0ZXN0cGFzc3dvcmQ=",
+            "body": "c2VydmVyOjQ0Mzp0Y3A6YWVzLTI1Ni1jZmI6b3Blbjp0ZXN0cGFzc3dvcmQ=",
             "protocol": "ssr",
-            "base64": "c2VydmVyOjQ0Mzp0Y3A6YWVzLTI1Ni1jZmI6b3Blbjp0ZXN0cGFzc3dvcmQ=",  # noqa: E501
+            "base64": "c2VydmVyOjQ0Mzp0Y3A6YWVzLTI1Ni1jZmI6b3Blbjp0ZXN0cGFzc3dvcmQ=",
         },
         "protocol_ssr_base64_basic",
     ),
@@ -231,6 +362,7 @@ V2RAY_URL_PATTERNS_VALID_EXAMPLES: tuple[
         "ssr://example.com:443:origin:aes-256-cfb:plain:cGFzc3dvcmQ=/api/v1?remarks=cHJvdG9jb2wtc3NyLXBsYWluCg==",
         {
             "url": "ssr://example.com:443:origin:aes-256-cfb:plain:cGFzc3dvcmQ=/api/v1?remarks=cHJvdG9jb2wtc3NyLXBsYWluCg==",
+            "body": "example.com:443:origin:aes-256-cfb:plain:cGFzc3dvcmQ=/api/v1?remarks=cHJvdG9jb2wtc3NyLXBsYWluCg==",
             "protocol": "ssr",
             "host": "example.com",
             "port": "443",
@@ -248,13 +380,14 @@ V2RAY_URL_PATTERNS_VALID_EXAMPLES: tuple[
         "trojan://mypassword@trojan.example.com:443/api/v1?allowInsecure=1#protocol-trojan",
         {
             "url": "trojan://mypassword@trojan.example.com:443/api/v1?allowInsecure=1",
+            "body": "mypassword@trojan.example.com:443/api/v1?allowInsecure=1",
             "protocol": "trojan",
             "password": "mypassword",
             "host": "trojan.example.com",
             "port": "443",
             "path": "/api/v1",
             "params": "allowInsecure=1",
-            "name": "",
+            "name": "protocol-trojan",
         },
         "protocol_trojan_full",
     ),
@@ -263,6 +396,7 @@ V2RAY_URL_PATTERNS_VALID_EXAMPLES: tuple[
         "tuic://550e8400-e29b-41d4-a716-446655440000:secretpass@tuic.example.com:443/api/v1?token=1#protocol-tuic",
         {
             "url": "tuic://550e8400-e29b-41d4-a716-446655440000:secretpass@tuic.example.com:443/api/v1?token=1",
+            "body": "550e8400-e29b-41d4-a716-446655440000:secretpass@tuic.example.com:443/api/v1?token=1",
             "protocol": "tuic",
             "uuid": "550e8400-e29b-41d4-a716-446655440000",
             "password": "secretpass",
@@ -270,7 +404,7 @@ V2RAY_URL_PATTERNS_VALID_EXAMPLES: tuple[
             "port": "443",
             "path": "/api/v1",
             "params": "token=1",
-            "name": "",
+            "name": "protocol-tuic",
         },
         "protocol_tuic_full",
     ),
@@ -279,13 +413,14 @@ V2RAY_URL_PATTERNS_VALID_EXAMPLES: tuple[
         "vless://550e8400-e29b-41d4-a716-446655440000@vless.example.com:443/api/v1?encryption=none&security=tls#protocol-vless",
         {
             "url": "vless://550e8400-e29b-41d4-a716-446655440000@vless.example.com:443/api/v1?encryption=none&security=tls",
+            "body": "550e8400-e29b-41d4-a716-446655440000@vless.example.com:443/api/v1?encryption=none&security=tls",
             "protocol": "vless",
             "uuid": "550e8400-e29b-41d4-a716-446655440000",
             "host": "vless.example.com",
             "port": "443",
             "path": "/api/v1",
             "params": "encryption=none&security=tls",
-            "name": "",
+            "name": "protocol-vless",
         },
         "protocol_vless_full",
     ),
@@ -294,13 +429,14 @@ V2RAY_URL_PATTERNS_VALID_EXAMPLES: tuple[
         "vmess://550e8400-e29b-41d4-a716-446655440000@vmess.example.com:443/api/v1?alterId=0&security=tls#protocol-vmess",
         {
             "url": "vmess://550e8400-e29b-41d4-a716-446655440000@vmess.example.com:443/api/v1?alterId=0&security=tls",
+            "body": "550e8400-e29b-41d4-a716-446655440000@vmess.example.com:443/api/v1?alterId=0&security=tls",
             "protocol": "vmess",
             "uuid": "550e8400-e29b-41d4-a716-446655440000",
             "host": "vmess.example.com",
             "port": "443",
             "path": "/api/v1",
             "params": "alterId=0&security=tls",
-            "name": "",
+            "name": "protocol-vmess",
         },
         "protocol_vmess_full",
     ),
@@ -309,8 +445,9 @@ V2RAY_URL_PATTERNS_VALID_EXAMPLES: tuple[
         "vmess://eyJhZGQiOiJ2bWVzcy5leGFtcGxlLmNvbSIsInBvcnQiOiI0NDMiLCJpZCI6IjU1MGU4NDAwLWUyOWItNDFkNC1hNzE2LTQ0NjY1NTQ0MDAwMCIsImFpZCI6IjAiLCJzY3kiOiJhdXRvIiwibmV0Ijoid3MiLCJ0eXBlIjoibm9uZSJ9",
         {
             "url": "vmess://eyJhZGQiOiJ2bWVzcy5leGFtcGxlLmNvbSIsInBvcnQiOiI0NDMiLCJpZCI6IjU1MGU4NDAwLWUyOWItNDFkNC1hNzE2LTQ0NjY1NTQ0MDAwMCIsImFpZCI6IjAiLCJzY3kiOiJhdXRvIiwibmV0Ijoid3MiLCJ0eXBlIjoibm9uZSJ9",
+            "body": "eyJhZGQiOiJ2bWVzcy5leGFtcGxlLmNvbSIsInBvcnQiOiI0NDMiLCJpZCI6IjU1MGU4NDAwLWUyOWItNDFkNC1hNzE2LTQ0NjY1NTQ0MDAwMCIsImFpZCI6IjAiLCJzY3kiOiJhdXRvIiwibmV0Ijoid3MiLCJ0eXBlIjoibm9uZSJ9",
             "protocol": "vmess",
-            "base64": "eyJhZGQiOiJ2bWVzcy5leGFtcGxlLmNvbSIsInBvcnQiOiI0NDMiLCJpZCI6IjU1MGU4NDAwLWUyOWItNDFkNC1hNzE2LTQ0NjY1NTQ0MDAwMCIsImFpZCI6IjAiLCJzY3kiOiJhdXRvIiwibmV0Ijoid3MiLCJ0eXBlIjoibm9uZSJ9",  # noqa: E501
+            "base64": "eyJhZGQiOiJ2bWVzcy5leGFtcGxlLmNvbSIsInBvcnQiOiI0NDMiLCJpZCI6IjU1MGU4NDAwLWUyOWItNDFkNC1hNzE2LTQ0NjY1NTQ0MDAwMCIsImFpZCI6IjAiLCJzY3kiOiJhdXRvIiwibmV0Ijoid3MiLCJ0eXBlIjoibm9uZSJ9",
         },
         "protocol_vmess_base64_full",
     ),
@@ -319,13 +456,14 @@ V2RAY_URL_PATTERNS_VALID_EXAMPLES: tuple[
         "wireguard://privatekey123@wg.example.com:51820/api/v1?keepalive=25#protocol-wireguard",
         {
             "url": "wireguard://privatekey123@wg.example.com:51820/api/v1?keepalive=25",
+            "body": "privatekey123@wg.example.com:51820/api/v1?keepalive=25",
             "protocol": "wireguard",
             "privatekey": "privatekey123",
             "host": "wg.example.com",
             "port": "51820",
             "path": "/api/v1",
             "params": "keepalive=25",
-            "name": "",
+            "name": "protocol-wireguard",
         },
         "protocol_wireguard_full",
     ),

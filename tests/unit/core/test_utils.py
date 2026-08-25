@@ -35,6 +35,7 @@ from core.utils import (
     normalize_condition,
     normalize_scalar,
     normalize_valid_fields,
+    parse_config_name_format,
     parse_valid_fields,
     re_fullmatch,
     re_search,
@@ -90,6 +91,8 @@ from tests.unit.core.constants.test_cases.utils import (
     NORMALIZE_SCALAR_CASES,
     NORMALIZE_VALID_FIELDS_VALID_ARGS,
     NORMALIZE_VALID_FIELDS_VALID_CASES,
+    PARSE_CONFIG_NAME_FORMAT_INVALID_ARGS,
+    PARSE_CONFIG_NAME_FORMAT_INVALID_CASES,
     PARSE_VALID_FIELDS_INVALID_ARGS,
     PARSE_VALID_FIELDS_INVALID_CASES,
     RE_FULLMATCH_AND_SEARCH_EXTENDED_ARGS,
@@ -496,6 +499,19 @@ def test_normalize_valid_fields_valid(
     )
 
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    PARSE_CONFIG_NAME_FORMAT_INVALID_ARGS,
+    PARSE_CONFIG_NAME_FORMAT_INVALID_CASES,
+)
+def test_parse_config_name_format_invalid(
+    invalid_input: object,
+) -> None:
+    with pytest.raises(ArgumentTypeError):
+        parse_config_name_format(
+            format_string=invalid_input,
+        )
 
 
 @pytest.mark.parametrize(

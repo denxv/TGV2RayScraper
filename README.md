@@ -402,6 +402,8 @@ python -m scripts.v2ray_cleaner -h
 
   * `-F, --config-filter CONDITION` - Keep only entries matching a Python-like condition (e.g., `"host == '1.1.1.1' and port > 1000"`).
 
+  * `-N, --config-name-format [FORMAT]` - Format configuration names using the specified template. If no value is provided (e.g., `-N`), the default format `"{protocol}-{host}-{port}"` is used. By default, original configuration names are preserved. This option only applies when configuration normalization is enabled.
+
   * `-R, --reverse` - Sort in descending order (applies only with `--sort`).
 
   * `-S, --sort [FIELDS]` - Sort entries by comma-separated fields (default: `"protocol"`).
@@ -418,6 +420,8 @@ python -m scripts.v2ray_cleaner -h
 
 * Applies filters based on Python-like conditions using the `--config-filter` parameter and performs optional normalization, which can be skipped via `--skip-normalize`.
 
+* Formats configuration names using the `--config-name-format` option. The template can use configuration fields, including nested fields, for example: `"{protocol}-{host}-{port}"` or `"{protocol}-{params[type]}"`. This option only applies when configuration normalization is enabled.
+
 * Removes duplicate entries based on specified fields when using the `--duplicate` option.
 
 * Sorts entries by the specified fields using `--sort` and can reverse the order with `--reverse` if needed.
@@ -426,7 +430,7 @@ python -m scripts.v2ray_cleaner -h
 
 * Exports parsed configurations to a JSON file using the `--export` option for later reuse without re-parsing the raw input.
 
-* Supports flexible selection of fields for filtering, sorting, and removing duplicates, allowing extraction of only the required configurations.
+* Supports flexible field selection for filtering, sorting, deduplication, and configuration name formatting, allowing the processing output to be customized.
 
 **Example usage:**
 

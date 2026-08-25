@@ -118,6 +118,7 @@ from core.typing import (
     ChannelsDict,
     FileMode,
     FilePath,
+    FormatStr,
     PostID,
     PostIDAndRawLines,
     V2RayConfigs,
@@ -133,6 +134,7 @@ from domain.channel import (
 )
 from domain.config import (
     ConfigExtractionResult,
+    iter_formatted_config_urls,
     line_to_configs,
     normalize_configs,
 )
@@ -150,6 +152,7 @@ __all__ = [
 def _apply_normalization(
     *,
     configs: V2RayConfigs | V2RayConfigsRaw,
+    format_string: FormatStr | None = None,
     skip_normalize: bool = False,
 ) -> V2RayConfigs | V2RayConfigsRaw:
     if skip_normalize:
@@ -160,6 +163,7 @@ def _apply_normalization(
 
     return normalize_configs(
         configs=configs,  # type: ignore[arg-type]
+        format_string=format_string,
     )
 
 
@@ -492,6 +496,7 @@ async def _run_channel_extraction(
 
 async def _try_import_configs(
     *,
+    format_string: FormatStr | None = None,
     import_path: FilePath,
     skip_normalize: bool = False,
 ) -> V2RayConfigs | V2RayConfigsRaw | None:
@@ -509,6 +514,7 @@ async def _try_import_configs(
 
     normalized_configs = _apply_normalization(
         configs=imported_configs,
+        format_string=format_string,
         skip_normalize=skip_normalize,
     )
 
@@ -706,18 +712,21 @@ async def import_configs(
 async def load_configs(
     ctx: IOContext,
     *,
+    format_string: FormatStr | None = None,
     import_path: FilePath | None = None,
     skip_normalize: bool = False,
 ) -> V2RayConfigs | V2RayConfigsRaw:
     logger.debug(
         msg=TEMPLATE_DEBUG_CONFIG_IO_LOAD_STARTED.format(
             skip_normalize=skip_normalize,
+            format_string=format_string,
             import_path=import_path,
         ),
     )
 
     if import_path is not None:
         final_configs = await _try_import_configs(
+            format_string=format_string,
             import_path=import_path,
             skip_normalize=skip_normalize,
         )
@@ -758,6 +767,7 @@ async def load_configs(
 
     normalized_configs = _apply_normalization(
         configs=configs,
+        format_string=format_string,
         skip_normalize=skip_normalize,
     )
 
@@ -796,10 +806,11 @@ async def save_configs(
     )
 
     await write_configs(
-        configs=[
-            str(config.get("url", ""))
-            for config in configs
-        ],
+        configs=list(
+            iter_formatted_config_urls(
+                configs=configs,
+            ),
+        ),
         configs_path=ctx.configs_clean_path,
         mode=mode,
     )

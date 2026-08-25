@@ -62,6 +62,8 @@ __all__ = [
     "CLI_V2RAY_CLEANER_CONFIG_PROCESSING_FILTER",
     "CLI_V2RAY_CLEANER_CONFIG_PROCESSING_FILTER_METAVAR",
     "CLI_V2RAY_CLEANER_CONFIG_PROCESSING_GROUP_TITLE",
+    "CLI_V2RAY_CLEANER_CONFIG_PROCESSING_NAME_FORMAT",
+    "CLI_V2RAY_CLEANER_CONFIG_PROCESSING_NAME_FORMAT_METAVAR",
     "CLI_V2RAY_CLEANER_CONFIG_PROCESSING_REVERSE",
     "CLI_V2RAY_CLEANER_CONFIG_PROCESSING_SORT",
     "CLI_V2RAY_CLEANER_CONFIG_PROCESSING_SORT_METAVAR",
@@ -310,6 +312,16 @@ CLI_V2RAY_CLEANER_CONFIG_PROCESSING_FILTER_METAVAR: CLIStr = (
 )
 CLI_V2RAY_CLEANER_CONFIG_PROCESSING_GROUP_TITLE: CLIStr = (
     "Configuration processing"
+)
+CLI_V2RAY_CLEANER_CONFIG_PROCESSING_NAME_FORMAT: CLIStr = (
+    "Format configuration names using the specified template. "
+    "If used without value (e.g., '-N'), "
+    "the default format is '%(const)s'. "
+    "By default, original configuration names are preserved. "
+    "This option only applies when configuration normalization is enabled."
+)
+CLI_V2RAY_CLEANER_CONFIG_PROCESSING_NAME_FORMAT_METAVAR: CLIStr = (
+    "FORMAT"
 )
 CLI_V2RAY_CLEANER_CONFIG_PROCESSING_REVERSE: CLIStr = (
     "Sort in descending order (only applies with --sort)."

@@ -39,11 +39,14 @@ from core.constants.formats import (
     FORMAT_BACKUP_FILENAME,
     FORMAT_BASE64_PADDING,
     FORMAT_CHANNEL_SET_DEST,
+    FORMAT_CONFIG_NAME_PARSER,
 )
 from core.constants.locales import (
     MESSAGE_ERROR_CONDITION_EMPTY,
+    MESSAGE_ERROR_CONFIG_NAME_EMPTY_FIELD,
     MESSAGE_ERROR_NO_FIELDS_PROVIDED,
     MESSAGE_ERROR_PROXY_EMPTY,
+    TEMPLATE_ERROR_CONFIG_NAME_INVALID_FORMAT,
     TEMPLATE_ERROR_DETECTED_DUPLICATE_FIELD,
     TEMPLATE_ERROR_EXPECTED_FILE,
     TEMPLATE_ERROR_EXPECTED_STRING,
@@ -82,6 +85,7 @@ from core.typing import (
     FilePath,
     FilePaths,
     FloatStr,
+    FormatStr,
     Iterable,
     Iterator,
     MaxValue,
@@ -110,6 +114,7 @@ __all__ = [
     "name_to_flag",
     "normalize_scalar",
     "normalize_valid_fields",
+    "parse_config_name_format",
     "parse_valid_fields",
     "re_fullmatch",
     "re_search",
@@ -356,6 +361,40 @@ def normalize_valid_fields(
     return ",".join(
         parse_valid_fields(params_str),
     )
+
+
+def parse_config_name_format(
+    format_string: FormatStr,
+) -> FormatStr:
+    if not isinstance(format_string, str):
+        raise ArgumentTypeError(
+            TEMPLATE_ERROR_EXPECTED_STRING.format(
+                type_name=type(format_string).__name__,
+            ),
+        )
+
+    try:
+        format_parts = list(
+            FORMAT_CONFIG_NAME_PARSER.parse(
+                format_string=format_string,
+            ),
+        )
+    except ValueError:
+        raise ArgumentTypeError(
+            TEMPLATE_ERROR_CONFIG_NAME_INVALID_FORMAT.format(
+                format=format_string,
+            ),
+        ) from None
+
+    if any(
+        field_name is not None and field_name.strip() == ""
+        for _, field_name, _, _ in format_parts
+    ):
+        raise ArgumentTypeError(
+            MESSAGE_ERROR_CONFIG_NAME_EMPTY_FIELD,
+        )
+
+    return format_string  # pragma: no cover
 
 
 def parse_valid_fields(

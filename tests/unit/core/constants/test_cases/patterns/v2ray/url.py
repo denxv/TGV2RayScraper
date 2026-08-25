@@ -1,5 +1,8 @@
 import pytest
 
+from core.constants.patterns.v2ray.detector import (
+    PATTERN_V2RAY_URL_DETECTOR,
+)
 from core.constants.patterns.v2ray.registry import (
     PATTERNS_V2RAY_URLS_BY_PROTOCOL,
 )
@@ -29,14 +32,19 @@ V2RAY_URL_PATTERNS_INVALID_CASES: tuple[
     pytest.param(
         pattern,
         text,
-        id=f"protocol_{name}_{case_id}",
+        id=case_id,
     )
-    for name, patterns in PATTERNS_V2RAY_URLS_BY_PROTOCOL.items()
-    for pattern in patterns
     for (
         text,
         case_id,
     ) in V2RAY_URL_PATTERNS_INVALID_EXAMPLES
+    for url_match in PATTERN_V2RAY_URL_DETECTOR.finditer(
+        string=text,
+    )
+    for pattern in PATTERNS_V2RAY_URLS_BY_PROTOCOL.get(
+        url_match.group("protocol"),
+        (),
+    )
 )
 
 V2RAY_URL_PATTERNS_VALID_ARGS: tuple[

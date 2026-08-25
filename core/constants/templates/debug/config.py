@@ -33,6 +33,7 @@ __all__ = [
     "TEMPLATE_DEBUG_CONFIG_IO_SAVE_EXPORT",
     "TEMPLATE_DEBUG_CONFIG_IO_WRITE_COMPLETED",
     "TEMPLATE_DEBUG_CONFIG_IO_WRITE_STARTED",
+    "TEMPLATE_DEBUG_CONFIG_NORMALIZE_NAME_FORMAT_FAILED",
     "TEMPLATE_DEBUG_CONFIG_UNEXPECTED_FAILURE",
 ]
 
@@ -180,6 +181,7 @@ TEMPLATE_DEBUG_CONFIG_IO_LOAD_PARSED: TemplateStr = (
 TEMPLATE_DEBUG_CONFIG_IO_LOAD_STARTED: TemplateStr = (
     "[config.io.load.started]: "
     "skip_normalize={skip_normalize!r}; "
+    "format_string={format_string!r}; "
     "import_path={import_path!r}"
 )
 TEMPLATE_DEBUG_CONFIG_IO_SAVE_EXPORT: TemplateStr = (
@@ -197,6 +199,13 @@ TEMPLATE_DEBUG_CONFIG_IO_WRITE_STARTED: TemplateStr = (
     "configs_count={configs_count!r}; "
     "mode={mode!r}; "
     "configs_path={configs_path!r}"
+)
+TEMPLATE_DEBUG_CONFIG_NORMALIZE_NAME_FORMAT_FAILED: TemplateStr = (
+    "[config.normalize.name.format.failed]: "
+    "exc_type={exc_type!r}; "
+    "exc_msg={exc_msg!r}; "
+    "format_string={format_string!r}; "
+    "config={config}"
 )
 TEMPLATE_DEBUG_CONFIG_UNEXPECTED_FAILURE: TemplateStr = (
     "[config.normalize.failed]: "
