@@ -348,12 +348,12 @@ V2RAY_URL_PATTERNS_VALID_EXAMPLES: tuple[
     ),
     (
         PATTERN_URL_SSR_BASE64,  # ssr://base64(host:port:protocol:method:obfs:base64(password)/?param=base64(value))
-        "ssr://c2VydmVyOjQ0Mzp0Y3A6YWVzLTI1Ni1jZmI6b3Blbjp0ZXN0cGFzc3dvcmQ=#protocol-ssr-base64",
+        "ssr://c2VydmVyOjQ0Mzp0Y3A6YWVzLTI1Ni1jZmI6b3BlbjpkR1Z6ZEhCaGMzTjNiM0prLz9yZW1hcmtzPWRHVnpkRzVoYldVJTNE#protocol-ssr-base64",
         {
-            "url": "ssr://c2VydmVyOjQ0Mzp0Y3A6YWVzLTI1Ni1jZmI6b3Blbjp0ZXN0cGFzc3dvcmQ=",
-            "body": "c2VydmVyOjQ0Mzp0Y3A6YWVzLTI1Ni1jZmI6b3Blbjp0ZXN0cGFzc3dvcmQ=",
+            "url": "ssr://c2VydmVyOjQ0Mzp0Y3A6YWVzLTI1Ni1jZmI6b3BlbjpkR1Z6ZEhCaGMzTjNiM0prLz9yZW1hcmtzPWRHVnpkRzVoYldVJTNE",
+            "body": "c2VydmVyOjQ0Mzp0Y3A6YWVzLTI1Ni1jZmI6b3BlbjpkR1Z6ZEhCaGMzTjNiM0prLz9yZW1hcmtzPWRHVnpkRzVoYldVJTNE",
             "protocol": "ssr",
-            "base64": "c2VydmVyOjQ0Mzp0Y3A6YWVzLTI1Ni1jZmI6b3Blbjp0ZXN0cGFzc3dvcmQ=",
+            "base64": "c2VydmVyOjQ0Mzp0Y3A6YWVzLTI1Ni1jZmI6b3BlbjpkR1Z6ZEhCaGMzTjNiM0prLz9yZW1hcmtzPWRHVnpkRzVoYldVJTNE",
         },
         "protocol_ssr_base64_basic",
     ),
