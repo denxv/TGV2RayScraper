@@ -97,9 +97,11 @@ __all__ = [
     "TypedDict",
     "Union",
     "V2RayConfig",
+    "V2RayConfigAny",
     "V2RayConfigRaw",
     "V2RayConfigRawIterator",
     "V2RayConfigs",
+    "V2RayConfigsAny",
     "V2RayConfigsRaw",
     "V2RayPatternsByProtocol",
     "V2RayRawLines",
@@ -192,3 +194,5 @@ MinValue: TypeAlias = Union[float, int]
 NumberValue: TypeAlias = Union[float, int, str]
 Record: TypeAlias = Union["ChannelInfo", "V2RayConfig"]
 ScalarValue: TypeAlias = Union[int, str, None]
+V2RayConfigAny: TypeAlias = Union["V2RayConfig", "V2RayConfigRaw"]
+V2RayConfigsAny: TypeAlias = Union["V2RayConfigs", "V2RayConfigsRaw"]

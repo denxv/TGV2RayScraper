@@ -69,10 +69,10 @@ from core.typing import (
     JSONDefault,
     SortKeys,
     V2RayConfig,
-    V2RayConfigRaw,
+    V2RayConfigAny,
     V2RayConfigRawIterator,
     V2RayConfigs,
-    V2RayConfigsRaw,
+    V2RayConfigsAny,
 )
 from core.utils import (
     b64decode_safe,
@@ -109,7 +109,7 @@ class ConfigExtractionResult:
 
 
 def _dumps_config(
-    config: V2RayConfig | V2RayConfigRaw,
+    config: V2RayConfigAny,
     *,
     default: JSONDefault = str,
     ensure_ascii: bool = False,
@@ -159,7 +159,7 @@ def filter_by_condition(
 
 
 def format_config_name(
-    config: V2RayConfig | V2RayConfigRaw,
+    config: V2RayConfigAny,
     *,
     format_string: FormatStr | None = None,
 ) -> str:
@@ -198,7 +198,7 @@ def format_config_name(
 
 
 def iter_formatted_config_urls(
-    configs: V2RayConfigs | V2RayConfigsRaw,
+    configs: V2RayConfigsAny,
 ) -> ConfigURLGenerator:
     for config in configs:
         url = config.get("url")
@@ -254,7 +254,7 @@ def line_to_configs(
 
 
 def normalize_config(
-    config: V2RayConfigRaw,
+    config: V2RayConfigAny,
     *,
     format_string: FormatStr | None = None,
 ) -> V2RayConfig:
@@ -323,7 +323,7 @@ def normalize_config(
 
 
 def normalize_config_base64(
-    config: V2RayConfigRaw,
+    config: V2RayConfigAny,
     *,
     format_string: FormatStr | None = None,
 ) -> V2RayConfig:
@@ -334,7 +334,7 @@ def normalize_config_base64(
     }
 
     normalizer = normalizers.get(
-        config.get("protocol", ""),
+        str(config.get("protocol", "")),
     )
 
     if normalizer is None:
@@ -347,7 +347,7 @@ def normalize_config_base64(
 
 
 def normalize_configs(
-    configs: V2RayConfigsRaw,
+    configs: V2RayConfigsAny,
     *,
     format_string: FormatStr | None = None,
 ) -> V2RayConfigs:
@@ -391,7 +391,7 @@ def normalize_configs(
 
 
 def normalize_ss_base64(
-    config: V2RayConfigRaw,
+    config: V2RayConfigAny,
     *,
     format_string: FormatStr | None = None,  # noqa: ARG001
 ) -> V2RayConfig:
@@ -400,6 +400,8 @@ def normalize_ss_base64(
     ):
         return dict(config)
 
+    protocol = config.get("protocol", "ss")
+
     (
         host,
         port,
@@ -407,7 +409,7 @@ def normalize_ss_base64(
         params,
         name,
     ) = (
-        str(config.get(key, "")).strip()
+        config.get(key, "")
         for key in (
             "host",
             "port",
@@ -417,23 +419,31 @@ def normalize_ss_base64(
         )
     )
 
-    protocol = config.get("protocol", "ss")
+    if isinstance(params, dict):
+        params = urlencode(
+            query=params,
+        )
 
-    ss_url = FORMAT_CONFIG_URL_BODY.format(
-        protocol=protocol,
-        body=b64decode_safe(
-            string=ss_base64,
-        ),
+    ss_body = b64decode_safe(
+        string=str(ss_base64),
     )
 
-    if host and port:
-        ss_url += FORMAT_CONFIG_URL_LOCATION.format(
+    if (
+        "@" not in ss_body
+        and host
+        and port
+    ):
+        ss_body += FORMAT_CONFIG_URL_LOCATION.format(
             host=host,
             port=port,
         )
-        ss_url += path
-        ss_url += f"?{params}" if params else ""
+        ss_body += str(path)
+        ss_body += f"?{params}" if params else ""
 
+    ss_url = FORMAT_CONFIG_URL_BODY.format(
+        protocol=protocol,
+        body=ss_body,
+    )
     ss_url += f"#{name}" if name else ""
 
     if not (
@@ -459,7 +469,7 @@ def normalize_ss_base64(
 
 
 def normalize_ssr_base64(
-    config: V2RayConfigRaw,
+    config: V2RayConfigAny,
     *,
     format_string: FormatStr | None = None,
 ) -> V2RayConfig:
@@ -475,7 +485,7 @@ def normalize_ssr_base64(
     ssr_url = FORMAT_CONFIG_URL_BODY.format(
         protocol=protocol,
         body=b64decode_safe(
-            string=ssr_base64,
+            string=str(ssr_base64),
         ),
     )
 
@@ -557,7 +567,7 @@ def normalize_ssr_base64(
 
 
 def normalize_vmess_base64(
-    config: V2RayConfigRaw,
+    config: V2RayConfigAny,
     *,
     format_string: FormatStr | None = None,
 ) -> V2RayConfig:
@@ -569,7 +579,7 @@ def normalize_vmess_base64(
     if not (
         vmess_match := PATTERN_VMESS_JSON.search(
             string=b64decode_safe(
-                string=vmess_base64,
+                string=str(vmess_base64),
             ),
         )
     ):

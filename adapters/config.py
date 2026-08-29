@@ -122,6 +122,7 @@ from core.typing import (
     PostID,
     PostIDAndRawLines,
     V2RayConfigs,
+    V2RayConfigsAny,
     V2RayConfigsRaw,
     V2RayRawLines,
 )
@@ -151,10 +152,10 @@ __all__ = [
 
 def _apply_normalization(
     *,
-    configs: V2RayConfigs | V2RayConfigsRaw,
+    configs: V2RayConfigsAny,
     format_string: FormatStr | None = None,
     skip_normalize: bool = False,
-) -> V2RayConfigs | V2RayConfigsRaw:
+) -> V2RayConfigsAny:
     if skip_normalize:
         logger.info(
             msg=MESSAGE_INFO_CONFIG_NORMALIZATION_SKIPPED,
@@ -162,7 +163,7 @@ def _apply_normalization(
         return configs
 
     return normalize_configs(
-        configs=configs,  # type: ignore[arg-type]
+        configs=configs,
         format_string=format_string,
     )
 
@@ -499,7 +500,7 @@ async def _try_import_configs(
     format_string: FormatStr | None = None,
     import_path: FilePath,
     skip_normalize: bool = False,
-) -> V2RayConfigs | V2RayConfigsRaw | None:
+) -> V2RayConfigsAny | None:
     imported_configs = await import_configs(
         import_path=import_path,
     )
@@ -715,7 +716,7 @@ async def load_configs(
     format_string: FormatStr | None = None,
     import_path: FilePath | None = None,
     skip_normalize: bool = False,
-) -> V2RayConfigs | V2RayConfigsRaw:
+) -> V2RayConfigsAny:
     logger.debug(
         msg=TEMPLATE_DEBUG_CONFIG_IO_LOAD_STARTED.format(
             skip_normalize=skip_normalize,
