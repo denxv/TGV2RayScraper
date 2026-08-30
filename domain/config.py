@@ -231,26 +231,28 @@ def iter_formatted_config_urls(
 def line_to_configs(
     line: str,
 ) -> V2RayConfigRawIterator:
-    return (
-        config_match.groupdict(
-            default="",
+    encoded_line = quote(
+        string=line.strip(),
+        safe="%",
+    )
+
+    for url_match in PATTERN_V2RAY_URL_DETECTOR.finditer(
+        string=encoded_line,
+    ):
+        decoded_url = unquote(
+            string=url_match.group("url"),
         )
-        for url_match in PATTERN_V2RAY_URL_DETECTOR.finditer(
-            string=quote(
-                string=line.strip(),
-                safe="%",
-            ),
-        )
+
         for pattern in PATTERNS_V2RAY_URLS_BY_PROTOCOL.get(
             url_match.group("protocol"),
             (),
-        )
-        for config_match in pattern.finditer(
-            string=unquote(
-                string=url_match.group("url"),
-            ),
-        )
-    )
+        ):
+            for config_match in pattern.finditer(
+                string=decoded_url,
+            ):
+                yield config_match.groupdict(
+                    default="",
+                )
 
 
 def normalize_config(
