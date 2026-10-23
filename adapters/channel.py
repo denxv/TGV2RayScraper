@@ -383,7 +383,7 @@ async def load_channels(
     end=MESSAGE_INFO_CHANNEL_LOAD_COMPLETED,
     tracking=False,
 )
-async def load_channels_and_urls(  # type: ignore[misc]
+async def load_channels_and_urls(
     ctx: IOContext,
 ) -> ChannelsAndNames:
     loaded_channels = await load_channels(
@@ -495,7 +495,7 @@ async def save_channels(
     end=MESSAGE_INFO_CHANNEL_SAVE_COMPLETED,
     tracking=False,
 )
-async def save_channels_and_urls(  # type: ignore[misc]
+async def save_channels_and_urls(
     ctx: IOContext,
     *,
     channels: ChannelsDict,
